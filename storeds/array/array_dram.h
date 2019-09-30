@@ -2,9 +2,6 @@
 //  array_dram.h
 //  DRAM Performance
 //
-//  Created by Christopher Storm York  on 8/8/19.
-//  Copyright © 2019 Storm York . All rights reserved.
-//
 
 #ifndef array_dram_h
 #define array_dram_h
