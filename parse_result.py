@@ -22,8 +22,8 @@ def main():
 
     results = {}
 
-    db_index = set() # db name
-    tn_index = set() # thread number
+    db_index = set()  # db name
+    tn_index = set()  # thread number
 
     for line in lines:
         if line[0][0] == '#':
@@ -64,6 +64,6 @@ def main():
                 line += '\t' + str(numpy.median(numpy.array(data)))
             out_file.write(line + '\n')
 
+
 if __name__ == '__main__':
     main()
-

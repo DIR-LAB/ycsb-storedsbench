@@ -17,9 +17,9 @@ fi
 workload_dir=$1
 
 for file_name in $workload_dir/workload*.spec; do
-  for ((tn=1; tn<=8; tn=tn*2)); do
+  for ((tn = 1; tn <= 8; tn = tn * 2)); do
     for db_name in ${db_names[@]}; do
-      for ((i=1; i<=repeat_num; ++i)); do
+      for ((i = 1; i <= repeat_num; ++i)); do
         echo "Running $db_name with $tn threads for $file_name"
         ./ycsbc -db $db_name -threads $tn -P $file_name 2>>ycsbc.output &
         wait
@@ -27,4 +27,3 @@ for file_name in $workload_dir/workload*.spec; do
     done
   done
 done
-

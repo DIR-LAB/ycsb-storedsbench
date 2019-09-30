@@ -17,42 +17,42 @@
 
 namespace ycsbc {
 
-class LockStlDB : public HashtableDB {
- public:
-  LockStlDB() : HashtableDB(
-      new vmp::LockStlHashtable<HashtableDB::FieldHashtable *>) { }
+    class LockStlDB : public HashtableDB {
+    public:
+        LockStlDB() : HashtableDB(
+                new vmp::LockStlHashtable < HashtableDB::FieldHashtable * > ) {}
 
-  ~LockStlDB() {
-    std::vector<KeyHashtable::KVPair> key_pairs = key_table_->Entries();
-    for (auto &key_pair : key_pairs) {
-      DeleteFieldHashtable(key_pair.second);
-    }
-    delete key_table_;
-  }
+        ~LockStlDB() {
+            std::vector <KeyHashtable::KVPair> key_pairs = key_table_->Entries();
+            for (auto &key_pair : key_pairs) {
+                DeleteFieldHashtable(key_pair.second);
+            }
+            delete key_table_;
+        }
 
- protected:
-  HashtableDB::FieldHashtable *NewFieldHashtable() {
-    return new vmp::LockStlHashtable<const char *>;
-  }
+    protected:
+        HashtableDB::FieldHashtable *NewFieldHashtable() {
+            return new vmp::LockStlHashtable<const char *>;
+        }
 
-  void DeleteFieldHashtable(HashtableDB::FieldHashtable *table) {
-    std::vector<FieldHashtable::KVPair> pairs = table->Entries();
-    for (auto &pair : pairs) {
-      DeleteString(pair.second);
-    }
-    delete table;
-  }
+        void DeleteFieldHashtable(HashtableDB::FieldHashtable *table) {
+            std::vector <FieldHashtable::KVPair> pairs = table->Entries();
+            for (auto &pair : pairs) {
+                DeleteString(pair.second);
+            }
+            delete table;
+        }
 
-  const char *CopyString(const std::string &str) {
-    char *value = new char[str.length() + 1];
-    strcpy(value, str.c_str());
-    return value;
-  }
+        const char *CopyString(const std::string &str) {
+            char *value = new char[str.length() + 1];
+            strcpy(value, str.c_str());
+            return value;
+        }
 
-  void DeleteString(const char *str) {
-    delete[] str;
-  }
-};
+        void DeleteString(const char *str) {
+            delete[] str;
+        }
+    };
 
 } // ycsbc
 
