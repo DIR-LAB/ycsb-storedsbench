@@ -14,6 +14,7 @@
 #include "db/redis_db.h"
 #include "db/tbb_rand_db.h"
 #include "db/tbb_scan_db.h"
+#include "db/storeds_db.h"
 
 using namespace std;
 using ycsbc::DB;
@@ -32,6 +33,8 @@ DB* DBFactory::CreateDB(utils::Properties &props) {
     return new TbbRandDB;
   } else if (props["dbname"] == "tbb_scan") {
     return new TbbScanDB;
+  } else if (props["dbname"] == "storeds") {
+    return new StoredsDB(props.GetProperty("type", "array"), props.GetProperty("dbpath", "/pmem/array.pmem"));
   } else return NULL;
 }
 

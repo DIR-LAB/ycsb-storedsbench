@@ -112,6 +112,24 @@ string ParseCommandLine(int argc, const char *argv[], utils::Properties &props) 
       }
       props.SetProperty("dbname", argv[argindex]);
       argindex++;
+    } else if (strcmp(argv[argindex], "-type") == 0){
+      // -type is only with storedsDB, it denotes the inner data structures we will use
+      argindex++;
+      if (argindex >= argc){
+        UsageMessage(argv[0]);
+        exit(0);
+      }
+      props.SetProperty("type", argv[argindex]);
+      argindex++;
+    } else if (strcmp(argv[argindex], "-dbpath") == 0){
+      // -dbpath is only with storedsDB, it shows where the db file is
+      argindex++;
+      if (argindex >= argc){
+        UsageMessage(argv[0]);
+        exit(0);
+      }
+      props.SetProperty("dbpath", argv[argindex]);
+      argindex++;
     } else if (strcmp(argv[argindex], "-host") == 0) {
       argindex++;
       if (argindex >= argc) {
