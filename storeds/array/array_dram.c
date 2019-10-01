@@ -38,12 +38,12 @@ int array_dram_read(const char *key, void *result) {
 
 int array_dram_update(const char *key, void *value) {
     check();
-    array[atoi(key)] = atoi((const char *) value)
+    array[atoi(key)] = atoi((const char *) value);
     return 1;
 }
 
 int array_dram_insert(const char *key, void *value) {
     check();
-    array[atoi(key)] = atoi((const char *) value)
+    array[atoi(key)] = atoi((const char *) value);
     return 1;
 }
