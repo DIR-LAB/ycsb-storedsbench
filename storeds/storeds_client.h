@@ -7,7 +7,7 @@
 #define YCSB_C_STOREDS_CLIENT_H_
 
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #include "array/array_dram.h"
 #include "array/array_pmem.h"
@@ -20,10 +20,14 @@ namespace ycsbc {
 
         ~StoredsClient();
 
-        int (*func_call_init[])(const char *) = {array_dram_init, array_pmem_init};
-        int (*func_call_read[])(const char *, void *) = {array_dram_read, array_pmem_read};
-        int (*func_call_update[])(const char *, const char *) = {array_dram_update, array_pmem_update};
-        int (*func_call_insert[])(const char *, const char *) = {array_dram_insert, array_pmem_insert};
+        int Read(const char *key, void *result);
+        int Update(const char *key, void *value);
+        int Insert(const char *key, void *value);
+
+        int (*func_call_init[2])(const char *) = {array_dram_init, array_pmem_init};
+        int (*func_call_read[2])(const char *, void *) = {array_dram_read, array_pmem_read};
+        int (*func_call_update[2])(const char *, void *) = {array_dram_update, array_pmem_update};
+        int (*func_call_insert[2])(const char *, void *) = {array_dram_insert, array_pmem_insert};
 
         int type_index;
     };
@@ -39,7 +43,7 @@ namespace ycsbc {
         } else {
             return;
         }
-        return func_call_init[type_index](path);
+        func_call_init[type_index](path);
     }
 
     inline StoredsClient::~StoredsClient() {
@@ -49,11 +53,11 @@ namespace ycsbc {
         return func_call_read[type_index](key, result);
     }
 
-    inline int storedsClient::Update(const char *key, const char *value) {
+    inline int StoredsClient::Update(const char *key, void *value) {
         return func_call_update[type_index](key, value);
     }
 
-    inline int storedsClient::Insert(const char *key, const char *value) {
+    inline int StoredsClient::Insert(const char *key, void *value) {
         return func_call_insert[type_index](key, value);
     }
 

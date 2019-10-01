@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include "core/properties.h"
+#include "core/db.h"
 #include "storeds/storeds_client.h"
 
 using std::cout;

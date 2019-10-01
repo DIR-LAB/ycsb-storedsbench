@@ -15,8 +15,9 @@ namespace ycsbc {
                         const vector <string> *fields,
                         vector <KVPair> &result) {
         result.clear();
-        const char *value = storeds_->Get(key.c_str());
-        result.push_back(std::make_pair(key, value));
+        char *dummy;
+        storeds_.Read(key.c_str(), dummy);
+        result.push_back(std::make_pair(key, dummy));
         return DB::kOK;
     }
 
@@ -30,8 +31,9 @@ namespace ycsbc {
                           std::vector <KVPair> &values) {
         //we just ignore table and key as they are not useful in our KV setting
         for (KVPair &field_pair : values) {
-            const char * val = CopyString(field_pair.second.c_str());
-            storeds_.Insert(key.first.c_str(), val);
+            char *val = new char[field_pair.second.length() + 1];
+            strcpy(val, field_pair.second.c_str());
+            storeds_.Insert(key.c_str(), val);
         }
         return DB::kOK;
     }
@@ -40,8 +42,9 @@ namespace ycsbc {
                           vector <KVPair> &values) {
         //we just ignore table and key as they are not useful in our KV setting
         for (KVPair &field_pair : values) {
-            const char * val = CopyString(field_pair.second.c_str());
-            storeds_.Insert(key.first.c_str(), val);
+            char *val = new char[field_pair.second.length() + 1];
+            strcpy(val, field_pair.second.c_str());
+            storeds_.Insert(key.c_str(), val);
         }
         return DB::kOK;
     }
