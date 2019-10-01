@@ -1,17 +1,24 @@
-CC=g++
-CFLAGS+=-Wall -std=c++11
-INCLUDES=-I../
-HEADERS=$(wildcard *.h)
-LDFLAGS=-lpmem -lpmemobj
+CC=gcc
+CFLAGS=-g -Wall -pthread -I./
+LDFLAGS= -lpthread -ltbb
+SUBDIRS=array
+SUBSRCS=$(wildcard array/*.c)
+OBJECTS=$(SUBSRCS:.c=.o)
+EXEC=storeds
 
-all: hiredis sample
+all: $(SUBDIRS) $(EXEC)
 
-sample:	sample.cc ../db/redis_db.o $(HEADERS)
-	$(MAKE) -C ./hiredis
-	sudo $(MAKE) install -C ./hiredis
-	$(MAKE) -C ../db
-	$(CC) $(CFLAGS) $(INCLUDES) $< ../db/redis_db.o $(LDFLAGS) -o $@
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+$(EXEC): $(wildcard *.cc) $(OBJECTS)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 clean:
-	$(RM) sample
-	$(MAKE) -C ./hiredis clean
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir $@; \
+	done
+	$(RM) $(EXEC)
+
+.PHONY: $(SUBDIRS) $(EXEC)
+
