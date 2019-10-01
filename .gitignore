@@ -1,3 +1,8 @@
+#exclude all extension-less executable from the repo
+*
+!*.*
+!*/
+
 # Prerequisites
 *.d
 
