@@ -2,7 +2,6 @@
  * array-pmem.c
  */
 
-#include "ex_common.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +10,7 @@
 #include <libpmemobj.h>
 #include <time.h>
 
+#include "ex_common.h"
 #include "array_pmem.h"
 
 #define TOID_ARRAY(x) TOID(x)
@@ -19,27 +19,27 @@
 #define MAX_TYPE_NUM 8
 
 POBJ_LAYOUT_BEGIN(array);
-POBJ_LAYOUT_TOID(array, struct array_elm);
 POBJ_LAYOUT_TOID(array, int);
 POBJ_LAYOUT_TOID(array, PMEMoid);
-POBJ_LAYOUT_TOID(array, TOID(struct array_elm));
 POBJ_LAYOUT_TOID(array, struct array_info);
 POBJ_LAYOUT_END(array);
+
+static PMEMobjpool *pop;
+static TOID(struct array_info) array_info;
 
 struct array_info {
     PMEMoid array;
 };
 
-static PMEMobjpool *pop;
 struct array_info *info = NULL;
-TOID(int) array = OID_NULL;
-const int size = 1000000;
+const int pmem_array_size = 1000000;
 
-inline int check(){
-    if (TOID_IS_NULL(array)) {
+int pmem_array_check(){
+    if ((info->array).off == 0) {
         fprintf(stderr, "array not initialized yet\n");
         return (-1);
     }
+    return 1;
 }
 
 int array_pmem_init(const char *path){
@@ -57,9 +57,9 @@ int array_pmem_init(const char *path){
     }
 
     POBJ_ZNEW(pop, &array_info, struct array_info);
-    struct array_info *info = D_RW(array_info);
-    POBJ_ALLOC(pop, &info->array, int, sizeof(int) * size, NULL, NULL);
-    if (TOID_IS_NULL(info->array)) {
+    info = D_RW(array_info);
+    POBJ_ALLOC(pop, &info->array, int, sizeof(int) * pmem_array_size, NULL, NULL);
+    if ((info->array).off == 0) {
         fprintf(stderr, "POBJ_ALLOC\n");
         return -1;
     }
@@ -68,29 +68,29 @@ int array_pmem_init(const char *path){
 }
 
 int array_pmem_read(const char *key, void *result){
-    check();
+    pmem_array_check();
     TOID(int) array;
     TOID_ASSIGN(array, info->array);
-    volatile int counter = D_RO(array)[atoi(key) % size];
+    int counter = D_RO(array)[atoi(key) % pmem_array_size];
     result = &counter;
     return 1;
 }
 
 int array_pmem_update(const char *key, void *value){
-    check();
+    pmem_array_check();
     TOID(int) array;
     TOID_ASSIGN(array, info->array);
-    int offset = atoi(key) % size;
+    int offset = atoi(key) % pmem_array_size;
     D_RW(array)[offset] = atoi((const char *) value);
     pmemobj_persist(pop, &D_RW(array)[offset], sizeof(int));
     return 1;
 }
 
 int array_pmem_insert(const char *key, void *value){
-    check();
+    pmem_array_check();
     TOID(int) array;
     TOID_ASSIGN(array, info->array);
-    int offset = atoi(key) % size;
+    int offset = atoi(key) % pmem_array_size;
     D_RW(array)[offset] = atoi((const char *) value);
     pmemobj_persist(pop, &D_RW(array)[offset], sizeof(int));
     return 1;
