@@ -14,11 +14,12 @@ const int size = 1000000;
 int volatile counter;
 int randIndex;
 
-inline int check(){
+int check(){
     if (array == NULL) {
         fprintf(stderr, "malloc failed\n");
         return (-1);
     }
+    return 1;
 }
 
 int array_dram_init(const char *path) {
