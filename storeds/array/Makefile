@@ -8,3 +8,4 @@ LDFLAGS=-lpmem -lpmemobj
 
 all:
 	$(CC) $(CFLAGS) array_dram.c -o array_dram $(LDFLAGS)
+	$(CC) $(CFLAGS) array_pmem.c -o array_pmem $(LDFLAGS)
