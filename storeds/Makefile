@@ -1,23 +1,19 @@
-CC=gcc
-CFLAGS=-g -Wall -pthread -I./
-LDFLAGS= -lpmemobj -lpmem
-SUBDIRS=array
-SUBSRCS=$(wildcard array/*.c)
-OBJECTS=$(SUBSRCS:.c=.o)
-EXEC=storeds
+CC=g++
+CFLAGS=-Wall -std=c++11
+INCLUDES=-I../
+HEADERS=$(wildcard *.h) #$(wildcard array/*.h)
+LDFLAGS=-lpmem -lpmemobj
+SOURCES=$(wildcard *.cc)
+OBJECTS=$(SOURCES:.cc=.o)
 
-all: $(SUBDIRS) $(EXEC)
+all: $(SOURCES) $(OBJECTS)
 
-$(SUBDIRS):
-	$(MAKE) -C $@
-
-$(EXEC): $(wildcard *.c) $(OBJECTS)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+.cc.o:
+	$(MAKE) -C ./array
+# 	sudo $(MAKE) install -C ./hiredis
+	$(MAKE) -C ../db
+	$(CC) $(CFLAGS) $(INCLUDES) $^ ../db/storeds_db.o array/array_dram.o array/array_pmem.o $(HEADERS) $(LDFLAGS) -o $@
 
 clean:
-	for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir $@; \
-	done
-	$(RM) $(EXEC)
+	$(RM) $(OBJECTS)
 
-.PHONY: $(SUBDIRS) $(EXEC)
