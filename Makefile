@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-std=c++11 -g -Wall -pthread -I./
 LDFLAGS= -lpthread -ltbb -lpmemobj
 SUBDIRS=core db storeds/array #storeds
-SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(wildcard storeds/*.cc) #$(wildcard storeds/array*.c)
+SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(wildcard storeds/array/*.c)
 OBJECTS=$(SUBSRCS:.cc=.o) $(SUBSRCS:.c=.o)
 EXEC=ycsbc
 
