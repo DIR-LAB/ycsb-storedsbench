@@ -11,9 +11,8 @@ all: $(SOURCES) $(OBJECTS)
 .cc.o:
 	$(MAKE) -C ./array
 # 	sudo $(MAKE) install -C ./hiredis
-	$(MAKE) -C ../db
-	$(CC) $(CFLAGS) $(INCLUDES) $^ ../db/storeds_db.o array/array_dram.o array/array_pmem.o $(HEADERS) $(LDFLAGS) -o $@
+#	$(MAKE) -C ../db
+#	$(CC) $(CFLAGS) $(INCLUDES) $^ ../db/storeds_db.o array/array_dram.o array/array_pmem.o $(HEADERS) $(LDFLAGS) -o $@
 
 clean:
 	$(RM) $(OBJECTS)
-
