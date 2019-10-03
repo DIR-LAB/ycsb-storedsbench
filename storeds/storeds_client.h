@@ -29,6 +29,7 @@ namespace ycsbc {
         int (*func_call_update[2])(const char *, void *) = {array_dram_update, array_pmem_update};
         int (*func_call_insert[2])(const char *, void *) = {array_dram_insert, array_pmem_insert};
 
+    private:
         int type_index;
     };
 
