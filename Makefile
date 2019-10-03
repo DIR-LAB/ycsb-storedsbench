@@ -1,9 +1,10 @@
 CC=g++
 CFLAGS=-std=c++11 -g -Wall -pthread -I./
-LDFLAGS= -lpthread -ltbb -lpmemobj
-SUBDIRS=core db storeds/array #storeds
-SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(wildcard storeds/array/*.c)
-OBJECTS=$(SUBSRCS:.cc=.o) $(SUBSRCS:.c=.o)
+LDFLAGS= -lpthread -ltbb -lpmemobj -lpmem
+SUBDIRS=core db
+SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc)
+OBJECTS=$(SUBSRCS:.cc=.o)
+STOREDSSRC=$(wildcard storeds/array/*.c)
 EXEC=ycsbc
 
 all: $(SUBDIRS) $(EXEC)
@@ -11,7 +12,7 @@ all: $(SUBDIRS) $(EXEC)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-$(EXEC): $(wildcard *.cc) $(OBJECTS)
+$(EXEC): $(wildcard *.cc) $(STOREDSSRC) $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 clean:
