@@ -87,6 +87,7 @@ int array_pmem_update(const char *key, void *value){
 }
 
 int array_pmem_insert(const char *key, void *value){
+    //printf("insert: %s %s\n", key, (const char *) value);
     pmem_array_check();
     TOID(int) array;
     TOID_ASSIGN(array, info->array);

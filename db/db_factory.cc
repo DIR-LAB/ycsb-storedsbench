@@ -6,14 +6,14 @@
 //  Copyright (c) 2014 Jinglei Ren <jinglei@ren.systems>.
 //
 
-#include "db/db_factory.h"
+#include "db_factory.h"
 
 #include <string>
-#include "db/basic_db.h"
-#include "db/lock_stl_db.h"
-#include "db/tbb_rand_db.h"
-#include "db/tbb_scan_db.h"
-#include "db/storeds_db.h"
+#include "basic_db.h"
+#include "lock_stl_db.h"
+#include "tbb_rand_db.h"
+#include "tbb_scan_db.h"
+#include "storeds_db.h"
 
 using namespace std;
 using ycsbc::DB;
@@ -33,7 +33,7 @@ DB *DBFactory::CreateDB(utils::Properties &props) {
     } else if (props["dbname"] == "tbb_scan") {
         return new TbbScanDB;
     } else if (props["dbname"] == "storeds") {
-        return new StoredsDB(props.GetProperty("type", "array").c_str(),
+        return new StoredsDB(props.GetProperty("type", "array-dram").c_str(),
                 props.GetProperty("dbpath", "/pmem/array.pmem").c_str());
     } else {
         return NULL;

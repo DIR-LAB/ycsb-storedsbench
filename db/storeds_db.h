@@ -6,13 +6,12 @@
 #ifndef YCSB_C_STOREDS_DB_H_
 #define YCSB_C_STOREDS_DB_H_
 
-#include "core/db.h"
+#include "../core/db.h"
 
 #include <iostream>
 #include <string>
-#include "core/properties.h"
-#include "core/db.h"
-#include "storeds/storeds_client.h"
+#include "../core/properties.h"
+#include "../storeds/storeds_client.h"
 
 using std::cout;
 using std::endl;
