@@ -33,18 +33,18 @@ int array_dram_init(const char *path) {
 
 int array_dram_read(const char *key, void *result) {
     check();
-    result = &array[atoi(key)];
+    result = &array[atol(key) % size];
     return 1;
 }
 
 int array_dram_update(const char *key, void *value) {
     check();
-    array[atoi(key)] = atoi((const char *) value);
+    array[atol(key) % size] = atoi((const char *) value);
     return 1;
 }
 
 int array_dram_insert(const char *key, void *value) {
     check();
-    array[atoi(key)] = atoi((const char *) value);
+    array[atol(key) % size] = atoi((const char *) value);
     return 1;
 }

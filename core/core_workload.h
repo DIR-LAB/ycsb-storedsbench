@@ -206,10 +206,10 @@ namespace ycsbc {
     }
 
     inline std::string CoreWorkload::BuildKeyName(uint64_t key_num) {
-        /*if (!ordered_inserts_) {
+        if (!ordered_inserts_) {
             key_num = utils::Hash(key_num);
         }
-        return std::string("user").append(std::to_string(key_num));*/
+        //return std::string("user").append(std::to_string(key_num));
         return std::to_string(key_num);
     }
 
