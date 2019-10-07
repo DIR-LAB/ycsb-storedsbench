@@ -28,6 +28,7 @@ namespace ycsbc {
         int (*func_call_read[2])(const char *, void *) = {array_dram_read, array_pmem_read};
         int (*func_call_update[2])(const char *, void *) = {array_dram_update, array_pmem_update};
         int (*func_call_insert[2])(const char *, void *) = {array_dram_insert, array_pmem_insert};
+        void (*func_call_destroy[2])() = {array_dram_free, array_pmem_free};
 
     private:
         int type_index;
@@ -48,6 +49,7 @@ namespace ycsbc {
     }
 
     inline StoredsClient::~StoredsClient() {
+        func_call_destroy[type_index]();
     }
 
     inline int StoredsClient::Read(const char *key, void *result) {

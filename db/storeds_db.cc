@@ -33,6 +33,7 @@ namespace ycsbc {
         for (KVPair &field_pair : values) {
             char *val = new char[field_pair.second.length() + 1];
             strcpy(val, field_pair.second.c_str());
+            //printf("%s %s\n", key.c_str(), val);
             storeds_.Insert(key.c_str(), val);
         }
         return DB::kOK;
@@ -51,6 +52,10 @@ namespace ycsbc {
 
     int StoredsDB::Delete(const std::string &table, const std::string &key) {
         throw "Delete: function not implemented!";
+    }
+
+    void StoredsDB::Close() {
+        //storeds_.~StoredsClient();
     }
 
 } // namespace ycsbc

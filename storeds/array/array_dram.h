@@ -18,4 +18,6 @@ int array_dram_insert(const char *key, void *value);
 
 int array_dram_delete(const char *key);
 
+void array_dram_free();
+
 #endif /* array_dram_h */

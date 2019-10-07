@@ -39,6 +39,8 @@ namespace ycsbc {
 
         int Delete(const std::string &table, const std::string &key);
 
+        void Close();
+
     private:
         StoredsClient storeds_;
     };

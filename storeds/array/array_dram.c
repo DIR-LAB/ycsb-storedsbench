@@ -48,3 +48,7 @@ int array_dram_insert(const char *key, void *value) {
     array[atol(key) % size] = atoi((const char *) value);
     return 1;
 }
+
+void array_dram_free() {
+    //todo: implement later
+}
