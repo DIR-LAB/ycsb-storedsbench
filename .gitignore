@@ -58,3 +58,7 @@ dkms.conf
 
 #ide generated files
 *.idea
+*.vscode
+
+# persistent memory pool file
+*.pmem
