@@ -41,6 +41,8 @@ namespace ycsbc {
 
         void Close();
 
+        ~StoredsDB();
+
     private:
         StoredsClient storeds_;
     };

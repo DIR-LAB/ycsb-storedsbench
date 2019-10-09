@@ -1,5 +1,5 @@
 //
-//  redis_db.cc
+//  storeds_db.cc
 //  YCSB-C
 //
 
@@ -54,8 +54,10 @@ namespace ycsbc {
         throw "Delete: function not implemented!";
     }
 
-    void StoredsDB::Close() {
-        //storeds_.~StoredsClient();
+    void StoredsDB::Close() {}
+
+    StoredsDB::~StoredsDB() {
+        storeds_.Free();
     }
 
 } // namespace ycsbc
