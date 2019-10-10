@@ -45,7 +45,7 @@ const int default_value_len = 101;
 int pmem_array_check(){
     if ((info->array).off == 0) {
         fprintf(stderr, "array not initialized yet\n");
-        return (-1);
+        assert(0);
     }
     return 1;
 }
@@ -91,8 +91,7 @@ PMEMoid alloc_toid() {
 	}
 
 	for (size_t i = 0; i < pmem_array_size; i++) {
-        char init_string[10] = "amar ami";
-		POBJ_NEW(pop, &D_RW(array)[i], struct array_elm, elm_constructor, &init_string);
+		POBJ_NEW(pop, &D_RW(array)[i], struct array_elm, elm_constructor, NULL);
 		if (TOID_IS_NULL(D_RW(array)[i])) {
 			fprintf(stderr, "POBJ_ALLOC\n");
 			assert(0);
