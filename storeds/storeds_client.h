@@ -12,6 +12,7 @@
 #include "array/array_dram.h"
 #include "array/array_pmem.h"
 #include "array/array_pmem_tx.h"
+#include "linkedlist/linkedlist_dram.h"
 
 namespace ycsbc {
 
