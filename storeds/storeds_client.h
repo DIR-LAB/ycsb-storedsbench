@@ -13,6 +13,8 @@
 #include "array/array_pmem.h"
 #include "array/array_pmem_tx.h"
 #include "linkedlist/linkedlist_dram.h"
+#include "linkedlist/linkedlist_pmem.h"
+#include "linkedlist/linkedlist_pmem_tx.h"
 
 namespace ycsbc {
 
@@ -25,39 +27,49 @@ namespace ycsbc {
         int Insert(const char *key, void *value);
         void Free();
 
-        int (*func_call_init[4])(const char *) = {
+        int (*func_call_init[6])(const char *) = {
                 array_dram_init,
                 array_pmem_init,
                 array_pmem_tx_init,
-                linkedlist_dram_init
+                linkedlist_dram_init,
+                linkedlist_pmem_init,
+                linkedlist_pmem_tx_init
         };
 
-        int (*func_call_read[4])(const char *, void *) = {
+        int (*func_call_read[6])(const char *, void *) = {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
-                linkedlist_dram_read
+                linkedlist_dram_read,
+                linkedlist_pmem_read,
+                linkedlist_pmem_tx_read
         };
 
-        int (*func_call_update[4])(const char *, void *) = {
+        int (*func_call_update[6])(const char *, void *) = {
                 array_dram_update,
                 array_pmem_update,
                 array_pmem_tx_update,
-                linkedlist_dram_update
+                linkedlist_dram_update,
+                linkedlist_pmem_update,
+                linkedlist_pmem_tx_update
         };
 
-        int (*func_call_insert[4])(const char *, void *) = {
+        int (*func_call_insert[6])(const char *, void *) = {
                 array_dram_insert,
                 array_pmem_insert,
                 array_pmem_tx_insert,
-                linkedlist_dram_insert
+                linkedlist_dram_insert,
+                linkedlist_pmem_insert,
+                linkedlist_pmem_tx_insert
         };
 
-        void (*func_call_destroy[4])() = {
+        void (*func_call_destroy[6])() = {
                 array_dram_free,
                 array_pmem_free,
                 array_pmem_tx_free,
-                linkedlist_dram_free
+                linkedlist_dram_free,
+                linkedlist_pmem_free,
+                linkedlist_pmem_tx_free
         };
 
     private:
@@ -74,8 +86,12 @@ namespace ycsbc {
             type_index = 1;
         } else if (strcmp(type, "array-pmem-tx") == 0) {
             type_index = 2;
-        } else if (strcmp(type, "linkedlist_dram") == 0) {
+        } else if (strcmp(type, "linkedlist-dram") == 0) {
             type_index = 3;
+        } else if (strcmp(type, "linkedlist-pmem") == 0) {
+            type_index = 4;
+        } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
+            type_index = 5;
         } else {
             return;
         }
