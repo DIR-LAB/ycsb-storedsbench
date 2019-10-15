@@ -87,7 +87,7 @@ namespace ycsbc {
                 linkedlist_pmem_tx_free,
                 ht_dram_free,
                 ht_pmem_free,
-                ht_pmem_tx_fre
+                ht_pmem_tx_free
         };
 
     private:
