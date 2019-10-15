@@ -13,19 +13,11 @@
 #include "ex_common.h"
 #include "array_pmem_tx.h"
 
-#define TOID_ARRAY(x) TOID(x)
-#define COUNT_OF(x) (sizeof(x) / sizeof(x[0]))
-#define MAX_BUFFLEN 30
-#define MAX_TYPE_NUM 8
-#define PM_ARRAY_POOL_SIZE    (160 * 1024 * 1024)
+/* size of the pmem object pool */
+#define PM_ARRAY_POOL_SIZE (160 * 1024 * 1024)
 
-POBJ_LAYOUT_BEGIN(array_tx);
-POBJ_LAYOUT_ROOT(array_tx, struct array_root);
-POBJ_LAYOUT_TOID(array_tx, struct array_elm);
-POBJ_LAYOUT_TOID(array_tx, PMEMoid);
-POBJ_LAYOUT_TOID(array_tx, TOID(struct array_elm));
-POBJ_LAYOUT_TOID(array_tx, struct array_info);
-POBJ_LAYOUT_END(array_tx);
+/* name of layout in the pool */
+#define LAYOUT_NAME "array_layout"
 
 static PMEMobjpool *pop = NULL;
 static PMEMoid root_oid;
@@ -76,12 +68,12 @@ void print_toid_tx() {
  */
 int array_pmem_tx_init(const char *path){
     if (file_exists(path) != 0) {
-        if ((pop = pmemobj_create(path, POBJ_LAYOUT_NAME(array), PM_ARRAY_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
+        if ((pop = pmemobj_create(path, LAYOUT_NAME, PM_ARRAY_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
             fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());
             exit(0);
         }
     } else {
-        if ((pop = pmemobj_open(path, POBJ_LAYOUT_NAME(array))) == NULL) {
+        if ((pop = pmemobj_open(path, LAYOUT_NAME)) == NULL) {
             fprintf(stderr, "failed to open pool: %s\n", pmemobj_errormsg());
             exit(0);
         }
