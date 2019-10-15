@@ -4,7 +4,7 @@
 
 #include <libpmemobj.h>
 
-#include "ex_common.h"
+#include "../ex_common.h"
 #include "ht_pmem_tx.h"
 
 /*  
