@@ -10,7 +10,7 @@
 #include <libpmemobj.h>
 #include <time.h>
 
-#include "ex_common.h"
+#include "../ex_common.h"
 #include "array_pmem.h"
 
 /* size of the pmem object pool */

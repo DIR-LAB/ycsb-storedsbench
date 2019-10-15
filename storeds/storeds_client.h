@@ -15,6 +15,9 @@
 #include "linkedlist/linkedlist_dram.h"
 #include "linkedlist/linkedlist_pmem.h"
 #include "linkedlist/linkedlist_pmem_tx.h"
+#include "hashmap/ht_dram.h"
+#include "hashmap/ht_pmem.h"
+#include "hashmap/ht_pmem_tx.h"
 
 namespace ycsbc {
 
@@ -27,49 +30,64 @@ namespace ycsbc {
         int Insert(const char *key, void *value);
         void Free();
 
-        int (*func_call_init[6])(const char *) = {
+        int (*func_call_init[9])(const char *) = {
                 array_dram_init,
                 array_pmem_init,
                 array_pmem_tx_init,
                 linkedlist_dram_init,
                 linkedlist_pmem_init,
-                linkedlist_pmem_tx_init
+                linkedlist_pmem_tx_init,
+                ht_dram_init,
+                ht_pmem_init,
+                ht_pmem_tx_init
         };
 
-        int (*func_call_read[6])(const char *, void *) = {
+        int (*func_call_read[9])(const char *, void *) = {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
                 linkedlist_dram_read,
                 linkedlist_pmem_read,
-                linkedlist_pmem_tx_read
+                linkedlist_pmem_tx_read,
+                ht_dram_read,
+                ht_pmem_read,
+                ht_pmem_tx_read
         };
 
-        int (*func_call_update[6])(const char *, void *) = {
+        int (*func_call_update[9])(const char *, void *) = {
                 array_dram_update,
                 array_pmem_update,
                 array_pmem_tx_update,
                 linkedlist_dram_update,
                 linkedlist_pmem_update,
-                linkedlist_pmem_tx_update
+                linkedlist_pmem_tx_update,
+                ht_dram_update,
+                ht_pmem_update,
+                ht_pmem_tx_update
         };
 
-        int (*func_call_insert[6])(const char *, void *) = {
+        int (*func_call_insert[9])(const char *, void *) = {
                 array_dram_insert,
                 array_pmem_insert,
                 array_pmem_tx_insert,
                 linkedlist_dram_insert,
                 linkedlist_pmem_insert,
-                linkedlist_pmem_tx_insert
+                linkedlist_pmem_tx_insert,
+                ht_dram_insert,
+                ht_pmem_insert,
+                ht_pmem_tx_insert
         };
 
-        void (*func_call_destroy[6])() = {
+        void (*func_call_destroy[9])() = {
                 array_dram_free,
                 array_pmem_free,
                 array_pmem_tx_free,
                 linkedlist_dram_free,
                 linkedlist_pmem_free,
-                linkedlist_pmem_tx_free
+                linkedlist_pmem_tx_free,
+                ht_dram_free,
+                ht_pmem_free,
+                ht_pmem_tx_fre
         };
 
     private:
@@ -92,6 +110,12 @@ namespace ycsbc {
             type_index = 4;
         } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
             type_index = 5;
+        } else if (strcmp(type, "hashtable-dram") == 0) {
+            type_index = 9;
+        } else if (strcmp(type, "hashtable-pmem") == 0) {
+            type_index = 10;
+        } else if (strcmp(type, "hashtable-pmem-tx") == 0) {
+            type_index = 11;
         } else {
             return;
         }
