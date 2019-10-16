@@ -111,11 +111,11 @@ namespace ycsbc {
         } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
             type_index = 5;
         } else if (strcmp(type, "hashtable-dram") == 0) {
-            type_index = 9;
+            type_index = 6;
         } else if (strcmp(type, "hashtable-pmem") == 0) {
-            type_index = 10;
+            type_index = 7;
         } else if (strcmp(type, "hashtable-pmem-tx") == 0) {
-            type_index = 11;
+            type_index = 8;
         } else {
             return;
         }
