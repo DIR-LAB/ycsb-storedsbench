@@ -19,6 +19,7 @@
 /* name of layout in the pool */
 #define LAYOUT_NAME "array_layout"
 
+/* Static Global Data */
 static PMEMobjpool *pop = NULL;
 static PMEMoid root_oid;
 static struct array_root *root_p = NULL;
