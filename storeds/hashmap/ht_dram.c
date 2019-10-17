@@ -155,8 +155,9 @@ int ht_dram_read(const char *key, void *result) {
 
 	for(struct entry *entry_p = buckets_p->bucket[hash_value]; entry_p != NULL; entry_p = entry_p->next) {
 		if(entry_p->key == uint64_key) {
-			//key found! replace the value and return
+			//key found! put it to result and return
 			result = entry_p->value;
+			break;
 		}
 		iteration_count += 1;
 	}
