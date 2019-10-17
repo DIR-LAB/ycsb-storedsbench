@@ -160,6 +160,7 @@ int array_pmem_tx_insert(const char *key, void *value){
     int offset = (int) (uint64_key % pmem_array_size);
 
     TX_BEGIN(pop) {
+        //@ddai: no need for extra memory allocation; add_range issue; and forget persist. Please fix similar issues.
         PMEMoid array_elm_oid = pmemobj_tx_alloc(sizeof(struct array_elm), ARRAY_ELEMENT_TYPE);
         struct array_elm *array_elm_ptr = (struct array_elm *) pmemobj_direct(array_elm_oid);
         strcpy(array_elm_ptr->value, (const char *) value);

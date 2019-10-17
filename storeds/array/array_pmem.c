@@ -103,7 +103,9 @@ int array_pmem_read(const char *key, void *result){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
+    //@ddai: this might not work. need to fix similar issues.
     const char *counter = ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value;
+    //@ddai: the way you return &counter will not work.
     result = &counter;
 
     return 1;
