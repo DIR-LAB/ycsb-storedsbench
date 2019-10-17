@@ -87,7 +87,6 @@ int array_pmem_init(const char *path){
         exit(0);
     }
     pmemobj_alloc(pop, &root_p->array, sizeof(struct array_elm) * pmem_array_size, ARRAY_TYPE, NULL, NULL);
-    printf("array is ready\n");
     pmemobj_persist(pop, root_p, sizeof(*root_p));
 
     pmem_array_check();
@@ -161,20 +160,14 @@ int array_pmem_insert(const char *key, void *value){
     return 1;
 }
 
-/*
- * free_toid -- de-allocate array of TOID(struct array_elm) type
- */
-void free_toid() {
-    for (int i = 0; i < pmem_array_size; i++) {
-        pmemobj_free(&((PMEMoid *) pmemobj_direct(root_p->array))[i]);
-    }
-    root_p->array = OID_NULL;
-}
-
 /**
  * array_pmem_free -- destructor
  */
 void array_pmem_free() {
-    free_toid();
+    pmem_array_check();
+    pmemobj_free(&root_p->array);
+    root_p->array = OID_NULL;
+    pmemobj_free(&root_oid);
+    root_oid = OID_NULL;
     pmemobj_close(pop);
 }

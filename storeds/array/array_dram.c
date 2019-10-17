@@ -10,9 +10,10 @@
 #include <string.h>
 #include <stdint.h>
 
-char **array = NULL;
 const int size = 1000000;
 const int default_value_len = 101;
+
+char (*array)[default_value_len];
 
 int volatile counter;
 int randIndex;
@@ -26,13 +27,10 @@ int check(){
 }
 
 int array_dram_init(const char *path) {
-    array = (char **) malloc(size * sizeof(char *));
+    array = (char (*)[default_value_len]) malloc(size * sizeof(*array));
     if (array == NULL) {
         fprintf(stderr, "malloc failed\n");
         return (-1);
-    }
-    for(int i=0; i<size; i+=1) {
-        array[i] = (char *) malloc(default_value_len * sizeof(char *));
     }
     return 1;
 }

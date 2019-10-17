@@ -123,10 +123,10 @@ void ht_pmem_tx_print() {
 }
 
 /*
- * hash_function -- the simplest hashing function,
+ * hash_function_tx -- the simplest hashing function,
  * see https://en.wikipedia.org/wiki/Universal_hashing#Hashing_integers
  */
-uint64_t hash_function(uint64_t value) {
+uint64_t hash_function_tx(uint64_t value) {
 	uint32_t a = root_p->hash_fun_coeff_a;
 	uint32_t b = root_p->hash_fun_coeff_b;
 	uint64_t p = root_p->hash_fun_coeff_p;
@@ -193,6 +193,9 @@ int ht_pmem_tx_init(const char *path) {
     return 1;
 }
 
+/**
+ * ht_pmem_tx_read -- read 'value' of 'key' and place it into '&result'
+ */
 int ht_pmem_tx_read(const char *key, void *result) {
 	ht_pmem_tx_check();
 
@@ -200,7 +203,7 @@ int ht_pmem_tx_read(const char *key, void *result) {
 	PMEMoid entry_oid = OID_NULL;
 
 	uint64_t uint64_key = strtoull(key, NULL, 0);
-	uint64_t hash_value = hash_function(uint64_key);
+	uint64_t hash_value = hash_function_tx(uint64_key);
 
 	//iteration_count can be used to check the number of iteration needed to find the value of a single key
 	int iteration_count = 0;
@@ -235,7 +238,7 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 	PMEMoid entry_oid = OID_NULL;
 
 	uint64_t uint64_key = strtoull(key, NULL, 0);
-	uint64_t hash_value = hash_function(uint64_key);
+	uint64_t hash_value = hash_function_tx(uint64_key);
 
 	//iteration_count can be used further to update the size of buckets with condition
 	int iteration_count = 0;
@@ -287,27 +290,31 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 }
 
 /**
- * free_toid_tx -- de-allocate array of TOID(struct array_elm) type
+ * ht_pmem_tx_free -- destructor
  */
-void free_ht_tx() {
+void ht_pmem_tx_free() {
     TX_BEGIN(pop) {
-        pmemobj_tx_add_range(root_p->buckets, 0, sizeof(root_p->buckets));
-        for (int i = 0; i < INIT_BUCKETS_NUM; i++) {
-            pmemobj_tx_free(((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
+        pmemobj_tx_add_range(root_oid, 0, sizeof(root_oid));
+        PMEMoid buckets_oid = root_p->buckets;
+        struct buckets *buckets_p = ((struct buckets *) pmemobj_direct(buckets_oid));
+        PMEMoid entry_oid = OID_NULL;
+
+        for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
+            //pmemobj_tx_free(((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
+            for (entry_oid = buckets_p->bucket[i]; entry_oid.off != 0; ) {
+                PMEMoid current_entry_oid = entry_oid;
+                entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next;
+
+                pmemobj_tx_free(current_entry_oid);
+            }
         }
-		//pmemobj_tx_free(root_p->buckets);
-        //root_p->buckets = OID_NULL;
+		pmemobj_tx_free(root_p->buckets);
+        root_p->buckets = OID_NULL;
+		pmemobj_tx_free(root_oid);
+		root_oid = OID_NULL;
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
 	} TX_END
-}
-
-/**
- * ht_pmem_tx_free -- destructor
- */
-void ht_pmem_tx_free() {
-    free_ht_tx();
-	root_oid = OID_NULL;
     pmemobj_close(pop);
 }
