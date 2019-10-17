@@ -21,6 +21,9 @@
 #include "skiplist/skiplist_dram.h"
 #include "skiplist/skiplist_pmem.h"
 #include "skiplist/skiplist_pmem_tx.h"
+#include "queue/queue_dram.h"
+#include "queue/queue_pmem.h"
+#include "queue/queue_pmem_tx.h"
 
 namespace ycsbc {
 
@@ -33,7 +36,7 @@ namespace ycsbc {
         int Insert(const char *key, void *value);
         void Free();
 
-        int (*func_call_init[12])(const char *) = {
+        int (*func_call_init[15])(const char *) = {
                 array_dram_init,
                 array_pmem_init,
                 array_pmem_tx_init,
@@ -45,10 +48,13 @@ namespace ycsbc {
                 ht_pmem_tx_init,
                 skiplist_dram_init,
                 skiplist_pmem_init,
-                skiplist_pmem_tx_init
+                skiplist_pmem_tx_init,
+                queue_dram_init,
+                queue_pmem_init,
+                queue_pmem_tx_init
         };
 
-        int (*func_call_read[12])(const char *, void *) = {
+        int (*func_call_read[15])(const char *, void *) = {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
@@ -60,10 +66,13 @@ namespace ycsbc {
                 ht_pmem_tx_read,
                 skiplist_dram_read,
                 skiplist_pmem_read,
-                skiplist_pmem_tx_read
+                skiplist_pmem_tx_read,
+                queue_dram_read,
+                queue_pmem_read,
+                queue_pmem_tx_read
         };
 
-        int (*func_call_update[12])(const char *, void *) = {
+        int (*func_call_update[15])(const char *, void *) = {
                 array_dram_update,
                 array_pmem_update,
                 array_pmem_tx_update,
@@ -75,10 +84,13 @@ namespace ycsbc {
                 ht_pmem_tx_update,
                 skiplist_dram_update,
                 skiplist_pmem_update,
-                skiplist_pmem_tx_update
+                skiplist_pmem_tx_update,
+                queue_dram_update,
+                queue_pmem_update,
+                queue_pmem_tx_update
         };
 
-        int (*func_call_insert[12])(const char *, void *) = {
+        int (*func_call_insert[15])(const char *, void *) = {
                 array_dram_insert,
                 array_pmem_insert,
                 array_pmem_tx_insert,
@@ -90,10 +102,13 @@ namespace ycsbc {
                 ht_pmem_tx_insert,
                 skiplist_dram_insert,
                 skiplist_pmem_insert,
-                skiplist_pmem_tx_insert
+                skiplist_pmem_tx_insert,
+                queue_dram_insert,
+                queue_pmem_insert,
+                queue_pmem_tx_insert
         };
 
-        void (*func_call_destroy[12])() = {
+        void (*func_call_destroy[15])() = {
                 array_dram_free,
                 array_pmem_free,
                 array_pmem_tx_free,
@@ -105,7 +120,10 @@ namespace ycsbc {
                 ht_pmem_tx_free,
                 skiplist_dram_free,
                 skiplist_pmem_free,
-                skiplist_pmem_tx_free
+                skiplist_pmem_tx_free,
+                queue_dram_free,
+                queue_pmem_free,
+                queue_pmem_tx_free
         };
 
     private:
@@ -140,6 +158,12 @@ namespace ycsbc {
             type_index = 10;
         } else if (strcmp(type, "skiplist-pmem-tx") == 0) {
             type_index = 11;
+        } else if (strcmp(type, "queue-dram") == 0) {
+            type_index = 12;
+        } else if (strcmp(type, "queue-pmem") == 0) {
+            type_index = 13;
+        } else if (strcmp(type, "queue-pmem-tx") == 0) {
+            type_index = 14;
         } else {
             return;
         }
