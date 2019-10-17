@@ -2,24 +2,331 @@
 // Created by Islam, Abdullah Al Raqibul on 10/15/19.
 //
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <libpmemobj.h>
+
+#include "../ex_common.h"
 #include "ht_pmem.h"
 
+/*  
+ * Data Structure Section
+ */
+
+/* size of the pmem object pool -- 1 GB */
+#define PM_HASHTABLE_POOL_SIZE ((size_t) (1 << 30))
+
+/* name of layout in the pool */
+#define LAYOUT_NAME "ht_layout"
+
+/* large prime number used as a hashing function coefficient */
+#define HASH_FUNC_COEFF_P 32212254719ULL
+
+/* initial number of buckets */
+#define INIT_BUCKETS_NUM 1000
+
+/* number of values in a bucket which trigger hashtable rebuild check */
+#define MIN_HASHSET_THRESHOLD 5
+
+/* number of values in a bucket which force hashtable rebuild */
+#define MAX_HASHSET_THRESHOLD 10
+
+/* default length for value */
+#define DEFAULT_VALUE_LEN 101
+
+/* types of allocations */
+enum types {
+	ROOT_TYPE,
+    ENTRY_TYPE,
+    BUCKETS_TYPE,
+
+    MAX_TYPES
+};
+
+/* declaration of data-structures */
+struct entry {
+	uint64_t key;
+	char value[DEFAULT_VALUE_LEN];
+
+	/* next entry list pointer */
+	PMEMoid next;
+};
+
+struct buckets {
+	/* number of buckets */
+	size_t nbuckets;
+
+	/* array of lists */
+	PMEMoid bucket[];
+};
+
+struct hashtable {
+	/* random number generator seed */
+	uint32_t seed;
+
+	/* hash function coefficients */
+	uint32_t hash_fun_coeff_a;	//hash_fun_a can not contain value '0'
+	uint32_t hash_fun_coeff_b;
+	uint64_t hash_fun_coeff_p;
+
+	/* number of values inserted */
+	uint64_t count;
+
+	/* buckets */
+	PMEMoid buckets;
+};
+
+/* Static Global Data */
+static PMEMobjpool *pop = NULL;
+static PMEMoid root_oid;
+static struct hashtable *root_p = NULL;
+
+/*
+ * ht_pmem_check -- checks if hashtable has been initialized
+ */
+int ht_pmem_check() {
+	if (root_p->buckets.off == 0) {
+        fprintf(stderr, "[%s]: FATAL: hashtable not initialized yet\n", __FUNCTION__);
+        assert(0);
+    }
+    return 1;
+}
+
+/*
+ * ht_pmem_print -- prints complete hashtable state
+ */
+void ht_pmem_print() {
+	ht_pmem_check();
+
+	PMEMoid buckets_oid = root_p->buckets;
+	struct buckets * buckets_p = ((struct buckets *) pmemobj_direct(buckets_oid));
+	PMEMoid entry_oid = OID_NULL;
+
+	printf("a: %d, b: %d, p: %lu\n", root_p->hash_fun_coeff_a, root_p->hash_fun_coeff_b, root_p->hash_fun_coeff_p);
+	printf("total entry count: %lu, buckets: %lu\n", root_p->count, buckets_p->nbuckets);
+
+	for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
+		if (buckets_p->bucket[i].off == 0) continue;
+
+		int num = 0;
+		printf("bucket #%lu:", i);
+		for (entry_oid = buckets_p->bucket[i]; entry_oid.off != 0; entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next) {
+			struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid);
+			printf(" <%lu, %s>", entry_p->key, entry_p->value);
+			num++;
+		}
+		printf(" (%d)\n", num);
+	}
+}
+
+/*
+ * hash_function -- the simplest hashing function,
+ * see https://en.wikipedia.org/wiki/Universal_hashing#Hashing_integers
+ */
+uint64_t hash_function(uint64_t value) {
+	uint32_t a = root_p->hash_fun_coeff_a;
+	uint32_t b = root_p->hash_fun_coeff_b;
+	uint64_t p = root_p->hash_fun_coeff_p;
+	size_t len = ((struct buckets *) pmemobj_direct(root_p->buckets))->nbuckets;
+
+	return ((value * a + b) % p) % len;
+}
+
+/*
+ * ht_pmem_reinit -- reinitialize the hashtable with a new number of buckets,
+ * not implemented yet
+ */
+int ht_pmem_reinit(size_t new_len) {
+	return 1;
+}
+
+/*
+ * ht_pmem_init -- hashtable initializer
+ */
 int ht_pmem_init(const char *path) {
+    if (file_exists(path) != 0) {
+        if ((pop = pmemobj_create(path, LAYOUT_NAME, PM_HASHTABLE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
+            fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());
+            exit(0);
+        }
+    } else {
+        if ((pop = pmemobj_open(path, LAYOUT_NAME)) == NULL) {
+            fprintf(stderr, "failed to open pool: %s\n", pmemobj_errormsg());
+            exit(0);
+        }
+    }
+
+	root_oid = pmemobj_root(pop, sizeof(struct hashtable));
+    root_p = (struct hashtable *) pmemobj_direct(root_oid);
+    if(root_p == NULL) {
+        printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
+        exit(0);
+    }
+
+    root_p->seed = (uint32_t)time(NULL);
+    do {
+        root_p->hash_fun_coeff_a = (uint32_t) rand();
+    } while(root_p->hash_fun_coeff_a == 0);
+
+    root_p->hash_fun_coeff_b = (uint32_t) rand();
+    root_p->hash_fun_coeff_p = HASH_FUNC_COEFF_P;
+
+    root_p->count = 0;
+
+    size_t len = INIT_BUCKETS_NUM;
+	size_t buckets_sz = sizeof(struct buckets) + len * sizeof(struct entry);
+
+    if(pmemobj_alloc(pop, &root_p->buckets, buckets_sz, BUCKETS_TYPE, NULL, NULL)) {
+        fprintf(stderr, "[%s]: FATAL: root allocation failed: %s\n", __func__, pmemobj_errormsg());
+		abort();
+    }
+    struct buckets *buckets_p = (struct buckets *) pmemobj_direct(root_p->buckets);
+    buckets_p->nbuckets = len;
+
+    // printf("~~~~~~~~~~~~~~~~~~\n");
+	// printf("proposed buckets_sz: %lu\n", buckets_sz);
+    // printf("actual buckets_sz 1: %lu\n", sizeof(root_p->buckets));
+    // printf("actual buckets_sz 2: %lu\n", sizeof(&root_p->buckets));
+    // printf("actual object size: %lu\n", sizeof(root_p->buckets));
+    // printf("sizeof len: %lu\n", sizeof(len));
+	// printf("~~~~~~~~~~~~~~~~~~\n");
+
+    //todo: do we really need to persist buckets_p???
+    pmemobj_persist(pop, buckets_p, sizeof(*buckets_p));
+    pmemobj_persist(pop, root_p, sizeof(*root_p));
+    ht_pmem_check();
+
     return 1;
 }
 
+/**
+ * ht_pmem_read -- read 'value' of 'key' and place it into '&result'
+ */
 int ht_pmem_read(const char *key, void *result) {
+    ht_pmem_check();
+
+	struct buckets *buckets_p = (struct buckets *) pmemobj_direct(root_p->buckets);
+	PMEMoid entry_oid = OID_NULL;
+
+	uint64_t uint64_key = strtoull(key, NULL, 0);
+	uint64_t hash_value = hash_function(uint64_key);
+
+	//iteration_count can be used to check the number of iteration needed to find the value of a single key
+	int iteration_count = 0;
+
+	for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next) {
+		if(((struct entry *) pmemobj_direct(entry_oid))->key == uint64_key) {
+			//key found! replace the value and return
+			struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid);
+			result = entry_p->value;
+		}
+		iteration_count += 1;
+	}
     return 1;
 }
 
+/**
+ * ht_pmem_update -- update 'value' of 'key' into the hashtable, will insert the 'value' if 'key' not exists
+ */
 int ht_pmem_update(const char *key, void *value) {
-    return 1;
+    return ht_pmem_insert(key, value);
 }
 
+/**
+ * ht_pmem_insert -- inserts 'value' into the hashtable,
+ * will update the 'value' if 'key' already exists
+ */
 int ht_pmem_insert(const char *key, void *value) {
+    printf("[%s]: key: %s, value: %s\n", __func__, key, (char *) value);
+    ht_pmem_check();
+
+	struct buckets *buckets_p = (struct buckets *) pmemobj_direct(root_p->buckets);
+	PMEMoid entry_oid = OID_NULL;
+
+	uint64_t uint64_key = strtoull(key, NULL, 0);
+	uint64_t hash_value = hash_function(uint64_key);
+
+    printf("hash value: %lu\n", hash_value);
+
+	//iteration_count can be used further to update the size of buckets with condition
+	int iteration_count = 0;
+
+	for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next) {
+        //todo: accessing location for 'key#6626839121507135375' and 'hash_value#1' is getting "Segmentation fault (core dumped)"
+        //do not know what happened in this memory location
+        if(((struct entry *) pmemobj_direct(entry_oid))->key == uint64_key) {
+            struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid);
+            // printf("in for loop \n");
+            // printf("entry_oid.off: %lu\n", entry_oid.off);
+            // printf("pointer acquired ...\n");
+            // printf("uint64_key: %lu\n", uint64_key);
+            // printf("(entry_p == NULL)->%d\n", entry_p == NULL);
+            // printf("entry_p->key: %lu\n", entry_p->key);
+		//if(entry_p->key == uint64_key) {
+            printf("key found ... going to update and return\n");
+			//key found! replace the value and safe to return
+			pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, sizeof((char *) value));
+			return 1;
+		}
+		iteration_count += 1;
+	}
+
+    printf("key not found ... going to insert and return\n");
+	//key not found! need to insert data into bucket[hash_value]
+    
+    //todo: allocate the new in-memory entry and then persist could be another option of doing this
+    //note: the following commented code is not working, will try with this way later
+    // struct entry *in_mem_entry_ptr = malloc(sizeof(struct entry));
+    // in_mem_entry_ptr->key = uint64_key;
+    // memcpy_persist(in_mem_entry_ptr->value, (char *) value, sizeof((char *) value));
+    // in_mem_entry_ptr->next = buckets_p->bucket[hash_value];
+    // pmemobj_zrealloc(pop, pmemobj_direct(buckets_p->bucket[hash_value]), sizeof(buckets_p->bucket[hash_value]) + sizeof(struct entry), BUCKETS_TYPE);
+    // buckets_p->bucket[hash_value] = in_mem_entry_ptr;
+
+    /* allocate the new entry to be inserted */
+	PMEMoid entry_oid_new;
+    if(pmemobj_alloc(pop, &entry_oid_new, sizeof(struct entry), ENTRY_TYPE, NULL, NULL)) {
+        fprintf(stderr, "[%s]: FATAL: new entry allocation failed: %s\n", __func__, pmemobj_errormsg());
+		abort();
+    }
+	struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid_new);
+	entry_p->key = uint64_key;
+	pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, sizeof((char *) value));
+	entry_p->next = buckets_p->bucket[hash_value];
+	buckets_p->bucket[hash_value] = entry_oid_new;
+    pmemobj_persist(pop, &buckets_p->bucket[hash_value], sizeof(buckets_p->bucket[hash_value]));
+
+	root_p->count += 1;
+    pmemobj_persist(pop, &root_p->count, sizeof(root_p->count));
+
+    //pmemobj_free((PMEMoid *)entry_p);
+    pmemobj_free(&entry_oid_new);
+
+	iteration_count += 1;
+	//todo: acording to the value of 'iteration_count', we can add custom logic to reinitialize the hash table with new bigger bucket size
+    
     return 1;
 }
 
+/**
+ * free_ht -- de-allocate hashbuckets of type (struct buckets)
+ */
+void free_ht() {
+    for (int i = 0; i < INIT_BUCKETS_NUM; i++) {
+        pmemobj_free(&((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
+    }
+    //pmemobj_free(root_p->buckets);
+    //root_p->buckets = OID_NULL;
+}
+
+/**
+ * ht_pmem_free -- destructor
+ */
 void ht_pmem_free() {
-    //
+    free_ht();
+	root_oid = OID_NULL;
+    pmemobj_close(pop);
 }
