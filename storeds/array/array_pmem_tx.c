@@ -94,11 +94,7 @@ int array_pmem_tx_init(const char *path){
         //note: why not the following one?
         //pmemobj_tx_add_range_direct(pmemobj_direct(root_p->array), sizeof(struct array_elm) * pmem_array_size);
 
-        PMEMoid array = pmemobj_tx_alloc(sizeof(struct array_elm) * pmem_array_size, ARRAY_TYPE);
-        printf("array is ready\n");
-        
-        root_p->array = array;
-        pmemobj_tx_free(array);
+        root_p->array = pmemobj_tx_zalloc(sizeof(struct array_elm) * pmem_array_size, ARRAY_TYPE);
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -140,8 +136,9 @@ int array_pmem_tx_update(const char *key, void *value){
         struct array_elm *array_elm_ptr = (struct array_elm *) pmemobj_direct(array_elm_oid);
         strcpy(array_elm_ptr->value, (const char *) value);
 
-        pmemobj_tx_add_range(root_p->array, 0, sizeof(struct array_root));
+        pmemobj_tx_add_range(root_p->array, 0, sizeof(root_p->array));
         ((PMEMoid *) pmemobj_direct(root_p->array))[offset] = array_elm_oid;
+        pmemobj_tx_free(array_elm_oid);
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -165,8 +162,9 @@ int array_pmem_tx_insert(const char *key, void *value){
         strcpy(array_elm_ptr->value, (const char *) value);
         
         //note: how to add transaction_add_range on array[offset] element?
-        pmemobj_tx_add_range(root_p->array, 0, sizeof(struct array_root));
+        pmemobj_tx_add_range(root_p->array, 0, sizeof(root_p->array));
         ((PMEMoid *) pmemobj_direct(root_p->array))[offset] = array_elm_oid;
+        pmemobj_tx_free(array_elm_oid);
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -177,26 +175,19 @@ int array_pmem_tx_insert(const char *key, void *value){
 }
 
 /**
- * free_toid_tx -- de-allocate array of TOID(struct array_elm) type
+ * array_pmem_tx_free -- destructor
  */
-void free_toid_tx() {
+void array_pmem_tx_free() {
+    pmem_tx_array_check();
     TX_BEGIN(pop) {
-        pmemobj_tx_add_range(root_oid, 0, sizeof(struct array_root));
-        for (int i = 0; i < pmem_array_size; i++) {
-            pmemobj_tx_free(((PMEMoid *) pmemobj_direct(root_p->array))[i]);
-        }
+        pmemobj_tx_add_range(root_oid, 0, sizeof(root_oid));
+        pmemobj_tx_free(root_p->array);
         root_p->array = OID_NULL;
+        pmemobj_tx_free(root_oid);
+        root_oid = OID_NULL;
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
 	} TX_END
-}
-
-/**
- * array_pmem_tx_free -- destructor
- */
-void array_pmem_tx_free() {
-    free_toid_tx();
-    root_oid = OID_NULL;
     pmemobj_close(pop);
 }
