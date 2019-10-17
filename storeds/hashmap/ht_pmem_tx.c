@@ -290,27 +290,31 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 }
 
 /**
- * free_ht_tx -- de-allocate hashbuckets of type (struct buckets)
+ * ht_pmem_tx_free -- destructor
  */
-void free_ht_tx() {
+void ht_pmem_tx_free() {
     TX_BEGIN(pop) {
-        pmemobj_tx_add_range(root_p->buckets, 0, sizeof(root_p->buckets));
-        for (int i = 0; i < INIT_BUCKETS_NUM; i++) {
-            pmemobj_tx_free(((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
+        pmemobj_tx_add_range(root_oid, 0, sizeof(root_oid));
+        PMEMoid buckets_oid = root_p->buckets;
+        struct buckets *buckets_p = ((struct buckets *) pmemobj_direct(buckets_oid));
+        PMEMoid entry_oid = OID_NULL;
+
+        for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
+            //pmemobj_tx_free(((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
+            for (entry_oid = buckets_p->bucket[i]; entry_oid.off != 0; ) {
+                PMEMoid current_entry_oid = entry_oid;
+                entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next;
+
+                pmemobj_tx_free(current_entry_oid);
+            }
         }
-		//pmemobj_tx_free(root_p->buckets);
-        //root_p->buckets = OID_NULL;
+		pmemobj_tx_free(root_p->buckets);
+        root_p->buckets = OID_NULL;
+		pmemobj_tx_free(root_oid);
+		root_oid = OID_NULL;
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
 	} TX_END
-}
-
-/**
- * ht_pmem_tx_free -- destructor
- */
-void ht_pmem_tx_free() {
-    free_ht_tx();
-	root_oid = OID_NULL;
     pmemobj_close(pop);
 }
