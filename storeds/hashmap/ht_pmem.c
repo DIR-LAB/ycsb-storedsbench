@@ -312,21 +312,25 @@ int ht_pmem_insert(const char *key, void *value) {
 }
 
 /**
- * free_ht -- de-allocate hashbuckets of type (struct buckets)
- */
-void free_ht() {
-    for (int i = 0; i < INIT_BUCKETS_NUM; i++) {
-        pmemobj_free(&((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
-    }
-    //pmemobj_free(root_p->buckets);
-    //root_p->buckets = OID_NULL;
-}
-
-/**
  * ht_pmem_free -- destructor
  */
 void ht_pmem_free() {
-    free_ht();
-	root_oid = OID_NULL;
+    ht_pmem_check();
+    PMEMoid buckets_oid = root_p->buckets;
+    struct buckets *buckets_p = ((struct buckets *) pmemobj_direct(buckets_oid));
+    PMEMoid entry_oid = OID_NULL;
+
+    for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
+        for (entry_oid = buckets_p->bucket[i]; entry_oid.off != 0; ) {
+            PMEMoid current_entry_oid = entry_oid;
+            entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next;
+
+            pmemobj_free(&current_entry_oid);
+        }
+    }
+    pmemobj_free(&root_p->buckets);
+    root_p->buckets = OID_NULL;
+    pmemobj_free(&root_oid);
+    root_oid = OID_NULL;
     pmemobj_close(pop);
 }
