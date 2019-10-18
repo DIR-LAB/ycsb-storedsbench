@@ -86,8 +86,9 @@ int array_pmem_init(const char *path){
         printf("FATAL: The Root Object Not Initalized Yet, Exit!\n");
         exit(0);
     }
-    pmemobj_alloc(pop, &root_p->array, sizeof(struct array_elm) * pmem_array_size, ARRAY_TYPE, NULL, NULL);
-    pmemobj_persist(pop, root_p, sizeof(*root_p));
+    size_t array_size = sizeof(struct array_elm) * pmem_array_size;
+    pmemobj_alloc(pop, &root_p->array, array_size, ARRAY_TYPE, NULL, NULL);
+    pmemobj_persist(pop, root_p, sizeof(struct array_root));
 
     pmem_array_check();
     return 1;
@@ -102,10 +103,9 @@ int array_pmem_read(const char *key, void *result){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    //@ddai: this might not work. need to fix similar issues.
-    const char *counter = ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value;
+    struct array_elm *array_elm_p = ((struct array_elm *) pmemobj_direct(root_p->array)) + offset;
     //@ddai: the way you return &counter will not work.
-    result = &counter;
+    result = array_elm_p->value;
 
     return 1;
 }
@@ -119,14 +119,9 @@ int array_pmem_update(const char *key, void *value){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    PMEMoid array_elm_oid = OID_NULL;
-    pmemobj_zalloc(pop, &array_elm_oid, sizeof(struct array_elm), ARRAY_ELEMENT_TYPE);
-    struct array_elm *array_elm_ptr = (struct array_elm *) pmemobj_direct(array_elm_oid);
-    strcpy(array_elm_ptr->value, (const char *) value);
-    ((PMEMoid *) pmemobj_direct(root_p->array))[offset] = array_elm_oid;
-    
-    pmemobj_persist(pop, &(((PMEMoid *) pmemobj_direct(root_p->array))[offset]), sizeof(struct array_elm));
-    pmemobj_free(&array_elm_oid);
+    struct array_elm *array_elm_p = ((struct array_elm *) pmemobj_direct(root_p->array)) + offset;
+    strcpy(array_elm_p->value, (const char *) value);
+    pmemobj_persist(pop, array_elm_p, sizeof(struct array_elm));
 
     return 1;
 }
@@ -141,21 +136,9 @@ int array_pmem_insert(const char *key, void *value){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    //todo: need to check later, why the following approach not working?
-    /*PMEMoid * array_p = (PMEMoid *) pmemobj_direct(root_p->array);
-    struct array_elm * array_elm_ptr = (struct array_elm *) pmemobj_direct(array_p[offset]);
-    if(array_elm_ptr->value == NULL) array_elm_ptr->value = malloc(sizeof(value));
-    pmemobj_memcpy_persist(pop, array_elm_ptr->value, (const char *) value, sizeof(value));
-    pmemobj_persist(pop, array_elm_ptr, sizeof(array_elm_ptr));*/
-
-    PMEMoid array_elm_oid = OID_NULL;
-    pmemobj_zalloc(pop, &array_elm_oid, sizeof(struct array_elm), ARRAY_ELEMENT_TYPE);
-    struct array_elm *array_elm_ptr = (struct array_elm *) pmemobj_direct(array_elm_oid);
-    strcpy(array_elm_ptr->value, (const char *) value);
-    ((PMEMoid *) pmemobj_direct(root_p->array))[offset] = array_elm_oid;
-    
-    pmemobj_persist(pop, &(((PMEMoid *) pmemobj_direct(root_p->array))[offset]), sizeof(struct array_elm));
-    pmemobj_free(&array_elm_oid);
+    struct array_elm *array_elm_p = ((struct array_elm *) pmemobj_direct(root_p->array)) + offset;
+    strcpy(array_elm_p->value, (const char *) value);
+    pmemobj_persist(pop, array_elm_p, sizeof(struct array_elm));
 
     return 1;
 }
