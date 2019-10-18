@@ -114,7 +114,7 @@ int array_pmem_tx_read(const char *key, void *result){
     int offset = (int) (uint64_key % pmem_array_size);
 
     //const char *counter = ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value;
-    struct array_elm *ptr = (struct array_elm *) (pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
+    struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
     result = ptr->value;
 
     return 1;
@@ -134,7 +134,7 @@ int array_pmem_tx_update(const char *key, void *value){
         //pmemobj_tx_add_range((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset], 0, sizeof(struct array_elm));
         //strcpy(((struct array_elm *) pmemobj_direct((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value, (const char *) value);
         PMEMoid p_ptr = root_p->array;
-        p_ptr.off = pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm);
+        p_ptr.off = (uint64_t) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
         pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
 
         struct array_elm *ptr = (struct array_elm *) p_ptr.off;
@@ -159,7 +159,7 @@ int array_pmem_tx_insert(const char *key, void *value){
 
     TX_BEGIN(pop) {
         PMEMoid p_ptr = root_p->array;
-        p_ptr.off = pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm);
+        p_ptr.off = (uint64_t) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
         pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
 
         struct array_elm *ptr = (struct array_elm *) p_ptr.off;
