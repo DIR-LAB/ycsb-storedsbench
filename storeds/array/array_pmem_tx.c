@@ -89,12 +89,13 @@ int array_pmem_tx_init(const char *path){
     
     TX_BEGIN(pop) {
         //todo: should we need to add TX_ADD here?
-        pmemobj_tx_add_range(root_oid, 0, sizeof(struct array_root));
+        pmemobj_tx_add_range(root_p->array, 0, sizeof(PMEMoid));
         
         //note: why not the following one?
         //pmemobj_tx_add_range_direct(pmemobj_direct(root_p->array), sizeof(struct array_elm) * pmem_array_size);
 
         root_p->array = pmemobj_tx_zalloc(sizeof(struct array_elm) * pmem_array_size, ARRAY_TYPE);
+        pmemobj_persist(pop, &root_p->array, sizeof(PMEMoid));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -112,8 +113,9 @@ int array_pmem_tx_read(const char *key, void *result){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    const char *counter = ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value;
-    result = &counter;
+    //const char *counter = ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value;
+    struct array_elm *ptr = (struct array_elm *) (pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
+    result = ptr->value;
 
     return 1;
 }
@@ -131,14 +133,13 @@ int array_pmem_tx_update(const char *key, void *value){
         //todo: this would be another way of update/insert. should check it later
         //pmemobj_tx_add_range((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset], 0, sizeof(struct array_elm));
         //strcpy(((struct array_elm *) pmemobj_direct((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value, (const char *) value);
+        PMEMoid p_ptr = root_p->array;
+        p_ptr.off = pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm);
+        pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
 
-        PMEMoid array_elm_oid = pmemobj_tx_alloc(sizeof(struct array_elm), ARRAY_ELEMENT_TYPE);
-        struct array_elm *array_elm_ptr = (struct array_elm *) pmemobj_direct(array_elm_oid);
-        strcpy(array_elm_ptr->value, (const char *) value);
-
-        pmemobj_tx_add_range(root_p->array, 0, sizeof(root_p->array));
-        ((PMEMoid *) pmemobj_direct(root_p->array))[offset] = array_elm_oid;
-        pmemobj_tx_free(array_elm_oid);
+        struct array_elm *ptr = (struct array_elm *) p_ptr.off;
+        strcpy(ptr->value, (const char *) value);
+        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -157,15 +158,13 @@ int array_pmem_tx_insert(const char *key, void *value){
     int offset = (int) (uint64_key % pmem_array_size);
 
     TX_BEGIN(pop) {
-        //@ddai: no need for extra memory allocation; add_range issue; and forget persist. Please fix similar issues.
-        PMEMoid array_elm_oid = pmemobj_tx_alloc(sizeof(struct array_elm), ARRAY_ELEMENT_TYPE);
-        struct array_elm *array_elm_ptr = (struct array_elm *) pmemobj_direct(array_elm_oid);
-        strcpy(array_elm_ptr->value, (const char *) value);
-        
-        //note: how to add transaction_add_range on array[offset] element?
-        pmemobj_tx_add_range(root_p->array, 0, sizeof(root_p->array));
-        ((PMEMoid *) pmemobj_direct(root_p->array))[offset] = array_elm_oid;
-        pmemobj_tx_free(array_elm_oid);
+        PMEMoid p_ptr = root_p->array;
+        p_ptr.off = pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm);
+        pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
+
+        struct array_elm *ptr = (struct array_elm *) p_ptr.off;
+        strcpy(ptr->value, (const char *) value);
+        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();

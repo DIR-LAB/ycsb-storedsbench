@@ -103,9 +103,8 @@ int array_pmem_read(const char *key, void *result){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    struct array_elm *array_elm_p = ((struct array_elm *) pmemobj_direct(root_p->array)) + offset;
-    //@ddai: the way you return &counter will not work.
-    result = array_elm_p->value;
+    struct array_elm *ptr = (struct array_elm *) (pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
+    result = ptr->value;
 
     return 1;
 }
@@ -119,9 +118,9 @@ int array_pmem_update(const char *key, void *value){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    struct array_elm *array_elm_p = ((struct array_elm *) pmemobj_direct(root_p->array)) + offset;
-    strcpy(array_elm_p->value, (const char *) value);
-    pmemobj_persist(pop, array_elm_p, sizeof(struct array_elm));
+    struct array_elm *ptr = (struct array_elm *) (pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
+    strcpy(ptr->value, (const char *) value);
+    pmemobj_persist(pop, ptr, sizeof(struct array_elm));
 
     return 1;
 }
@@ -136,9 +135,9 @@ int array_pmem_insert(const char *key, void *value){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    struct array_elm *array_elm_p = ((struct array_elm *) pmemobj_direct(root_p->array)) + offset;
-    strcpy(array_elm_p->value, (const char *) value);
-    pmemobj_persist(pop, array_elm_p, sizeof(struct array_elm));
+    struct array_elm *ptr = (struct array_elm *) (pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm);
+    strcpy(ptr->value, (const char *) value);
+    pmemobj_persist(pop, ptr, sizeof(struct array_elm));
 
     return 1;
 }
