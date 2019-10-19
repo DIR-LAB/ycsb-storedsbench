@@ -88,8 +88,7 @@ int array_pmem_tx_init(const char *path){
     }
     
     TX_BEGIN(pop) {
-        //todo: should we need to add TX_ADD here?
-        pmemobj_tx_add_range(root_p->array, 0, sizeof(PMEMoid));
+        pmemobj_tx_add_range(root_oid, 0, sizeof(struct array_root));
         
         //note: why not the following one?
         //pmemobj_tx_add_range_direct(pmemobj_direct(root_p->array), sizeof(struct array_elm) * pmem_array_size);
