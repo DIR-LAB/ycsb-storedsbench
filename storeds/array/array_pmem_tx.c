@@ -132,13 +132,18 @@ int array_pmem_tx_update(const char *key, void *value){
         //todo: this would be another way of update/insert. should check it later
         //pmemobj_tx_add_range((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset], 0, sizeof(struct array_elm));
         //strcpy(((struct array_elm *) pmemobj_direct((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value, (const char *) value);
-        PMEMoid p_ptr = root_p->array;
+        /*PMEMoid p_ptr = root_p->array;
         p_ptr.off = (uint64_t) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
         pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
 
         struct array_elm *ptr = (struct array_elm *) p_ptr.off;
         strcpy(ptr->value, (const char *) value);
-        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));
+        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));*/
+
+        struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
+        pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_elm));
+        strcpy(ptr->value, (const char *) value);
+        pmemobj_persist(pop, ptr, sizeof(struct array_elm));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -157,13 +162,18 @@ int array_pmem_tx_insert(const char *key, void *value){
     int offset = (int) (uint64_key % pmem_array_size);
 
     TX_BEGIN(pop) {
-        PMEMoid p_ptr = root_p->array;
+        /*PMEMoid p_ptr = root_p->array;
         p_ptr.off = (uint64_t) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
         pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
 
         struct array_elm *ptr = (struct array_elm *) p_ptr.off;
         strcpy(ptr->value, (const char *) value);
-        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));
+        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));*/
+
+        struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
+        pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_elm));
+        strcpy(ptr->value, (const char *) value);
+        pmemobj_persist(pop, ptr, sizeof(struct array_elm));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
