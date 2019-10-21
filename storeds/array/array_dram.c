@@ -27,7 +27,7 @@ int check(){
 }
 
 int array_dram_init(const char *path) {
-    array = (char (*)[default_value_len]) malloc(size * sizeof(*array));
+    array = (char (*)[default_value_len]) malloc(size * default_value_len);
     if (array == NULL) {
         fprintf(stderr, "malloc failed\n");
         return (-1);

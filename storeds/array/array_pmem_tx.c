@@ -190,7 +190,7 @@ int array_pmem_tx_insert(const char *key, void *value){
 void array_pmem_tx_free() {
     pmem_tx_array_check();
     TX_BEGIN(pop) {
-        pmemobj_tx_add_range(root_oid, 0, sizeof(root_oid));
+        pmemobj_tx_add_range(root_oid, 0, sizeof(struct array_root));
         pmemobj_tx_free(root_p->array);
         root_p->array = OID_NULL;
         pmemobj_tx_free(root_oid);
