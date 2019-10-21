@@ -104,7 +104,7 @@ int linkedlist_pmem_update(const char *key, void *value) {
 
     while (current_node != NULL) {
         if (current_node->key == uint64_key) {
-            pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, sizeof(value));
+            pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, strlen((char *) value));
             break;
         }
         current_node = (struct node *) pmemobj_direct(current_node->next);
@@ -129,8 +129,8 @@ int linkedlist_pmem_insert(const char *key, void *value) {
         //printf("here i come 3\n");
         root_p->head = new_node_oid;
         root_p->tail = new_node_oid;
-        pmemobj_persist(pop, &root_p->head, sizeof(root_p->head));
-        pmemobj_persist(pop, &root_p->tail, sizeof(root_p->tail));
+        pmemobj_persist(pop, &root_p->head, sizeof(struct node));
+        pmemobj_persist(pop, &root_p->tail, sizeof(struct node));
         /*pmemobj_alloc(pop, &root_p->head, sizeof(struct node), NODE_TYPE, NULL, NULL);
         pmemobj_memcpy_persist(pop, pmemobj_direct(root_p->head), in_memory_node_ptr, sizeof(struct node));
 
@@ -139,7 +139,7 @@ int linkedlist_pmem_insert(const char *key, void *value) {
     else {
         ((struct node *) pmemobj_direct(root_p->tail))->next = new_node_oid;
         root_p->tail = ((struct node *) pmemobj_direct(root_p->tail))->next;
-        pmemobj_persist(pop, &root_p->tail, sizeof(root_p->tail));
+        pmemobj_persist(pop, &root_p->tail, sizeof(struct node));
         /*PMEMoid tail_next = ((struct node *) pmemobj_direct(root_p->tail))->next;
         pmemobj_alloc(pop, &tail_next, sizeof(struct node), NODE_TYPE, NULL, NULL);
         pmemobj_memcpy_persist(pop, pmemobj_direct(tail_next), in_memory_node_ptr, sizeof(struct node));

@@ -102,7 +102,7 @@ int linkedlist_pmem_tx_update(const char *key, void *value) {
         if (current_node->key == uint64_key) {
             TX_BEGIN(pop) {
                 pmemobj_tx_add_range_direct(current_node, sizeof(struct node));
-                pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, sizeof(value));
+                pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, strlen((char *) value));
             } TX_ONABORT {
 				fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 				abort();
@@ -149,7 +149,7 @@ void linkedlist_pmem_tx_free() {
     PMEMoid current_node;
 
     TX_BEGIN(pop) {
-        pmemobj_tx_add_range(root_oid, 0, sizeof(root_oid));
+        pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_root));
         while (root_p->head.off != 0) {
             current_node = root_p->head;
             root_p->head = ((struct node *) pmemobj_direct(root_p->head))->next;
