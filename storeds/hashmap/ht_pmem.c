@@ -179,24 +179,14 @@ int ht_pmem_init(const char *path) {
     size_t len = INIT_BUCKETS_NUM;
 	size_t buckets_sz = sizeof(struct buckets) + len * sizeof(struct entry);
 
-    if(pmemobj_alloc(pop, &root_p->buckets, buckets_sz, BUCKETS_TYPE, NULL, NULL)) {
+    if(pmemobj_zalloc(pop, &root_p->buckets, buckets_sz, BUCKETS_TYPE)) {
         fprintf(stderr, "[%s]: FATAL: root allocation failed: %s\n", __func__, pmemobj_errormsg());
 		abort();
     }
     struct buckets *buckets_p = (struct buckets *) pmemobj_direct(root_p->buckets);
     buckets_p->nbuckets = len;
 
-    // printf("~~~~~~~~~~~~~~~~~~\n");
-	// printf("proposed buckets_sz: %lu\n", buckets_sz);
-    // printf("actual buckets_sz 1: %lu\n", sizeof(root_p->buckets));
-    // printf("actual buckets_sz 2: %lu\n", sizeof(&root_p->buckets));
-    // printf("actual object size: %lu\n", sizeof(root_p->buckets));
-    // printf("sizeof len: %lu\n", sizeof(len));
-	// printf("~~~~~~~~~~~~~~~~~~\n");
-
-    //todo: do we really need to persist buckets_p???
-    pmemobj_persist(pop, buckets_p, sizeof(*buckets_p));
-    pmemobj_persist(pop, root_p, sizeof(*root_p));
+    pmemobj_persist(pop, root_p, sizeof(struct hashtable));
     ht_pmem_check();
 
     return 1;
@@ -240,7 +230,7 @@ int ht_pmem_update(const char *key, void *value) {
  * will update the 'value' if 'key' already exists
  */
 int ht_pmem_insert(const char *key, void *value) {
-    printf("[%s]: key: %s, value: %s\n", __func__, key, (char *) value);
+    //printf("[%s]: key: %s, value: %s\n", __func__, key, (char *) value);
     ht_pmem_check();
 
 	struct buckets *buckets_p = (struct buckets *) pmemobj_direct(root_p->buckets);
@@ -249,61 +239,34 @@ int ht_pmem_insert(const char *key, void *value) {
 	uint64_t uint64_key = strtoull(key, NULL, 0);
 	uint64_t hash_value = hash_function(uint64_key);
 
-    printf("hash value: %lu\n", hash_value);
-
-	//iteration_count can be used further to update the size of buckets with condition
+    //iteration_count can be used further to update the size of buckets with condition
 	int iteration_count = 0;
 
 	for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next) {
-        //todo: accessing location for 'key#6626839121507135375' and 'hash_value#1' is getting "Segmentation fault (core dumped)"
-        //do not know what happened in this memory location
         if(((struct entry *) pmemobj_direct(entry_oid))->key == uint64_key) {
             struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid);
-            // printf("in for loop \n");
-            // printf("entry_oid.off: %lu\n", entry_oid.off);
-            // printf("pointer acquired ...\n");
-            // printf("uint64_key: %lu\n", uint64_key);
-            // printf("(entry_p == NULL)->%d\n", entry_p == NULL);
-            // printf("entry_p->key: %lu\n", entry_p->key);
-		//if(entry_p->key == uint64_key) {
-            printf("key found ... going to update and return\n");
-			//key found! replace the value and safe to return
-			pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, sizeof((char *) value));
+            pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value));
 			return 1;
 		}
 		iteration_count += 1;
 	}
 
-    printf("key not found ... going to insert and return\n");
-	//key not found! need to insert data into bucket[hash_value]
-    
-    //todo: allocate the new in-memory entry and then persist could be another option of doing this
-    //note: the following commented code is not working, will try with this way later
-    // struct entry *in_mem_entry_ptr = malloc(sizeof(struct entry));
-    // in_mem_entry_ptr->key = uint64_key;
-    // memcpy_persist(in_mem_entry_ptr->value, (char *) value, sizeof((char *) value));
-    // in_mem_entry_ptr->next = buckets_p->bucket[hash_value];
-    // pmemobj_zrealloc(pop, pmemobj_direct(buckets_p->bucket[hash_value]), sizeof(buckets_p->bucket[hash_value]) + sizeof(struct entry), BUCKETS_TYPE);
-    // buckets_p->bucket[hash_value] = in_mem_entry_ptr;
-
+    //key not found! need to insert data into bucket[hash_value]
     /* allocate the new entry to be inserted */
-	PMEMoid entry_oid_new;
-    if(pmemobj_alloc(pop, &entry_oid_new, sizeof(struct entry), ENTRY_TYPE, NULL, NULL)) {
+	PMEMoid new_entry_oid;
+    if(pmemobj_zalloc(pop, &new_entry_oid, sizeof(struct entry), ENTRY_TYPE)) {
         fprintf(stderr, "[%s]: FATAL: new entry allocation failed: %s\n", __func__, pmemobj_errormsg());
 		abort();
     }
-	struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid_new);
-	entry_p->key = uint64_key;
-	pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, sizeof((char *) value));
-	entry_p->next = buckets_p->bucket[hash_value];
-	buckets_p->bucket[hash_value] = entry_oid_new;
-    pmemobj_persist(pop, &buckets_p->bucket[hash_value], sizeof(buckets_p->bucket[hash_value]));
+	struct entry *new_entry_p = (struct entry *) pmemobj_direct(new_entry_oid);
+	new_entry_p->key = uint64_key;
+	pmemobj_memcpy_persist(pop, new_entry_p->value, (char *) value, strlen((char *) value));
+	new_entry_p->next = buckets_p->bucket[hash_value];
+	buckets_p->bucket[hash_value] = new_entry_oid;
+    pmemobj_persist(pop, &(buckets_p->bucket[hash_value]), sizeof(struct entry));
 
 	root_p->count += 1;
-    pmemobj_persist(pop, &root_p->count, sizeof(root_p->count));
-
-    //pmemobj_free((PMEMoid *)entry_p);
-    pmemobj_free(&entry_oid_new);
+    pmemobj_persist(pop, &root_p->count, sizeof(uint64_t));
 
 	iteration_count += 1;
 	//todo: acording to the value of 'iteration_count', we can add custom logic to reinitialize the hash table with new bigger bucket size
