@@ -249,7 +249,7 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 			struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid);
 			TX_BEGIN(pop) {
 				pmemobj_tx_add_range_direct(entry_p, sizeof(struct entry));
-				pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, sizeof((char *) value));
+				pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value));
 			} TX_ONABORT {
 				fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 				abort();
@@ -261,19 +261,14 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 	}
 
 	//key not found! need to insert data into bucket[hash_value]
-	//struct entry *tx_range_p = (struct entry *) pmemobj_direct(buckets_p->bucket[hash_value]);
 	TX_BEGIN(pop) {
-		//todo: need to find the proper pmemobj_tx_add_range
-		//pmemobj_tx_add_range_direct((struct entry *) pmemobj_direct(buckets_p->bucket[hash_value]), sizeof(struct entry));
-		//pmemobj_tx_add_range_direct(tx_range_p, sizeof(struct entry *));
-		pmemobj_tx_add_range(root_p->buckets, 0, sizeof(root_p->buckets));
-		//pmemobj_tx_add_range(((PMEMoid *) pmemobj_direct(root_p->buckets))[hash_value], 0, sizeof(((PMEMoid *) pmemobj_direct(root_p->buckets))[hash_value]));
+		pmemobj_tx_add_range_direct(&(buckets_p->bucket[hash_value]), sizeof(struct entry));
 		pmemobj_tx_add_range_direct(&root_p->count, sizeof(uint64_t));
 
 		PMEMoid entry_oid_new = pmemobj_tx_alloc(sizeof(struct entry), ENTRY_TYPE);
 		struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid_new);
 		entry_p->key = uint64_key;
-		pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, sizeof((char *) value));
+		pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value));
 		entry_p->next = buckets_p->bucket[hash_value];
 		buckets_p->bucket[hash_value] = entry_oid_new;
 
@@ -294,7 +289,7 @@ int ht_pmem_tx_insert(const char *key, void *value) {
  */
 void ht_pmem_tx_free() {
     TX_BEGIN(pop) {
-        pmemobj_tx_add_range(root_oid, 0, sizeof(root_oid));
+        pmemobj_tx_add_range(root_oid, 0, sizeof(struct hashtable_tx));
         PMEMoid buckets_oid = root_p->buckets;
         struct buckets *buckets_p = ((struct buckets *) pmemobj_direct(buckets_oid));
         PMEMoid entry_oid = OID_NULL;
