@@ -96,11 +96,10 @@ int linkedlist_dram_insert(const char *key, void *value) {
 void linkedlist_dram_free() {
     struct node *current_node;
 
+    if(tail != NULL) free(tail);
     while (head != NULL) {
         current_node = head;
         head = head->next;
         free(current_node);
     }
-    free(head);
-    free(tail);
 }
