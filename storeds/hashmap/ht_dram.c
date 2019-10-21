@@ -177,7 +177,7 @@ int ht_dram_update(const char *key, void *value) {
 struct entry* ht_dram_new_entry(uint64_t key, const char* value) {
     struct entry *entry_p = (struct entry *) malloc(sizeof(struct entry));
     entry_p->key = key;
-    memcpy(entry_p->value, (char *) value, sizeof(value));
+    memcpy(entry_p->value, (char *) value, strlen((char *) value));
 	entry_p->next = (struct entry *) malloc(sizeof(struct entry));
     return entry_p;
 }
