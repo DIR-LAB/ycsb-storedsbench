@@ -94,7 +94,7 @@ int array_pmem_tx_init(const char *path){
         //pmemobj_tx_add_range_direct(pmemobj_direct(root_p->array), sizeof(struct array_elm) * pmem_array_size);
 
         root_p->array = pmemobj_tx_zalloc(sizeof(struct array_elm) * pmem_array_size, ARRAY_TYPE);
-        pmemobj_persist(pop, &root_p->array, sizeof(PMEMoid));
+        //pmemobj_persist(pop, &root_p->array, sizeof(PMEMoid));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -141,9 +141,10 @@ int array_pmem_tx_update(const char *key, void *value){
         pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));*/
 
         struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
-        pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_elm));
+        pmemobj_tx_add_range_direct(ptr, sizeof(struct array_elm));
+        //pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_elm));
         strcpy(ptr->value, (const char *) value);
-        pmemobj_persist(pop, ptr, sizeof(struct array_elm));
+        //pmemobj_persist(pop, ptr, sizeof(struct array_elm));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
@@ -171,9 +172,9 @@ int array_pmem_tx_insert(const char *key, void *value){
         pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));*/
 
         struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
-        pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_elm));
+        pmemobj_tx_add_range_direct(ptr, sizeof(struct array_elm));
         strcpy(ptr->value, (const char *) value);
-        pmemobj_persist(pop, ptr, sizeof(struct array_elm));
+        //pmemobj_persist(pop, ptr, sizeof(struct array_elm));
     } TX_ONABORT {
 		fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 		abort();
