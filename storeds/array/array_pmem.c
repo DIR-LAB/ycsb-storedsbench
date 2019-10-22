@@ -60,7 +60,8 @@ int pmem_array_check() {
  */
 void print_toid(struct array_info *info) {
 	for (int i = 0; i < pmem_array_size; i++) {
-        printf("array element [%d] -> %s\n", i, ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[i]))->value);
+        struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + i * sizeof(struct array_elm));
+        printf("array element [%d] -> %s\n", i, ptr->value);
     }
 }
 

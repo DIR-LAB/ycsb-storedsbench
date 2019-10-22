@@ -60,7 +60,8 @@ int pmem_tx_array_check(){
  */
 void print_toid_tx() {
 	for (int i = 0; i < pmem_array_size; i++) {
-        printf("array element [%d] -> %s\n", i, ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[i]))->value);
+        struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + i * sizeof(struct array_elm));
+        printf("array element [%d] -> %s\n", i, ptr->value);
     }
 }
 
@@ -112,7 +113,6 @@ int array_pmem_tx_read(const char *key, void *result){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
-    //const char *counter = ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value;
     struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
     result = ptr->value;
 
@@ -129,17 +129,6 @@ int array_pmem_tx_update(const char *key, void *value){
     int offset = (int) (uint64_key % pmem_array_size);
 
     TX_BEGIN(pop) {
-        //todo: this would be another way of update/insert. should check it later
-        //pmemobj_tx_add_range((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset], 0, sizeof(struct array_elm));
-        //strcpy(((struct array_elm *) pmemobj_direct((PMEMoid) ((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value, (const char *) value);
-        /*PMEMoid p_ptr = root_p->array;
-        p_ptr.off = (uint64_t) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
-        pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
-
-        struct array_elm *ptr = (struct array_elm *) p_ptr.off;
-        strcpy(ptr->value, (const char *) value);
-        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));*/
-
         struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
         pmemobj_tx_add_range_direct(ptr, sizeof(struct array_elm));
         //pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_elm));
@@ -163,14 +152,6 @@ int array_pmem_tx_insert(const char *key, void *value){
     int offset = (int) (uint64_key % pmem_array_size);
 
     TX_BEGIN(pop) {
-        /*PMEMoid p_ptr = root_p->array;
-        p_ptr.off = (uint64_t) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
-        pmemobj_tx_add_range(p_ptr, 0, sizeof(struct array_elm));
-
-        struct array_elm *ptr = (struct array_elm *) p_ptr.off;
-        strcpy(ptr->value, (const char *) value);
-        pmemobj_persist(pop, ptr->value, sizeof(struct array_elm));*/
-
         struct array_elm *ptr = (struct array_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_elm));
         pmemobj_tx_add_range_direct(ptr, sizeof(struct array_elm));
         strcpy(ptr->value, (const char *) value);
@@ -180,7 +161,6 @@ int array_pmem_tx_insert(const char *key, void *value){
 		abort();
 	} TX_END
 
-    //printf("-> %s\n", ((struct array_elm *) pmemobj_direct(((PMEMoid *) pmemobj_direct(root_p->array))[offset]))->value);
     return 1;
 }
 

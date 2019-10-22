@@ -295,7 +295,6 @@ void ht_pmem_tx_free() {
         PMEMoid entry_oid = OID_NULL;
 
         for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
-            //pmemobj_tx_free(((PMEMoid *) pmemobj_direct(root_p->buckets))[i]);
             for (entry_oid = buckets_p->bucket[i]; entry_oid.off != 0; ) {
                 PMEMoid current_entry_oid = entry_oid;
                 entry_oid = ((struct entry *) pmemobj_direct(entry_oid))->next;
