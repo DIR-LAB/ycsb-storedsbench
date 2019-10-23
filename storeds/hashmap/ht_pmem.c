@@ -260,7 +260,7 @@ int ht_pmem_insert(const char *key, void *value) {
     }
 	struct entry *new_entry_p = (struct entry *) pmemobj_direct(new_entry_oid);
 	new_entry_p->key = uint64_key;
-	pmemobj_memcpy_persist(pop, new_entry_p->value, (char *) value, strlen((char *) value));
+	memcpy(new_entry_p->value, (char *) value, strlen((char *) value));
 	new_entry_p->next = buckets_p->bucket[hash_value];
 	buckets_p->bucket[hash_value] = new_entry_oid;
     pmemobj_persist(pop, &(buckets_p->bucket[hash_value]), sizeof(struct entry));

@@ -249,7 +249,7 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 			struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid);
 			TX_BEGIN(pop) {
 				pmemobj_tx_add_range_direct(entry_p, sizeof(struct entry));
-				pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value));
+				memcpy(entry_p->value, (char *) value, strlen((char *) value));
 			} TX_ONABORT {
 				fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 				abort();
@@ -268,7 +268,7 @@ int ht_pmem_tx_insert(const char *key, void *value) {
 		PMEMoid entry_oid_new = pmemobj_tx_alloc(sizeof(struct entry), ENTRY_TYPE);
 		struct entry *entry_p = (struct entry *) pmemobj_direct(entry_oid_new);
 		entry_p->key = uint64_key;
-		pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value));
+		memcpy(entry_p->value, (char *) value, strlen((char *) value));
 		entry_p->next = buckets_p->bucket[hash_value];
 		buckets_p->bucket[hash_value] = entry_oid_new;
 
