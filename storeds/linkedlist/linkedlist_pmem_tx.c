@@ -102,7 +102,7 @@ int linkedlist_pmem_tx_update(const char *key, void *value) {
         if (current_node->key == uint64_key) {
             TX_BEGIN(pop) {
                 pmemobj_tx_add_range_direct(current_node, sizeof(struct node));
-                pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, strlen((char *) value));
+                memcpy(current_node->value, (const char *) value, strlen((char *) value));
             } TX_ONABORT {
 				fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 				abort();
@@ -115,18 +115,18 @@ int linkedlist_pmem_tx_update(const char *key, void *value) {
 }
 
 int linkedlist_pmem_tx_insert(const char *key, void *value) {
-    uint64_t uint64_key = strtoull(key, NULL, 0);
-    struct node *in_memory_node_ptr = (struct node *) malloc(sizeof(struct node));
-    in_memory_node_ptr->key = uint64_key;
-    strcpy(in_memory_node_ptr->value, (const char *) value);
-
-    PMEMoid new_node_oid;
-    pmemobj_zalloc(pop, &new_node_oid, sizeof(struct node), NODE_TYPE);
-    struct node *pmem_node_ptr = (struct node *) pmemobj_direct(new_node_oid);
-    pmemobj_memcpy_persist(pop, pmem_node_ptr, in_memory_node_ptr, sizeof(struct node));
-    free(in_memory_node_ptr);
-
     TX_BEGIN(pop) {
+        uint64_t uint64_key = strtoull(key, NULL, 0);
+        struct node *in_memory_node_ptr = (struct node *) malloc(sizeof(struct node));
+        in_memory_node_ptr->key = uint64_key;
+        strcpy(in_memory_node_ptr->value, (const char *) value);
+
+        PMEMoid new_node_oid;
+        pmemobj_zalloc(pop, &new_node_oid, sizeof(struct node), NODE_TYPE);
+        struct node *pmem_node_ptr = (struct node *) pmemobj_direct(new_node_oid);
+        memcpy(pmem_node_ptr, in_memory_node_ptr, sizeof(struct node));
+        free(in_memory_node_ptr);
+
         if(root_p->head.off == 0) {
             pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_root));
             root_p->head = new_node_oid;
