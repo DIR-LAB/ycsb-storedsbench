@@ -19,7 +19,7 @@
 #define DEFAULT_VALUE_LEN 101
 
 /* number of levels in skiplist */
-#define SKIPLIST_LEVELS_NUM 4
+#define SKIPLIST_LEVELS_NUM 16
 
 /* base level of skiplist */
 #define SKIPLIST_BASE_LEVEL 0
@@ -65,24 +65,36 @@ int skiplist_dram_init(const char *path) {
 }
 
 /**
+ * skiplist_dram_print -- (internal) level-wise print all the <key-value> pairs stored in skiplist
+ */
+void skiplist_dram_print() {
+    int current_level = SKIPLIST_LEVELS_NUM - 1;
+
+    while(current_level >= SKIPLIST_BASE_LEVEL) {
+        struct sk_node *current_node = head->next[current_level];
+        printf("level[%d]", current_level);
+        while(current_node != NULL) {
+            printf(" <%lu, %s> ->", current_node->entry.key, current_node->entry.value);
+            current_node = current_node->next[current_level];
+        }
+        printf("<END>\n");
+        current_level -= 1;
+    }
+}
+
+/**
  * skiplist_dram_find -- (internal) returns path to searched node
  * or if node doesn't exist, it will return path to place where key should be.
  */
 void skiplist_dram_find(uint64_t uint64_key, struct sk_node **path) {
     //printf("[%s] called in\n", __func__);
     struct sk_node *active_node = head;
-    //if(head == NULL) printf("head is null ...\n");
     for(int current_level = SKIPLIST_LEVELS_NUM - 1; current_level >= 0; current_level -= 1) {
-        //printf("current_level: %d\n", current_level);
         struct sk_node *current_node = active_node->next[current_level];
-        //if(current_node == NULL) printf("current_node is null ...\n");
-        //printf("before the while loop ...\n");
         while(current_node != NULL && current_node->entry.key < uint64_key) {
-            //printf("into the while loop\n");
             active_node = current_node;
             current_node = active_node->next[current_level];
         }
-        //if(active_node != NULL) printf("current_level[%d] => node <%lu, %s>\n", current_level, active_node->entry.key, active_node->entry.value);
         path[current_level] = active_node;
     }
 }
@@ -92,8 +104,7 @@ void skiplist_dram_find(uint64_t uint64_key, struct sk_node **path) {
  */
 int skiplist_dram_read(const char *key, void *result) {
     skiplist_dram_check();
-    printf("[%s]: PARAM: key: %s\n", __func__, key);
-    //todo: add checker method
+    //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
     uint64_t uint64_key = strtoull(key, NULL, 0);
     struct sk_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
@@ -102,6 +113,7 @@ int skiplist_dram_read(const char *key, void *result) {
     if(possible_found != NULL && possible_found->entry.key == uint64_key) {
         result = possible_found->entry.value;
     }
+    //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) result);
     return 1;
 }
 
@@ -111,7 +123,8 @@ int skiplist_dram_read(const char *key, void *result) {
  */
 int skiplist_dram_update(const char *key, void *value) {
     skiplist_dram_check();
-    printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+    //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
+
     skiplist_dram_insert(key, value);
     return 1;
 }
@@ -135,7 +148,7 @@ void skiplist_dram_insert_node(struct sk_node *new_node, struct sk_node *path[SK
  */
 int skiplist_dram_insert(const char *key, void *value) {
     skiplist_dram_check();
-    printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+    //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
     uint64_t uint64_key = strtoull(key, NULL, 0);
     struct sk_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
 
@@ -157,18 +170,23 @@ int skiplist_dram_insert(const char *key, void *value) {
 }
 
 /**
- * skiplist_dram_free -- dealocate memory of skiplist
+ * skiplist_dram_free -- deallocate memory of skiplist
  */
 void skiplist_dram_free() {
     skiplist_dram_check();
-    for(int i=0; i<SKIPLIST_LEVELS_NUM; i+=1) {
-        struct sk_node *current = head->next[i];
-        while(current != NULL) {
-            struct sk_node *tmp = current;
-            current = current->next[i];
+    int current_level = SKIPLIST_LEVELS_NUM - 1;
+    
+    while(current_level >= SKIPLIST_BASE_LEVEL) {
+        struct sk_node *current_node = head->next[current_level];
+        printf("level[%d]\n", current_level);
+        while(current_node != NULL) {
+            struct sk_node *tmp = current_node;
+            current_node = current_node->next[current_level];
             free(tmp);
+            tmp = NULL;
         }
-        free(head->next[i]);
+        current_level -= 1;
     }
     free(head);
+    head = NULL;
 }
