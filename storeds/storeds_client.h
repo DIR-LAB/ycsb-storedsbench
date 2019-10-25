@@ -12,6 +12,7 @@
 #include "array/array_dram.h"
 #include "array/array_pmem.h"
 #include "array/array_pmem_tx.h"
+#include "array/array_pmem_raw.h"
 #include "linkedlist/linkedlist_dram.h"
 #include "linkedlist/linkedlist_pmem.h"
 #include "linkedlist/linkedlist_pmem_tx.h"
@@ -36,7 +37,7 @@ namespace ycsbc {
         int Insert(const char *key, void *value);
         void Free();
 
-        int (*func_call_init[15])(const char *) = {
+        int (*func_call_init[16])(const char *) = {
                 array_dram_init,
                 array_pmem_init,
                 array_pmem_tx_init,
@@ -51,10 +52,11 @@ namespace ycsbc {
                 skiplist_pmem_tx_init,
                 rbtree_dram_init,
                 rbtree_pmem_init,
-                rbtree_pmem_tx_init
+                rbtree_pmem_tx_init,
+                array_pmem_raw_init
         };
 
-        int (*func_call_read[15])(const char *, void *) = {
+        int (*func_call_read[16])(const char *, void *) = {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
@@ -69,10 +71,11 @@ namespace ycsbc {
                 skiplist_pmem_tx_read,
                 rbtree_dram_read,
                 rbtree_pmem_read,
-                rbtree_pmem_tx_read
+                rbtree_pmem_tx_read,
+                array_pmem_raw_read
         };
 
-        int (*func_call_update[15])(const char *, void *) = {
+        int (*func_call_update[16])(const char *, void *) = {
                 array_dram_update,
                 array_pmem_update,
                 array_pmem_tx_update,
@@ -87,10 +90,11 @@ namespace ycsbc {
                 skiplist_pmem_tx_update,
                 rbtree_dram_update,
                 rbtree_pmem_update,
-                rbtree_pmem_tx_update
+                rbtree_pmem_tx_update,
+                array_pmem_raw_update
         };
 
-        int (*func_call_insert[15])(const char *, void *) = {
+        int (*func_call_insert[16])(const char *, void *) = {
                 array_dram_insert,
                 array_pmem_insert,
                 array_pmem_tx_insert,
@@ -105,10 +109,11 @@ namespace ycsbc {
                 skiplist_pmem_tx_insert,
                 rbtree_dram_insert,
                 rbtree_pmem_insert,
-                rbtree_pmem_tx_insert
+                rbtree_pmem_tx_insert,
+                array_pmem_raw_insert
         };
 
-        void (*func_call_destroy[15])() = {
+        void (*func_call_destroy[16])() = {
                 array_dram_free,
                 array_pmem_free,
                 array_pmem_tx_free,
@@ -123,7 +128,8 @@ namespace ycsbc {
                 skiplist_pmem_tx_free,
                 rbtree_dram_free,
                 rbtree_pmem_free,
-                rbtree_pmem_tx_free
+                rbtree_pmem_tx_free,
+                array_pmem_raw_free
         };
 
     private:
@@ -164,6 +170,8 @@ namespace ycsbc {
             type_index = 13;
         } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
             type_index = 14;
+        } else if (strcmp(type, "array-pmem-raw") == 0) {
+            type_index = 15;
         } else {
             return;
         }
