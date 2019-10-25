@@ -33,6 +33,16 @@ echo "[Benchmark] array-pmem-tx"
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/array.pmem -type array-pmem-tx -P workloads/workloadf.spec
 echo "*****************<>*****************"
 
+#array-pmem-raw
+echo "[Benchmark] array-pmem-raw"
+./ycsbc -db storeds -threads 1 -dbpath /pmem/array-raw.pmem -type array-pmem-raw -P workloads/workloada.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/array-raw.pmem -type array-pmem-raw -P workloads/workloadb.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/array-raw.pmem -type array-pmem-raw -P workloads/workloadc.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/array-raw.pmem -type array-pmem-raw -P workloads/workloadd.spec
+#./ycsbc -db storeds -threads 1 -dbpath /pmem/array-raw.pmem -type array-pmem-raw -P workloads/workloade.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/array-raw.pmem -type array-pmem-raw -P workloads/workloadf.spec
+echo "*****************<>*****************"
+
 #hashtable-dram
 echo "[Benchmark] hashtable-dram"
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/hashtable.pmem -type hashtable-dram -P workloads/workloada.spec
