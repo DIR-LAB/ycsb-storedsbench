@@ -21,9 +21,9 @@
 #include "skiplist/skiplist_dram.h"
 #include "skiplist/skiplist_pmem.h"
 #include "skiplist/skiplist_pmem_tx.h"
-#include "queue/queue_dram.h"
-#include "queue/queue_pmem.h"
-#include "queue/queue_pmem_tx.h"
+#include "rbtree/rbtree_dram.h"
+#include "rbtree/rbtree_pmem.h"
+#include "rbtree/rbtree_pmem_tx.h"
 
 namespace ycsbc {
 
@@ -49,9 +49,9 @@ namespace ycsbc {
                 skiplist_dram_init,
                 skiplist_pmem_init,
                 skiplist_pmem_tx_init,
-                queue_dram_init,
-                queue_pmem_init,
-                queue_pmem_tx_init
+                rbtree_dram_init,
+                rbtree_pmem_init,
+                rbtree_pmem_tx_init
         };
 
         int (*func_call_read[15])(const char *, void *) = {
@@ -67,9 +67,9 @@ namespace ycsbc {
                 skiplist_dram_read,
                 skiplist_pmem_read,
                 skiplist_pmem_tx_read,
-                queue_dram_read,
-                queue_pmem_read,
-                queue_pmem_tx_read
+                rbtree_dram_read,
+                rbtree_pmem_read,
+                rbtree_pmem_tx_read
         };
 
         int (*func_call_update[15])(const char *, void *) = {
@@ -85,9 +85,9 @@ namespace ycsbc {
                 skiplist_dram_update,
                 skiplist_pmem_update,
                 skiplist_pmem_tx_update,
-                queue_dram_update,
-                queue_pmem_update,
-                queue_pmem_tx_update
+                rbtree_dram_update,
+                rbtree_pmem_update,
+                rbtree_pmem_tx_update
         };
 
         int (*func_call_insert[15])(const char *, void *) = {
@@ -103,9 +103,9 @@ namespace ycsbc {
                 skiplist_dram_insert,
                 skiplist_pmem_insert,
                 skiplist_pmem_tx_insert,
-                queue_dram_insert,
-                queue_pmem_insert,
-                queue_pmem_tx_insert
+                rbtree_dram_insert,
+                rbtree_pmem_insert,
+                rbtree_pmem_tx_insert
         };
 
         void (*func_call_destroy[15])() = {
@@ -121,9 +121,9 @@ namespace ycsbc {
                 skiplist_dram_free,
                 skiplist_pmem_free,
                 skiplist_pmem_tx_free,
-                queue_dram_free,
-                queue_pmem_free,
-                queue_pmem_tx_free
+                rbtree_dram_free,
+                rbtree_pmem_free,
+                rbtree_pmem_tx_free
         };
 
     private:
@@ -158,11 +158,11 @@ namespace ycsbc {
             type_index = 10;
         } else if (strcmp(type, "skiplist-pmem-tx") == 0) {
             type_index = 11;
-        } else if (strcmp(type, "queue-dram") == 0) {
+        } else if (strcmp(type, "rbtree-dram") == 0) {
             type_index = 12;
-        } else if (strcmp(type, "queue-pmem") == 0) {
+        } else if (strcmp(type, "rbtree-pmem") == 0) {
             type_index = 13;
-        } else if (strcmp(type, "queue-pmem-tx") == 0) {
+        } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
             type_index = 14;
         } else {
             return;
