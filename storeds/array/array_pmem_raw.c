@@ -1,5 +1,5 @@
 /*
- * array-pmem.c
+ * array-pmem-raw.c
  */
 
 #include <math.h>
@@ -23,8 +23,8 @@
 
 /* Static Global Data */
 static char* pmemaddr;
+static size_t mapped_len;
 static int is_pmem;
-static int fd;
 
 const int pmem_array_size = 1024 * 1024;
 const int default_value_len = 101;
@@ -34,27 +34,14 @@ struct array_elm {
 };
 
 /**
- * array_pmem_init -- initialize the array
+ * array_pmem_raw_init -- initialize the array
  */
-int array_pmem_init(const char *path){
-    if ((fd = open(path, O_CREAT|O_RDWR, 0666)) < 0) {
-		perror("open");
+int array_pmem_raw_init(const char *path){
+    /* create a pmem file and memory map it */
+	if ((pmemaddr = (char *) pmem_map_file(path, PM_ARRAY_POOL_SIZE, PMEM_FILE_CREATE, 0666, &mapped_len, &is_pmem)) == NULL) {
+		perror("pmem_map_file");
 		exit(1);
 	}
-
-    /* allocate the pmem */
-	if ((errno = posix_fallocate(fd, 0, PM_ARRAY_POOL_SIZE)) != 0) {
-		perror("posix_fallocate");
-		exit(1);
-	}
-
-    /* memory map it */
-	if ((pmemaddr = pmem_map(fd)) == NULL) {
-		perror("pmem_map");
-		exit(1);
-	}
-
-    close(fd);
 
     /* determine if range is true pmem */
 	is_pmem = pmem_is_pmem(pmemaddr, PM_ARRAY_POOL_SIZE);
@@ -63,9 +50,9 @@ int array_pmem_init(const char *path){
 }
 
 /**
- * array_pmem_read -- read data from array[key] and set the result in result
+ * array_pmem_raw_read -- read data from array[key] and set the result in result
  */
-int array_pmem_read(const char *key, void *result){    
+int array_pmem_raw_read(const char *key, void *result){    
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
@@ -76,32 +63,32 @@ int array_pmem_read(const char *key, void *result){
 }
 
 /**
- * array_pmem_update -- update data to array[key] by value
+ * array_pmem_raw_update -- update data to array[key] by value
  */
-int array_pmem_update(const char *key, void *value){
+int array_pmem_raw_update(const char *key, void *value){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
     struct array_elm *ptr = (struct array_elm *) ((char *)pmemaddr + offset * sizeof(struct array_elm));
-    pmem_memcpy(ptr, (const char *) value, sizeof(struct array_elm));
+    pmem_memcpy_persist(ptr, (const char *) value, sizeof(struct array_elm));
     return 1;
 }
 
 /**
- * array_pmem_insert -- insert data value into array[key]
+ * array_pmem_raw_insert -- insert data value into array[key]
  */
-int array_pmem_insert(const char *key, void *value){
+int array_pmem_raw_insert(const char *key, void *value){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 
     struct array_elm *ptr = (struct array_elm *) ((char *)pmemaddr + offset * sizeof(struct array_elm));
-    pmem_memcpy(ptr, (const char *) value, sizeof(struct array_elm));
+    pmem_memcpy_persist(ptr, (const char *) value, sizeof(struct array_elm));
     return 1;
 }
 
 /**
- * array_pmem_free -- destructor
+ * array_pmem_raw_free -- destructor
  */
-void array_pmem_free() {
-    return;
+void array_pmem_raw_free() {
+    pmem_unmap(pmemaddr, mapped_len);
 }
