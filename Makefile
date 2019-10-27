@@ -4,7 +4,7 @@ LDFLAGS= -lpthread -ltbb -lpmemobj -lpmem
 SUBDIRS=core db
 SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc)
 OBJECTS=$(SUBSRCS:.cc=.o)
-STOREDSSRC=$(wildcard storeds/array/*.c) $(wildcard storeds/linkedlist/*.c) $(wildcard storeds/hashmap/*.c) $(wildcard storeds/skiplist/*.c) $(wildcard storeds/rbtree/*.c)
+STOREDSSRC=$(wildcard storeds/array/*.c) $(wildcard storeds/linkedlist/*.c) $(wildcard storeds/hashmap/*.c) $(wildcard storeds/skiplist/*.c) $(wildcard storeds/rbtree/*.c) $(wildcard storeds/btree/*.c)
 EXEC=ycsbc
 
 all: $(SUBDIRS) $(EXEC)
