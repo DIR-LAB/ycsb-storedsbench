@@ -1,0 +1,18 @@
+//
+// Created by aislam6 on 10/27/19.
+//
+
+#ifndef YCSB_STOREDSBENCH_BTREE_PMEM_H
+#define YCSB_STOREDSBENCH_BTREE_PMEM_H
+
+int btree_pmem_init(const char *path);
+
+int btree_pmem_read(const char *key, void *result);
+
+int btree_pmem_update(const char *key, void *value);
+
+int btree_pmem_insert(const char *key, void *value);
+
+void btree_pmem_free();
+
+#endif //YCSB_STOREDSBENCH_BTREE_PMEM_H
