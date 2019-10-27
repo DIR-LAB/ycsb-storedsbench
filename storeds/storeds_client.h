@@ -44,6 +44,7 @@ namespace ycsbc {
                 array_dram_init,
                 array_pmem_init,
                 array_pmem_tx_init,
+                array_pmem_raw_init,
                 linkedlist_dram_init,
                 linkedlist_pmem_init,
                 linkedlist_pmem_tx_init,
@@ -56,7 +57,6 @@ namespace ycsbc {
                 rbtree_dram_init,
                 rbtree_pmem_init,
                 rbtree_pmem_tx_init,
-                array_pmem_raw_init,
                 btree_dram_init,
                 btree_pmem_init,
                 btree_pmem_tx_init
@@ -66,6 +66,7 @@ namespace ycsbc {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
+                array_pmem_raw_read,
                 linkedlist_dram_read,
                 linkedlist_pmem_read,
                 linkedlist_pmem_tx_read,
@@ -78,7 +79,6 @@ namespace ycsbc {
                 rbtree_dram_read,
                 rbtree_pmem_read,
                 rbtree_pmem_tx_read,
-                array_pmem_raw_read,
                 btree_dram_read,
                 btree_pmem_read,
                 btree_pmem_tx_read
@@ -88,6 +88,7 @@ namespace ycsbc {
                 array_dram_update,
                 array_pmem_update,
                 array_pmem_tx_update,
+                array_pmem_raw_update,
                 linkedlist_dram_update,
                 linkedlist_pmem_update,
                 linkedlist_pmem_tx_update,
@@ -100,7 +101,6 @@ namespace ycsbc {
                 rbtree_dram_update,
                 rbtree_pmem_update,
                 rbtree_pmem_tx_update,
-                array_pmem_raw_update,
                 btree_dram_update,
                 btree_pmem_update,
                 btree_pmem_tx_update
@@ -110,6 +110,7 @@ namespace ycsbc {
                 array_dram_insert,
                 array_pmem_insert,
                 array_pmem_tx_insert,
+                array_pmem_raw_insert,
                 linkedlist_dram_insert,
                 linkedlist_pmem_insert,
                 linkedlist_pmem_tx_insert,
@@ -122,7 +123,6 @@ namespace ycsbc {
                 rbtree_dram_insert,
                 rbtree_pmem_insert,
                 rbtree_pmem_tx_insert,
-                array_pmem_raw_insert,
                 btree_dram_insert,
                 btree_pmem_insert,
                 btree_pmem_tx_insert
@@ -132,6 +132,7 @@ namespace ycsbc {
                 array_dram_free,
                 array_pmem_free,
                 array_pmem_tx_free,
+                array_pmem_raw_free,
                 linkedlist_dram_free,
                 linkedlist_pmem_free,
                 linkedlist_pmem_tx_free,
@@ -144,7 +145,6 @@ namespace ycsbc {
                 rbtree_dram_free,
                 rbtree_pmem_free,
                 rbtree_pmem_tx_free,
-                array_pmem_raw_free,
                 btree_dram_free,
                 btree_pmem_free,
                 btree_pmem_tx_free
@@ -164,31 +164,31 @@ namespace ycsbc {
             type_index = 1;
         } else if (strcmp(type, "array-pmem-tx") == 0) {
             type_index = 2;
-        } else if (strcmp(type, "linkedlist-dram") == 0) {
-            type_index = 3;
-        } else if (strcmp(type, "linkedlist-pmem") == 0) {
-            type_index = 4;
-        } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
-            type_index = 5;
-        } else if (strcmp(type, "hashtable-dram") == 0) {
-            type_index = 6;
-        } else if (strcmp(type, "hashtable-pmem") == 0) {
-            type_index = 7;
-        } else if (strcmp(type, "hashtable-pmem-tx") == 0) {
-            type_index = 8;
-        } else if (strcmp(type, "skiplist-dram") == 0) {
-            type_index = 9;
-        } else if (strcmp(type, "skiplist-pmem") == 0) {
-            type_index = 10;
-        } else if (strcmp(type, "skiplist-pmem-tx") == 0) {
-            type_index = 11;
-        } else if (strcmp(type, "rbtree-dram") == 0) {
-            type_index = 12;
-        } else if (strcmp(type, "rbtree-pmem") == 0) {
-            type_index = 13;
-        } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
-            type_index = 14;
         } else if (strcmp(type, "array-pmem-raw") == 0) {
+            type_index = 3;
+        } else if (strcmp(type, "linkedlist-dram") == 0) {
+            type_index = 4;
+        } else if (strcmp(type, "linkedlist-pmem") == 0) {
+            type_index = 5;
+        } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
+            type_index = 6;
+        } else if (strcmp(type, "hashtable-dram") == 0) {
+            type_index = 7;
+        } else if (strcmp(type, "hashtable-pmem") == 0) {
+            type_index = 8;
+        } else if (strcmp(type, "hashtable-pmem-tx") == 0) {
+            type_index = 9;
+        } else if (strcmp(type, "skiplist-dram") == 0) {
+            type_index = 10;
+        } else if (strcmp(type, "skiplist-pmem") == 0) {
+            type_index = 11;
+        } else if (strcmp(type, "skiplist-pmem-tx") == 0) {
+            type_index = 12;
+        } else if (strcmp(type, "rbtree-dram") == 0) {
+            type_index = 13;
+        } else if (strcmp(type, "rbtree-pmem") == 0) {
+            type_index = 14;
+        } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
             type_index = 15;
         } else if (strcmp(type, "btree-dram") == 0) {
             type_index = 16;
