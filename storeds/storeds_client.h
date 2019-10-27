@@ -25,6 +25,9 @@
 #include "rbtree/rbtree_dram.h"
 #include "rbtree/rbtree_pmem.h"
 #include "rbtree/rbtree_pmem_tx.h"
+#include "btree/btree_dram.h"
+#include "btree/btree_pmem.h"
+#include "btree/btree_pmem_tx.h"
 
 namespace ycsbc {
 
@@ -37,7 +40,7 @@ namespace ycsbc {
         int Insert(const char *key, void *value);
         void Free();
 
-        int (*func_call_init[16])(const char *) = {
+        int (*func_call_init[19])(const char *) = {
                 array_dram_init,
                 array_pmem_init,
                 array_pmem_tx_init,
@@ -53,10 +56,13 @@ namespace ycsbc {
                 rbtree_dram_init,
                 rbtree_pmem_init,
                 rbtree_pmem_tx_init,
-                array_pmem_raw_init
+                array_pmem_raw_init,
+                btree_dram_init,
+                btree_pmem_init,
+                btree_pmem_tx_init
         };
 
-        int (*func_call_read[16])(const char *, void *) = {
+        int (*func_call_read[19])(const char *, void *) = {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
@@ -72,10 +78,13 @@ namespace ycsbc {
                 rbtree_dram_read,
                 rbtree_pmem_read,
                 rbtree_pmem_tx_read,
-                array_pmem_raw_read
+                array_pmem_raw_read,
+                btree_dram_read,
+                btree_pmem_read,
+                btree_pmem_tx_read
         };
 
-        int (*func_call_update[16])(const char *, void *) = {
+        int (*func_call_update[19])(const char *, void *) = {
                 array_dram_update,
                 array_pmem_update,
                 array_pmem_tx_update,
@@ -91,10 +100,13 @@ namespace ycsbc {
                 rbtree_dram_update,
                 rbtree_pmem_update,
                 rbtree_pmem_tx_update,
-                array_pmem_raw_update
+                array_pmem_raw_update,
+                btree_dram_update,
+                btree_pmem_update,
+                btree_pmem_tx_update
         };
 
-        int (*func_call_insert[16])(const char *, void *) = {
+        int (*func_call_insert[19])(const char *, void *) = {
                 array_dram_insert,
                 array_pmem_insert,
                 array_pmem_tx_insert,
@@ -110,10 +122,13 @@ namespace ycsbc {
                 rbtree_dram_insert,
                 rbtree_pmem_insert,
                 rbtree_pmem_tx_insert,
-                array_pmem_raw_insert
+                array_pmem_raw_insert,
+                btree_dram_insert,
+                btree_pmem_insert,
+                btree_pmem_tx_insert
         };
 
-        void (*func_call_destroy[16])() = {
+        void (*func_call_destroy[19])() = {
                 array_dram_free,
                 array_pmem_free,
                 array_pmem_tx_free,
@@ -129,7 +144,10 @@ namespace ycsbc {
                 rbtree_dram_free,
                 rbtree_pmem_free,
                 rbtree_pmem_tx_free,
-                array_pmem_raw_free
+                array_pmem_raw_free,
+                btree_dram_free,
+                btree_pmem_free,
+                btree_pmem_tx_free
         };
 
     private:
@@ -172,6 +190,12 @@ namespace ycsbc {
             type_index = 14;
         } else if (strcmp(type, "array-pmem-raw") == 0) {
             type_index = 15;
+        } else if (strcmp(type, "btree-dram") == 0) {
+            type_index = 16;
+        } else if (strcmp(type, "btree-pmem") == 0) {
+            type_index = 17;
+        } else if (strcmp(type, "btree-pmem-tx") == 0) {
+            type_index = 18;
         } else {
             return;
         }
