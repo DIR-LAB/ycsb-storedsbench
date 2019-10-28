@@ -38,6 +38,7 @@ struct sk_node {
 	struct sk_node *next[SKIPLIST_LEVELS_NUM];
 };
 
+/* Static Global Data */
 static struct sk_node *head = NULL;
 
 /*
