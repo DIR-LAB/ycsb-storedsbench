@@ -188,6 +188,25 @@ void btree_dram_insert_not_full(struct btree_node *node, uint64_t key, void *val
     btree_dram_insert_not_full(node->entries[i+1], key, value);
 }
 
+bool update_if_found(struct btree_node *current_node, uint64_t key, void *value) {
+    int i = 0;
+    while(i<current_node->nk && key > current_node->entries[i].key) {
+        i += 1;
+    }
+
+    //check if we found the key
+    if(key == current_node->entries[i].key) {
+        //key found, update value and return
+        memcpy(current_node->entries[i].value, (char *) value, strlen((char *) value));
+        return true;
+    }
+
+    if(current_node->is_leaf) return false;     //we reached to leaf, key not found
+
+    //the node is not leaf, move to the proper child node
+    return update_if_found(current_node->children[i], key, value);
+}
+
 /**
  * btree_dram_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
  */
@@ -203,11 +222,9 @@ int btree_dram_insert(const char *key, void *value) {
         return 1;
     }
 
-    //todo: if the key already exist in btree, update the value and return
-    // struct btree_node *found_node = btree_dram_find_node(uint64_key);
-    // if(found_node != NULL) {
-    //     memcpy(found_node->entries[0].value, (char *) value, strlen((char *) value));
-    // }
+    // if the key already exist in btree, update the value and return
+    bool is_updated = update_if_found(root, uint64_key, value);
+    if(is_updated) return 1;        //we found the key, and value has been updated
 
     // if root is full
     if(btree_dram_is_node_full(root->nk)) {
