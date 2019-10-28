@@ -251,9 +251,25 @@ int btree_dram_insert(const char *key, void *value) {
     return 1;
 }
 
+void btree_dram_recursive_free(struct btree_node *current_node) {
+    //base case
+    if(current_node->is_leaf) return;
+
+    //recursively call all the child nodes
+    for(int i=0; i<current_node->nk+1; i+=1) {
+        btree_dram_recursive_free(current_node->children[i]);
+    }
+
+    //free the memory
+    free(current_node);
+}
+
 /**
  * btree_dram_free -- destructor
  */
 void btree_dram_free() {
-    //
+    btree_dram_check();
+
+    btree_dram_recursive_free(root);
+    root = NULL;
 }
