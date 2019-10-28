@@ -102,3 +102,45 @@ echo "[Benchmark] linkedlist-pmem-tx"
 # ./ycsbc -db storeds -threads 1 -dbpath /pmem/linkedlist.pmem -type linkedlist-pmem-tx -P workloads/workloade.spec
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/linkedlist.pmem -type linkedlist-pmem-tx -P workloads/workloadf.spec
 echo "*****************<>*****************"
+
+#skiplist-dram
+echo "[Benchmark] skiplist-dram"
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P workloads/workloada.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P workloads/workloadb.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P workloads/workloadc.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P workloads/workloadd.spec
+# ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P workloads/workloade.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P workloads/workloadf.spec
+echo "*****************<>*****************"
+
+#linkedlist-pmem
+echo "[Benchmark] skiplist-pmem"
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P workloads/workloada.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P workloads/workloadb.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P workloads/workloadc.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P workloads/workloadd.spec
+# rm /pmem/skiplist.pmem
+# ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P workloads/workloade.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P workloads/workloadf.spec
+echo "*****************<>*****************"
+
+#linkedlist-pmem
+echo "[Benchmark] skiplist-pmem-tx"
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloada.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloadb.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloadc.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloadd.spec
+# rm /pmem/skiplist.pmem
+# ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloade.spec
+rm /pmem/skiplist.pmem
+./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloadf.spec
+echo "*****************<>*****************"
