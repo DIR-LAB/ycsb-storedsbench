@@ -181,11 +181,11 @@ void btree_dram_insert_not_full(struct btree_node *node, uint64_t key, void *val
 
         //after the split, child's middle entry is pushed to parent
         //decide which children will hold the new <key,value> pair
-        if(node->entries[i+1].key < uint64_key) {
+        if(node->entries[i+1].key < key) {
             i += 1;
         }
     }
-    btree_dram_insert_not_full(node->entries[i+1], key, value);
+    btree_dram_insert_not_full(node->children[i+1], key, value);
 }
 
 bool update_if_found(struct btree_node *current_node, uint64_t key, void *value) {
