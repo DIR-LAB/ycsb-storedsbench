@@ -169,23 +169,43 @@ int skiplist_dram_insert(const char *key, void *value) {
     return 1;
 }
 
+/*
+ * skiplist_dram_remove_node -- (internal) removes selected node
+ */
+void skiplist_dram_remove_node(struct sk_node *path[SKIPLIST_LEVELS_NUM]) {
+    struct sk_node *possible_remove = path[SKIPLIST_BASE_LEVEL]->next[SKIPLIST_BASE_LEVEL];
+    for(int i=SKIPLIST_BASE_LEVEL; i<SKIPLIST_LEVELS_NUM; i+=1) {
+        if(path[i]->next[i] != NULL && (path[i]->next[i]->entry.key == possible_remove->entry.key)) {
+            //struct sk_node *tmp = path[i]->next[i];
+            path[i]->next[i] = possible_remove->next[i];
+            //free(tmp);
+        }
+    }
+    free(possible_remove);
+    //todo: need careful analysis if this memory de-allocation is the right way or not!
+}
+
+/*
+ * skiplist_dram_remove_free -- (internal) removes key-value pair from the list
+ */
+void skiplist_dram_remove_free(uint64_t key) {
+    struct sk_node *path[SKIPLIST_LEVELS_NUM], *possible_remove;
+    skiplist_dram_find(key, path);
+    possible_remove = path[SKIPLIST_BASE_LEVEL]->next[SKIPLIST_BASE_LEVEL];
+    if(possible_remove != NULL && possible_remove->entry.key == key) {
+        skiplist_dram_remove_node(path);
+    }
+}
+
 /**
  * skiplist_dram_free -- deallocate memory of skiplist
  */
 void skiplist_dram_free() {
     skiplist_dram_check();
-    int current_level = SKIPLIST_LEVELS_NUM - 1;
-    
-    while(current_level >= SKIPLIST_BASE_LEVEL) {
-        struct sk_node *current_node = head->next[current_level];
-        printf("level[%d]\n", current_level);
-        while(current_node != NULL) {
-            struct sk_node *tmp = current_node;
-            current_node = current_node->next[current_level];
-            free(tmp);
-            tmp = NULL;
-        }
-        current_level -= 1;
+
+    while(head->next[0] != NULL) {
+        struct sk_node *next = head->next[0];
+        skiplist_dram_remove_free(next->entry.key);
     }
     free(head);
     head = NULL;
