@@ -193,7 +193,7 @@ int skiplist_pmem_tx_insert(const char *key, void *value) {
     if(possible_found_oid.off != 0 && possible_found_ptr->entry.key == uint64_key) {
         //key already exist, update value
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range_direct(possible_found_ptr, sizeof(struct sk_entry));
+            pmemobj_tx_add_range_direct(&possible_found_ptr->entry, sizeof(struct sk_entry));
             memcpy(possible_found_ptr->entry.value, (char *) value, strlen((char *) value));
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
