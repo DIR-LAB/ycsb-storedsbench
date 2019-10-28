@@ -87,10 +87,36 @@ struct btree_node *btree_dram_create_node(bool _is_leaf) {
 }
 
 /**
+ * btree_dram_search -- (internal) search the node contains the key and return the value
+ */
+char *btree_dram_search(struct btree_node *current_node, uint64_t key) {
+    int i = 0;
+
+    //todo: it is possible to apply binary search here to make the search faster
+    while(i<current_node->nk && key > current_node->entries[i].key) {
+        i += 1;
+    }
+
+    //check if we found the key
+    if(key == current_node->entries[i].key) {
+        //key found, return the value
+        return current_node->entries[i].value;
+    }
+
+    if(current_node->is_leaf) return NULL;     //we reached to leaf, key not found
+
+    //the node is not leaf, move to the proper child node
+    return btree_dram_search(current_node->children[i], key);
+}
+
+/**
  * btree_dram_read -- read 'value' of 'key' from btree and place it into '&result'
  */
 int btree_dram_read(const char *key, void *result) {
     btree_dram_check();
+
+    uint64_t uint64_key = strtoull(key, NULL, 0);
+    result = btree_dram_search(root, uint64_key);
     return 1;
 }
 
@@ -99,6 +125,7 @@ int btree_dram_read(const char *key, void *result) {
  */
 int btree_dram_update(const char *key, void *value) {
     btree_dram_check();
+    btree_dram_insert(key, value);
     return 1;
 }
 
@@ -188,8 +215,13 @@ void btree_dram_insert_not_full(struct btree_node *node, uint64_t key, void *val
     btree_dram_insert_not_full(node->children[i+1], key, value);
 }
 
+/**
+ * update_if_found -- (internal) search the key and if exist, update the value
+ */
 bool update_if_found(struct btree_node *current_node, uint64_t key, void *value) {
     int i = 0;
+
+    //todo: it is possible to apply binary search here to make the search faster
     while(i<current_node->nk && key > current_node->entries[i].key) {
         i += 1;
     }
