@@ -44,7 +44,7 @@ struct btree_node {
 };
 
 /* Static Global Data */
-struct btree_node *root;
+static struct btree_node *root;
 
 /*
  * btree_dram_check -- (internal) checks if btree has been initialized
@@ -125,6 +125,7 @@ int btree_dram_read(const char *key, void *result) {
  */
 int btree_dram_update(const char *key, void *value) {
     btree_dram_check();
+    //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
     btree_dram_insert(key, value);
     return 1;
 }
@@ -192,6 +193,7 @@ void btree_dram_insert_not_full(struct btree_node *node, uint64_t key, void *val
 
         node->entries[i+1].key = key;
         memcpy(node->entries[i+1].value, (char *) value, strlen((char *) value));
+        node->nk += 1;
         return;
     }
 
@@ -243,6 +245,7 @@ bool update_if_found(struct btree_node *current_node, uint64_t key, void *value)
  * btree_dram_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
  */
 int btree_dram_insert(const char *key, void *value) {
+    //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
     uint64_t uint64_key = strtoull(key, NULL, 0);
 
     // if btree is empty, create root
