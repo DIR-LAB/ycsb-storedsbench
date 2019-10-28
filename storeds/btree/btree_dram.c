@@ -58,10 +58,10 @@ int btree_dram_check() {
 }
 
 /*
- * btree_dram_is_full -- (internal) checks if btree node contains max possible <key-value> pairs
+ * btree_dram_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
  */
-int btree_dram_is_full(int nk) {
-    return nk == 2*MIN_DEGREE-1 ? 1 : 0;
+int btree_dram_is_node_full(int nk) {
+    return nk == MAX_KEYS ? 1 : 0;
 }
 
 /*
@@ -154,7 +154,38 @@ void btree_dram_split_node(int idx, struct btree_node *parent, struct btree_node
  * when this function called, we can assume that the node has space to hold new data
  */
 void btree_dram_insert_not_full(struct btree_node *node, uint64_t key, void *value) {
-    //todo: start working from here
+    int i = node->nk - 1;
+
+    // if node is a leaf, insert the data to actual position and return
+    if(node->is_leaf) {
+        while(i>=0 && node->entries[i].key > key) {
+            node->entries[i+1] = node->entries[i];
+            i -= 1;
+        }
+
+        node->entries[i+1].key = key;
+        memcpy(node->entries[i+1].value, (char *) value, strlen((char *) value));
+        return;
+    }
+
+    // the node is not a leaf
+    // find the child which is going to store the new data
+    while(i>=0 && node->entries[i].key > key) {
+        i -= 1;
+    }
+
+    //check if the child is full
+    if(btree_dram_is_node_full(node->children[i+1]->nk)) {
+        //child is full, need to split
+        btree_dram_split_node(i+1, node, node->children[i+1]);
+
+        //after the split, child's middle entry is pushed to parent
+        //decide which children will hold the new <key,value> pair
+        if(node->entries[i+1].key < uint64_key) {
+            i += 1;
+        }
+    }
+    btree_dram_insert_not_full(node->entries[i+1], key, value);
 }
 
 /**
@@ -179,7 +210,7 @@ int btree_dram_insert(const char *key, void *value) {
     // }
 
     // if root is full
-    if(root->nk == MAX_KEYS) {
+    if(btree_dram_is_node_full(root->nk)) {
         int idx = 0;
         struct btree_node *new_root = btree_dram_create_node(false);    //root is not a leaf anymore
         new_root->children[idx] = root;
