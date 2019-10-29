@@ -68,6 +68,7 @@ struct btree_node {
 static PMEMobjpool *pop = NULL;
 static PMEMoid root_oid;
 static struct btree_node *root_p = NULL;
+static int total_nodes = 0;         //store the number of nodes the btree have
 
 /*
  * btree_pmem_tx_check -- (internal) checks if btree has been initialized
@@ -92,6 +93,7 @@ int btree_pmem_tx_is_node_full(int nk) {
  * this function must be called from a transaction block
  */
 PMEMoid btree_pmem_tx_create_node(bool _is_leaf) {
+    total_nodes += 1;
     PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct btree_node), NODE_TYPE);
     struct btree_node *new_node_prt = (struct btree_node *) pmemobj_direct(new_node_oid);
     
@@ -122,11 +124,6 @@ int btree_pmem_tx_init(const char *path) {
     }
 
 	root_oid = pmemobj_root(pop, sizeof(struct btree_node));
-    root_p = (struct btree_node *) pmemobj_direct(root_oid);
-    if(root_p == NULL) {
-        printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
-        exit(0);
-    }
 
     TX_BEGIN(pop) {
         pmemobj_tx_add_range(root_oid, 0, sizeof(struct btree_node));
@@ -135,6 +132,12 @@ int btree_pmem_tx_init(const char *path) {
         fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
         abort();
     } TX_END
+
+    root_p = (struct btree_node *) pmemobj_direct(root_oid);
+    if(root_p == NULL) {
+        printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
+        exit(0);
+    }
 
     btree_pmem_tx_check();
     return 1;
@@ -169,7 +172,7 @@ char *btree_pmem_tx_search(PMEMoid current_node_oid, uint64_t key) {
  */
 int btree_pmem_tx_read(const char *key, void *result) {
     btree_pmem_tx_check();
-    printf("[%s]: PARAM: key: %s\n", __func__, key);
+    //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
     uint64_t uint64_key = strtoull(key, NULL, 0);
     result = btree_pmem_tx_search(root_oid, uint64_key);
@@ -181,7 +184,7 @@ int btree_pmem_tx_read(const char *key, void *result) {
  */
 int btree_pmem_tx_update(const char *key, void *value) {
     btree_pmem_tx_check();
-    printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+    //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
     btree_pmem_tx_insert(key, value);
     return 1;
 }
@@ -329,12 +332,11 @@ bool btree_pmem_tx_update_if_found(PMEMoid current_node_oid, uint64_t key, void 
  * btree_pmem_tx_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
  */
 int btree_pmem_tx_insert(const char *key, void *value) {
-    printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+    //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
     uint64_t uint64_key = strtoull(key, NULL, 0);
 
     // if the key already exist in btree, update the value and return
     bool is_updated = btree_pmem_tx_update_if_found(root_oid, uint64_key, value);
-    printf("is_updated: %d\n", is_updated);
     if(is_updated) return 1;        //we found the key, and value has been updated
 
     // if root is full
@@ -359,7 +361,11 @@ int btree_pmem_tx_insert(const char *key, void *value) {
             btree_pmem_tx_insert_not_full(new_root_ptr->children[idx], uint64_key, value);
             
             //update the root
+            pmemobj_tx_add_range_direct(root_p, sizeof(struct btree_node));
             root_oid = new_root_oid;
+
+            //as root_oid updated, reassign root_p
+            root_p = (struct btree_node *) pmemobj_direct(root_oid);
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
             abort();
