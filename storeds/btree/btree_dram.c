@@ -41,10 +41,10 @@ struct btree_node {
     int nk;
 
     //array of <key-value> entries
-    struct entry *entries;
+    struct entry entries[MAX_KEYS];
 
     //array of child pointer
-    struct btree_node **children;
+    struct btree_node *children[MAX_CHILDREN];
 };
 
 /* Static Global Data */
@@ -84,8 +84,8 @@ struct btree_node *btree_dram_create_node(bool _is_leaf) {
     new_node_p->is_leaf = _is_leaf;
     new_node_p->nk = 0;
 
-    new_node_p->entries = (struct entry *) malloc(MAX_KEYS * sizeof(struct entry));
-    new_node_p->children = (struct btree_node **) malloc((MAX_CHILDREN) * sizeof(struct btree_node));
+    //new_node_p->entries = (struct entry *) malloc(MAX_KEYS * sizeof(struct entry));
+    //new_node_p->children = (struct btree_node **) malloc((MAX_CHILDREN) * sizeof(struct btree_node));
 
     return new_node_p;
 }
