@@ -10,6 +10,10 @@
 
 #include "btree_dram.h"
 
+/*  
+ * Data Structure Section
+ */
+
 /* minimum degree - every node (except root) must contain (MIN_DEGREE - 1) keys */
 /* all nodes (including root) may contain at most (2*MIN_DEGREE - 1) keys */
 #define MIN_DEGREE 3
@@ -39,7 +43,7 @@ struct btree_node {
     //array of <key-value> entries
     struct entry *entries;
 
-    //array if child pointer
+    //array of child pointer
     struct btree_node **children;
 };
 
@@ -81,7 +85,7 @@ struct btree_node *btree_dram_create_node(bool _is_leaf) {
     new_node_p->nk = 0;
 
     new_node_p->entries = (struct entry *) malloc(MAX_KEYS * sizeof(struct entry));
-    new_node_p->children = (struct btree_node **) malloc((MAX_CHILDREN) * sizeof(struct entry));
+    new_node_p->children = (struct btree_node **) malloc((MAX_CHILDREN) * sizeof(struct btree_node));
 
     return new_node_p;
 }
@@ -286,9 +290,15 @@ int btree_dram_insert(const char *key, void *value) {
     return 1;
 }
 
+/**
+ * btree_dram_recursive_free -- recursively visit all the btree nodes and de-allocate memory
+ */
 void btree_dram_recursive_free(struct btree_node *current_node) {
     //base case
-    if(current_node->is_leaf) return;
+    if(current_node->is_leaf) {
+        free(current_node);
+        return;
+    }
 
     //recursively call all the child nodes
     for(int i=0; i<current_node->nk+1; i+=1) {
