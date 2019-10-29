@@ -93,7 +93,7 @@ echo "[Benchmark] linkedlist-pmem"
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/linkedlist.pmem -type linkedlist-pmem -P workloads/workloadf.spec
 echo "*****************<>*****************"
 
-#linkedlist-pmem
+#linkedlist-pmem-tx
 echo "[Benchmark] linkedlist-pmem-tx"
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/linkedlist.pmem -type linkedlist-pmem-tx -P workloads/workloada.spec
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/linkedlist.pmem -type linkedlist-pmem-tx -P workloads/workloadb.spec
@@ -143,4 +143,34 @@ rm /pmem/skiplist.pmem
 # ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloade.spec
 rm /pmem/skiplist.pmem
 ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P workloads/workloadf.spec
+echo "*****************<>*****************"
+
+#btree-dram
+echo "[Benchmark] btree-dram"
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-dram -P workloads/workloada.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-dram -P workloads/workloadb.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-dram -P workloads/workloadc.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-dram -P workloads/workloadd.spec
+# ./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-dram -P workloads/workloade.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-dram -P workloads/workloadf.spec
+echo "*****************<>*****************"
+
+#btree-pmem
+echo "[Benchmark] btree-pmem"
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem -P workloads/workloada.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem -P workloads/workloadb.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem -P workloads/workloadc.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem -P workloads/workloadd.spec
+# ./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem -P workloads/workloade.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem -P workloads/workloadf.spec
+echo "*****************<>*****************"
+
+#btree-pmem-tx
+echo "[Benchmark] btree-pmem-tx"
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem-tx -P workloads/workloada.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem-tx -P workloads/workloadb.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem-tx -P workloads/workloadc.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem-tx -P workloads/workloadd.spec
+# ./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem-tx -P workloads/workloade.spec
+./ycsbc -db storeds -threads 1 -dbpath /pmem/btree.pmem -type btree-pmem-tx -P workloads/workloadf.spec
 echo "*****************<>*****************"
