@@ -16,7 +16,7 @@
 
 /* minimum degree - every node (except root) must contain (MIN_DEGREE - 1) keys */
 /* all nodes (including root) may contain at most (2*MIN_DEGREE - 1) keys */
-#define MIN_DEGREE 3
+#define MIN_DEGREE 9
 
 /* maximum keys a node can hold */
 #define MAX_KEYS (2 * MIN_DEGREE - 1)
