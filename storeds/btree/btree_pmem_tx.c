@@ -332,7 +332,9 @@ bool btree_pmem_tx_update_if_found(PMEMoid current_node_oid, uint64_t key, void 
  * btree_pmem_tx_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
  */
 int btree_pmem_tx_insert(const char *key, void *value) {
+    btree_pmem_tx_check();
     //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+    
     uint64_t uint64_key = strtoull(key, NULL, 0);
 
     // if the key already exist in btree, update the value and return
