@@ -2,7 +2,7 @@
 # Workload A: Read heavy workload
 #   Application example: Session store recording recent actions
 #                        
-#   Read/insert ratio: 75/25
+#   Read/Write ratio: 75/25
 #   Default data size: 1 KB records (10 fields, 100 bytes each, plus key)
 #   Request distribution: zipfian
 
