@@ -26,7 +26,7 @@
 #define HASH_FUNC_COEFF_P 32212254719ULL
 
 /* initial number of buckets */
-#define INIT_BUCKETS_NUM 1000
+#define INIT_BUCKETS_NUM 8192
 
 /* number of values in a bucket which trigger hashtable rebuild check */
 #define MIN_HASHSET_THRESHOLD 5
@@ -147,6 +147,8 @@ int ht_pmem_reinit(size_t new_len) {
  * ht_pmem_init -- hashtable initializer
  */
 int ht_pmem_init(const char *path) {
+    srand((uint32_t) time(NULL));
+
     if (file_exists(path) != 0) {
         if ((pop = pmemobj_create(path, LAYOUT_NAME, PM_HASHTABLE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
             fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());

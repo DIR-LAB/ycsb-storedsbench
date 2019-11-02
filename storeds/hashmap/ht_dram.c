@@ -16,7 +16,7 @@
 #define HASH_FUNC_COEFF_P 32212254719ULL
 
 /* initial number of buckets */
-#define INIT_BUCKETS_NUM 1000
+#define INIT_BUCKETS_NUM 8192
 
 /* number of values in a bucket which trigger hashtable rebuild check */
 #define MIN_HASHSET_THRESHOLD 5
@@ -78,6 +78,7 @@ int ht_dram_check() {
  * ht_dram_print -- prints complete hashtable state
  */
 void ht_dram_print() {
+    srand((uint32_t) time(NULL));
 	ht_dram_check();
 
 	struct buckets *buckets_p = root_p->buckets;
