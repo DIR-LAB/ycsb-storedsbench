@@ -35,11 +35,11 @@ int array_dram_init(const char *path) {
     return 1;
 }
 
-int array_dram_read(const char *key, void *result) {
+int array_dram_read(const char *key, void *&result) {
     check();
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % size);
-    result = &array[offset];
+    result = array[offset];
     return 1;
 }
 

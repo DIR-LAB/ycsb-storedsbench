@@ -8,7 +8,7 @@
 
 int array_dram_init(const char *path);
 
-int array_dram_read(const char *key, void *result);
+int array_dram_read(const char *key, void *&result);
 
 int array_dram_scan(const char *key, int len, void *result);
 

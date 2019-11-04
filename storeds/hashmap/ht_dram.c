@@ -144,7 +144,7 @@ int ht_dram_init(const char *path) {
 /**
  * ht_dram_read -- read 'value' of 'key' and place it into '&result'
  */
-int ht_dram_read(const char *key, void *result) {
+int ht_dram_read(const char *key, void *&result) {
 	ht_dram_check();
 
 	struct buckets *buckets_p = root_p->buckets;
@@ -178,7 +178,7 @@ int ht_dram_update(const char *key, void *value) {
 struct entry* ht_dram_new_entry(uint64_t key, const char* value) {
     struct entry *entry_p = (struct entry *) malloc(sizeof(struct entry));
     entry_p->key = key;
-    memcpy(entry_p->value, (char *) value, strlen((char *) value));
+    memcpy(entry_p->value, (char *) value, strlen((char *) value) + 1);
 	entry_p->next = (struct entry *) malloc(sizeof(struct entry));
     return entry_p;
 }
@@ -199,7 +199,7 @@ int ht_dram_insert(const char *key, void *value) {
 	for(struct entry *entry_p = buckets_p->bucket[hash_value]; entry_p != NULL; entry_p = entry_p->next) {
 		if(entry_p->key == uint64_key) {
 			//key found! replace the value and return
-			memcpy(entry_p->value, (char *) value, strlen((char *) value));
+			memcpy(entry_p->value, (char *) value, strlen((char *) value) + 1);
 			return 1;
 		}
 		iteration_count += 1;

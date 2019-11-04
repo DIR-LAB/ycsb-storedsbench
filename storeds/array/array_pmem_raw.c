@@ -52,7 +52,7 @@ int array_pmem_raw_init(const char *path){
 /**
  * array_pmem_raw_read -- read data from array[key] and set the result in result
  */
-int array_pmem_raw_read(const char *key, void *result){    
+int array_pmem_raw_read(const char *key, void *&result){
     uint64_t uint64_key = strtoull(key, NULL, 0);
     int offset = (int) (uint64_key % pmem_array_size);
 

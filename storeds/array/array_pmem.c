@@ -98,7 +98,7 @@ int array_pmem_init(const char *path){
 /**
  * array_pmem_read -- read data from array[key] and set the result in result
  */
-int array_pmem_read(const char *key, void *result){
+int array_pmem_read(const char *key, void *&result){
     pmem_array_check();
     
     uint64_t uint64_key = strtoull(key, NULL, 0);

@@ -127,7 +127,7 @@ void skiplist_pmem_tx_find(uint64_t uint64_key, PMEMoid *path) {
 /**
  * skiplist_pmem_tx_read -- read value of key and sets into result
  */
-int skiplist_pmem_tx_read(const char *key, void *result) {
+int skiplist_pmem_tx_read(const char *key, void *&result) {
     skiplist_pmem_tx_check();
     //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
@@ -194,7 +194,7 @@ int skiplist_pmem_tx_insert(const char *key, void *value) {
         //key already exist, update value
         TX_BEGIN(pop) {
             pmemobj_tx_add_range_direct(&possible_found_ptr->entry, sizeof(struct sk_entry));
-            memcpy(possible_found_ptr->entry.value, (char *) value, strlen((char *) value));
+            memcpy(possible_found_ptr->entry.value, (char *) value, strlen((char *) value) + 1);
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
             abort();
@@ -206,7 +206,7 @@ int skiplist_pmem_tx_insert(const char *key, void *value) {
             PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct sk_node), NODE_TYPE);
             struct sk_node *new_node_ptr = (struct sk_node *) pmemobj_direct(new_node_oid);
             new_node_ptr->entry.key = uint64_key;
-            memcpy(new_node_ptr->entry.value, (char *) value, strlen((char *) value));
+            memcpy(new_node_ptr->entry.value, (char *) value, strlen((char *) value) + 1);
             skiplist_pmem_tx_insert_node(new_node_oid, path_oid);
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());

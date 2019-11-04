@@ -7,7 +7,7 @@
 
 int linkedlist_dram_init(const char *path);
 
-int linkedlist_dram_read(const char *key, void *result);
+int linkedlist_dram_read(const char *key, void *&result);
 
 int linkedlist_dram_update(const char *key, void *value);
 

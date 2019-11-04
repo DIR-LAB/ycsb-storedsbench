@@ -16,7 +16,7 @@ namespace ycsbc {
                         vector <KVPair> &result) {
         result.clear();
         char *dummy;
-        storeds_.Read(key.c_str(), dummy);
+        storeds_.Read(key.c_str(), (void *&) dummy);
         result.push_back(std::make_pair(key, dummy));
         return DB::kOK;
     }

@@ -7,7 +7,7 @@
 
 int btree_pmem_init(const char *path);
 
-int btree_pmem_read(const char *key, void *result);
+int btree_pmem_read(const char *key, void *&result);
 
 int btree_pmem_update(const char *key, void *value);
 

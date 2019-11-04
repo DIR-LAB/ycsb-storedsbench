@@ -7,7 +7,7 @@
 
 int btree_pmem_tx_init(const char *path);
 
-int btree_pmem_tx_read(const char *key, void *result);
+int btree_pmem_tx_read(const char *key, void *&result);
 
 int btree_pmem_tx_update(const char *key, void *value);
 

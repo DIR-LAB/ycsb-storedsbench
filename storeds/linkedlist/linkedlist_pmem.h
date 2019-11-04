@@ -7,7 +7,7 @@
 
 int linkedlist_pmem_init(const char *path);
 
-int linkedlist_pmem_read(const char *key, void *result);
+int linkedlist_pmem_read(const char *key, void *&result);
 
 int linkedlist_pmem_update(const char *key, void *value);
 

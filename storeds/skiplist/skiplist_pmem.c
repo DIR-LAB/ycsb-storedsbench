@@ -119,7 +119,7 @@ void skiplist_pmem_find(uint64_t uint64_key, PMEMoid *path) {
 /**
  * skiplist_pmem_read -- read value of key and sets into result
  */
-int skiplist_pmem_read(const char *key, void *result) {
+int skiplist_pmem_read(const char *key, void *&result) {
     skiplist_pmem_check();
     //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
@@ -186,7 +186,7 @@ int skiplist_pmem_insert(const char *key, void *value) {
     struct sk_node *possible_found_ptr = (struct sk_node *) pmemobj_direct(possible_found_oid);
     if(possible_found_oid.off != 0 && possible_found_ptr->entry.key == uint64_key) {
         //key already exist, update value
-        memcpy(possible_found_ptr->entry.value, (char *) value, strlen((char *) value));
+        memcpy(possible_found_ptr->entry.value, (char *) value, strlen((char *) value) + 1);
         pmemobj_persist(pop, possible_found_ptr, sizeof(struct sk_node));
     }
     else {
@@ -195,7 +195,7 @@ int skiplist_pmem_insert(const char *key, void *value) {
         pmemobj_alloc(pop, &new_node_oid, sizeof(struct sk_node), NODE_TYPE, NULL, NULL);
         struct sk_node *new_node_ptr = (struct sk_node *) pmemobj_direct(new_node_oid);
         new_node_ptr->entry.key = uint64_key;
-        memcpy(new_node_ptr->entry.value, (char *) value, strlen((char *) value));
+        memcpy(new_node_ptr->entry.value, (char *) value, strlen((char *) value) + 1);
         skiplist_pmem_insert_node(new_node_oid, path_oid);
     }
     return 1;

@@ -170,7 +170,7 @@ char *btree_pmem_tx_search(PMEMoid current_node_oid, uint64_t key) {
 /**
  * btree_pmem_tx_read -- read 'value' of 'key' from btree and place it into '&result'
  */
-int btree_pmem_tx_read(const char *key, void *result) {
+int btree_pmem_tx_read(const char *key, void *&result) {
     btree_pmem_tx_check();
     //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
@@ -266,7 +266,7 @@ void btree_pmem_tx_insert_not_full(PMEMoid node_oid, uint64_t key, void *value) 
         }
 
         node_ptr->entries[i+1].key = key;
-        memcpy(node_ptr->entries[i+1].value, (char *) value, strlen((char *) value));
+        memcpy(node_ptr->entries[i+1].value, (char *) value, strlen((char *) value) + 1);
         node_ptr->nk += 1;
         return;
     }
@@ -314,7 +314,7 @@ bool btree_pmem_tx_update_if_found(PMEMoid current_node_oid, uint64_t key, void 
         //key found, update value and return
         TX_BEGIN(pop) {
             pmemobj_tx_add_range_direct(&current_node_ptr->entries[i], sizeof(struct entry));
-            memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value));
+            memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
             abort();

@@ -103,7 +103,7 @@ void skiplist_dram_find(uint64_t uint64_key, struct sk_node **path) {
 /**
  * skiplist_dram_read -- read value of key and sets into result
  */
-int skiplist_dram_read(const char *key, void *result) {
+int skiplist_dram_read(const char *key, void *&result) {
     skiplist_dram_check();
     //printf("[%s]: PARAM: key: %s\n", __func__, key);
 

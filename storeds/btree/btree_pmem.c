@@ -160,7 +160,7 @@ char *btree_pmem_search(PMEMoid current_node_oid, uint64_t key) {
 /**
  * btree_pmem_read -- read 'value' of 'key' from btree and place it into '&result'
  */
-int btree_pmem_read(const char *key, void *result) {
+int btree_pmem_read(const char *key, void *&result) {
     btree_pmem_check();
     //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
@@ -254,7 +254,7 @@ void btree_pmem_insert_not_full(PMEMoid node_oid, uint64_t key, void *value) {
         }
 
         node_ptr->entries[i+1].key = key;
-        memcpy(node_ptr->entries[i+1].value, (char *) value, strlen((char *) value));
+        memcpy(node_ptr->entries[i+1].value, (char *) value, strlen((char *) value) + 1);
         node_ptr->nk += 1;
 
         //persist the changes
@@ -298,7 +298,7 @@ bool btree_pmem_update_if_found(PMEMoid current_node_oid, uint64_t key, void *va
     //check if we found the key
     if(key == current_node_ptr->entries[i].key) {
         //key found, update value and return
-        memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value));
+        memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
         pmemobj_persist(pop, &current_node_ptr->entries[i], strlen((char *) value));
         return true;
     }

@@ -8,7 +8,7 @@ int rbtree_pmem_tx_init(const char *path) {
     return 1;
 }
 
-int rbtree_pmem_tx_read(const char *key, void *result) {
+int rbtree_pmem_tx_read(const char *key, void *&result) {
     return 1;
 }
 

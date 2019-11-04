@@ -7,7 +7,7 @@
 
 int rbtree_dram_init(const char *path);
 
-int rbtree_dram_read(const char *key, void *result);
+int rbtree_dram_read(const char *key, void *&result);
 
 int rbtree_dram_update(const char *key, void *value);
 

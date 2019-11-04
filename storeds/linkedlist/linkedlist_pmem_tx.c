@@ -76,7 +76,7 @@ int linkedlist_pmem_tx_init(const char *path) {
     return 1;
 }
 
-int linkedlist_pmem_tx_read(const char *key, void *result) {
+int linkedlist_pmem_tx_read(const char *key, void *&result) {
     linkedlist_pmem_tx_check();
 
     uint64_t uint64_key = strtoull(key, NULL, 0);
@@ -102,7 +102,7 @@ int linkedlist_pmem_tx_update(const char *key, void *value) {
         if (current_node->key == uint64_key) {
             TX_BEGIN(pop) {
                 pmemobj_tx_add_range_direct(current_node, sizeof(struct node));
-                memcpy(current_node->value, (const char *) value, strlen((char *) value));
+                memcpy(current_node->value, (const char *) value, strlen((char *) value) + 1);
             } TX_ONABORT {
 				fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
 				abort();

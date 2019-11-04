@@ -7,7 +7,7 @@
 
 int btree_dram_init(const char *path);
 
-int btree_dram_read(const char *key, void *result);
+int btree_dram_read(const char *key, void *&result);
 
 int btree_dram_update(const char *key, void *value);
 

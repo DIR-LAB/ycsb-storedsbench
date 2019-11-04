@@ -37,7 +37,7 @@ int linkedlist_dram_init(const char *path) {
     return 1;
 }
 
-int linkedlist_dram_read(const char *key, void *result) {
+int linkedlist_dram_read(const char *key, void *&result) {
     //printf("[%s]: key: %s\n", __FUNCTION__, key);
     linkedlist_dram_check();
 

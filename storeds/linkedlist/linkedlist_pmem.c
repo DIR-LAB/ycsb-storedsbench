@@ -76,7 +76,7 @@ int linkedlist_pmem_init(const char *path) {
     return 1;
 }
 
-int linkedlist_pmem_read(const char *key, void *result) {
+int linkedlist_pmem_read(const char *key, void *&result) {
     linkedlist_pmem_check();
 
     uint64_t uint64_key = strtoull(key, NULL, 0);
@@ -100,7 +100,7 @@ int linkedlist_pmem_update(const char *key, void *value) {
 
     while (current_node != NULL) {
         if (current_node->key == uint64_key) {
-            pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, strlen((char *) value));
+            pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, strlen((char *) value) + 1);
             break;
         }
         current_node = (struct node *) pmemobj_direct(current_node->next);

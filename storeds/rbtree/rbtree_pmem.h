@@ -7,7 +7,7 @@
 
 int rbtree_pmem_init(const char *path);
 
-int rbtree_pmem_read(const char *key, void *result);
+int rbtree_pmem_read(const char *key, void *&result);
 
 int rbtree_pmem_update(const char *key, void *value);
 

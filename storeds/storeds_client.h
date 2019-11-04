@@ -35,7 +35,7 @@ namespace ycsbc {
     public:
         StoredsClient(const char *host, const char *path);
 
-        int Read(const char *key, void *result);
+        int Read(const char *key, void *&result);
         int Update(const char *key, void *value);
         int Insert(const char *key, void *value);
         void Free();
@@ -62,7 +62,7 @@ namespace ycsbc {
                 btree_pmem_tx_init
         };
 
-        int (*func_call_read[19])(const char *, void *) = {
+        int (*func_call_read[19])(const char *, void * &) = {
                 array_dram_read,
                 array_pmem_read,
                 array_pmem_tx_read,
@@ -202,7 +202,7 @@ namespace ycsbc {
         func_call_init[type_index](path);
     }
 
-    inline int StoredsClient::Read(const char *key, void *result) {
+    inline int StoredsClient::Read(const char *key, void *&result) {
         return func_call_read[type_index](key, result);
     }
 

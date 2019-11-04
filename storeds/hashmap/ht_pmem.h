@@ -7,7 +7,7 @@
 
 int ht_pmem_init(const char *path);
 
-int ht_pmem_read(const char *key, void *result);
+int ht_pmem_read(const char *key, void *&result);
 
 int ht_pmem_update(const char *key, void *value);
 

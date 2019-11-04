@@ -116,7 +116,7 @@ char *btree_dram_search(struct btree_node *current_node, uint64_t key) {
 /**
  * btree_dram_read -- read 'value' of 'key' from btree and place it into '&result'
  */
-int btree_dram_read(const char *key, void *result) {
+int btree_dram_read(const char *key, void *&result) {
     btree_dram_check();
 
     uint64_t uint64_key = strtoull(key, NULL, 0);
@@ -196,7 +196,7 @@ void btree_dram_insert_not_full(struct btree_node *node, uint64_t key, void *val
         }
 
         node->entries[i+1].key = key;
-        memcpy(node->entries[i+1].value, (char *) value, strlen((char *) value));
+        memcpy(node->entries[i+1].value, (char *) value, strlen((char *) value) + 1);
         node->nk += 1;
         return;
     }
@@ -235,7 +235,7 @@ bool update_if_found(struct btree_node *current_node, uint64_t key, void *value)
     //check if we found the key
     if(key == current_node->entries[i].key) {
         //key found, update value and return
-        memcpy(current_node->entries[i].value, (char *) value, strlen((char *) value));
+        memcpy(current_node->entries[i].value, (char *) value, strlen((char *) value) + 1);
         return true;
     }
 
@@ -256,7 +256,7 @@ int btree_dram_insert(const char *key, void *value) {
     if(root == NULL) {
         root = btree_dram_create_node(true);    //root is also a leaf
         root->entries[0].key = uint64_key;
-        memcpy(root->entries[0].value, (char *) value, strlen((char *) value));
+        memcpy(root->entries[0].value, (char *) value, strlen((char *) value) + 1);
         root->nk = 1;
         return 1;
     }
