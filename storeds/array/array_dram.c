@@ -60,5 +60,6 @@ int array_dram_insert(const char *key, void *value) {
 }
 
 void array_dram_free() {
+    check();
     free(array);
 }
