@@ -1,10 +1,9 @@
 CC=g++
 CFLAGS=-std=c++11 -g -Wall -pthread -I./
 LDFLAGS= -lpthread -ltbb -lpmemobj -lpmem
-SUBDIRS=core db
-SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc)
+SUBDIRS=core db storeds
+SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(wildcard storeds/*.cc)
 OBJECTS=$(SUBSRCS:.cc=.o)
-STOREDSSRC=$(wildcard storeds/array/*.c) $(wildcard storeds/linkedlist/*.c) $(wildcard storeds/hashmap/*.c) $(wildcard storeds/skiplist/*.c) $(wildcard storeds/rbtree/*.c) $(wildcard storeds/btree/*.c)
 EXEC=ycsbc
 EXECTEST=ycsbc_test
 EXECPARALLEL=ycsbc_parallel
@@ -15,16 +14,16 @@ all: $(SUBDIRS) $(EXEC) $(EXECTEST) ${EXECPARALLEL} ${EXECPARALLELTEST}
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-$(EXEC): ycsbc.cc $(STOREDSSRC) $(OBJECTS)
+$(EXEC): ycsbc.cc $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-$(EXECTEST): ycsbc_test.cc $(STOREDSSRC) $(OBJECTS)
+$(EXECTEST): ycsbc_test.cc $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-$(EXECPARALLEL): ycsbc_parallel.cc $(STOREDSSRC) $(OBJECTS)
+$(EXECPARALLEL): ycsbc_parallel.cc $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-$(EXECPARALLELTEST): ycsbc_parallel_test.cc $(STOREDSSRC) $(OBJECTS)
+$(EXECPARALLELTEST): ycsbc_parallel_test.cc $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 clean:
