@@ -11,7 +11,8 @@
 #include <iostream>
 #include <string>
 #include "../core/properties.h"
-#include "../storeds/storeds_client.h"
+#include "../storeds/storeds_db_factory.h"
+#include "../storeds/storeds_base.h"
 
 using std::cout;
 using std::endl;
@@ -20,7 +21,8 @@ namespace ycsbc {
 
     class StoredsDB : public DB {
     public:
-        StoredsDB(const char *type, const char *path) : storeds_(type, path) {
+        StoredsDB(const char *type, const char *path) {
+            storeds_ = StoredsDbFactory::GetDB(type, path);
         }
 
         int Read(const std::string &table, const std::string &key,
@@ -44,7 +46,7 @@ namespace ycsbc {
         ~StoredsDB();
 
     private:
-        StoredsClient storeds_;
+        StoredsBase *storeds_;
     };
 
 } // ycsbc

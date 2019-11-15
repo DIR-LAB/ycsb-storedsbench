@@ -6,6 +6,7 @@
 #include "storeds_db.h"
 
 #include <cstring>
+#include <iostream>
 
 using namespace std;
 
@@ -16,7 +17,7 @@ namespace ycsbc {
                         vector <KVPair> &result) {
         result.clear();
         char *dummy;
-        storeds_.Read(key.c_str(), (void *&) dummy);
+        storeds_->read(key.c_str(), (void *&) dummy);
         result.push_back(std::make_pair(key, dummy));
         return DB::kOK;
     }
@@ -33,8 +34,8 @@ namespace ycsbc {
         for (KVPair &field_pair : values) {
             char *val = new char[field_pair.second.length() + 1];
             strcpy(val, field_pair.second.c_str());
-            //printf("%s %s\n", key.c_str(), val);
-            storeds_.Insert(key.c_str(), val);
+            //printf("[INSERT] %s %s\n", key.c_str(), val);
+            storeds_->insert(key.c_str(), val);
         }
         return DB::kOK;
     }
@@ -45,7 +46,8 @@ namespace ycsbc {
         for (KVPair &field_pair : values) {
             char *val = new char[field_pair.second.length() + 1];
             strcpy(val, field_pair.second.c_str());
-            storeds_.Insert(key.c_str(), val);
+            //printf("[UPDATE] %s %s\n", key.c_str(), val);
+            storeds_->update(key.c_str(), val);
         }
         return DB::kOK;
     }
@@ -57,7 +59,7 @@ namespace ycsbc {
     void StoredsDB::Close() {}
 
     StoredsDB::~StoredsDB() {
-        storeds_.Free();
+        storeds_->destroy();
     }
 
 } // namespace ycsbc
