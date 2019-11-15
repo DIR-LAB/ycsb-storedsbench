@@ -107,7 +107,7 @@ void run_test(int tid, utils::Properties props) {
 
     cout << "[" << tid << "] update passed!" << endl;
 
-    //if (db) db->~DB();
+    if (db) db->~DB();
     cout << "[->] thread " << tid << " ended" << endl;
 }
 
