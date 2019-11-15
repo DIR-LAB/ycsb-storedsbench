@@ -50,10 +50,12 @@ int main(const int argc, const char *argv[]) {
     const string db_file_extension = ".pmem";
 
     ycsbc::DB *db_list[num_threads];
+    ycsbc::CoreWorkload wl_list[num_threads];
 
     for(int t=0; t<num_threads; t+=1) {
         props.SetProperty("dbpath", dbpath + to_string(t) + db_file_extension);
         db_list[t] = ycsbc::DBFactory::CreateDB(props);
+        wl_list[t].Init(props);
 
         if (!db_list[t]) {
             cout << "Unknown database name " << props["dbname"] << endl;
@@ -61,14 +63,11 @@ int main(const int argc, const char *argv[]) {
         }
     }
 
-    ycsbc::CoreWorkload wl;
-    wl.Init(props);
-
     // Loads data
     vector <future<int>> actual_ops;
     int total_ops = stoi(props[ycsbc::CoreWorkload::RECORD_COUNT_PROPERTY]);
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async, ParallelDelegateClient, db_list[i], &wl, total_ops, true));
+        actual_ops.emplace_back(async(launch::async, ParallelDelegateClient, db_list[i], &wl_list[i], total_ops, true));
     }
     assert((int) actual_ops.size() == num_threads);
 
@@ -85,7 +84,7 @@ int main(const int argc, const char *argv[]) {
     utils::Timer<double> timer;
     timer.Start();
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async, ParallelDelegateClient, db_list[i], &wl, total_ops, false));
+        actual_ops.emplace_back(async(launch::async, ParallelDelegateClient, db_list[i], &wl_list[i], total_ops, false));
     }
     assert((int) actual_ops.size() == num_threads);
 
