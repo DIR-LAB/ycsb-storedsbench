@@ -10,37 +10,31 @@
 #include<stdbool.h>
 #include<algorithm>
 
-enum Color {RED,BLACK};
-const int size = 1000000;
-const int default_value_len = 101;
-struct Node 
+enum rbtree_color {RED,BLACK};
+const int rbtree_default_value_len = 101;
+struct rbtree_entry 
 { 
     uint64_t key; 
-    char value[default_value_len];
-    struct Node *left, *right, *parent; 
+    char value[rbtree_default_value_len];
+    struct rbtree_entry *left, *right, *parent; 
     bool color;
   
-    
-    // Constructor 
-    /*
-    Node(int data) 
-    { 
-       this->data = data; 
-       left = right = parent = NULL; 
-       this->color = RED; 
-    } 
-    */
 }; 
 
-static struct Node *groot = NULL;
+static struct rbtree_entry *groot = NULL;
 
 
-
+/*
+ * Initialize root of tree to NULL
+ */
 int rbtree_dram_init(const char *path) {
     groot = NULL;
     return 1;
 }
 
+/*
+ * Check Whether RBTree is initialized or not
+ */
 int rbtree_dram_check() {
     if (groot == NULL) {
         fprintf(stderr, "[%s]: FATAL: RBTREE not initialized yet\n", __FUNCTION__);
@@ -49,57 +43,48 @@ int rbtree_dram_check() {
     return 1;
 }
 
-bool print_tree_value(struct Node *root,uint64_t key,void *&result)
+/*
+ * Read and return Value for a given Key of RBTree
+ */
+bool print_tree_value(struct rbtree_entry *root,uint64_t key,void *&result)
 {
-    //printf("\nROOTVAL %d\n",root->value);
-    //printf("OUTKEY %d",key);
-    //printf("\nINKEY %d",root->key);
     bool ttest = root->key==key;
     if(ttest)
     {
         result = root->value;
-        
-        
-        
-        //char* x = "2";
-        //result = x;
         return true;
-
     }
-    //result = root->value;
-    //return true;
-    //printf("\nTTEST FAILED\n");
-    
     if(root->left!=NULL)
+    {
         if(print_tree_value(root->left,key,result)==true)
+        {
             return true;
+        }
+    }
     if(root->right!=NULL)
+    {
         if(print_tree_value(root->right,key,result)==true)
+        {
             return true;
-    
+        }
+    }
     return false;
+    
 }
-bool update_tree_value(struct Node *root,uint64_t key,void* value)
+
+/*
+ * Read and update Value for a given Key of RBTree
+ */
+bool update_tree_value(struct rbtree_entry *root,uint64_t key,void* value)
 {
-    //printf("\nROOTVAL %d\n",root->value);
-    //printf("OUTKEY %d",key);
-    //printf("\nINKEY %d",root->key);
     bool ttest = root->key==key;
     if(ttest)
     {
         strcpy(root->value, (const char *) value);
-        //result = root->value;
-        
-        
-        
-        //char* x = "2";
-        //result = x;
+     
         return true;
 
     }
-    //result = root->value;
-    //return true;
-    //printf("\nTTEST FAILED\n");
     
     if(root->left!=NULL)
         if(update_tree_value(root->left,key,value)==true)
@@ -110,96 +95,85 @@ bool update_tree_value(struct Node *root,uint64_t key,void* value)
     
     return false;
 }
-int rbtree_dram_read(const char* key, void *&result) {
-    //printf("RB READ INIT");
-    uint64_t uint64_key = strtoull(key, NULL, 0);
-    //printf("REACH KEY PRINT");
-    rbtree_dram_check();
-    struct Node* cur = groot;
-    //printf("KEY %d",uint64_key);
-    //har* ret = "2";
-    //result = "2";
-    //result = ret;
-    print_tree_value(cur,uint64_key,result);
-    
 
+/*
+ * Read RBTree DRAM and return value into the result variable.
+ */
+int rbtree_dram_read(const char* key, void *&result) {
+    uint64_t uint64_key = strtoull(key, NULL, 0);
+    rbtree_dram_check();
+    struct rbtree_entry* cur = groot;
+    print_tree_value(cur,uint64_key,result);
     return 1;
 }
 
-
-void rotateLeft(struct Node *root, struct Node *pt) 
+/*
+ * Rotate Sub-Tree of RBTree to the Left
+ */
+void rotateLeft(struct rbtree_entry *root, struct rbtree_entry *pt) 
 { 
-    struct Node *pt_right = pt->right; 
-  
+    struct rbtree_entry *pt_right = pt->right;   
     pt->right = pt_right->left; 
-  
     if (pt->right != NULL) 
         pt->right->parent = pt; 
-  
     pt_right->parent = pt->parent; 
-  
     if (pt->parent == NULL) 
         root = pt_right; 
-
     else if (pt == pt->parent->left) 
     {
         pt->parent->left = pt_right; 
     }
-  
     else
     {
         pt->parent->right = pt_right; 
     }
-  
     pt_right->left = pt; 
     pt->parent = pt_right; 
 } 
 
-void rotateRight(struct Node *root, struct Node *pt) 
+/*
+ * Rotate Sub-Tree of RBTree to right
+ */
+void rotateRight(struct rbtree_entry *root, struct rbtree_entry *pt) 
 { 
-    struct Node *pt_left = pt->left; 
-  
+    struct rbtree_entry *pt_left = pt->left; 
     pt->left = pt_left->right; 
-  
     if (pt->left != NULL) 
+    {
         pt->left->parent = pt; 
-  
+    }
     pt_left->parent = pt->parent; 
-  
     if (pt->parent == NULL) 
+    {
         root = pt_left; 
-  
+    }
     else if (pt == pt->parent->left) 
+    {
         pt->parent->left = pt_left; 
-  
+    }
     else
+    {
         pt->parent->right = pt_left; 
-  
+    }
     pt_left->right = pt; 
     pt->parent = pt_left; 
 } 
 
 
-struct Node* BSTInsert(struct Node* root, struct Node *pt) 
+/*
+ * Insert into Binary Search Tree, before doing fix to balance to make RBTree.
+ */
+struct rbtree_entry* BSTInsert(struct rbtree_entry* root, struct rbtree_entry *pt) 
 { 
-    //printf("\n INSERTING %d \n",pt->key);
-    //printf("\nINSERTING VALUE %s",pt->value);
-    //return root;
-    /* If the tree is empty, return a new nod e */
     if (root == NULL) 
     {
-       //printf("\n INSERTING %d \n",pt->key);
-       //printf("\nINSERTING VALUE %d",pt->value);
-
        return pt; 
     }
   
     /* Otherwise, recur down the tree */
     if (pt->key < root->key) 
-    { 
-        
+    {     
         root->left  = BSTInsert(root->left, pt); 
-        //root->left=pt;
         root->left->parent = root; 
     } 
     else if (pt->key > root->key) 
@@ -212,60 +186,15 @@ struct Node* BSTInsert(struct Node* root, struct Node *pt)
     return root; 
 } 
 
+
+
 /*
-int BSTInsertnew(struct Node *pt)
-{
-    printf("\n%d",pt->key);
-    printf("\n%s",pt->value);
-    if(groot==NULL)
-        groot=pt;
-    
-    else
-    {
-        printf("\nREACHES ELSE");
-        struct Node cur = groot;
-        int last = 0;
-        bool done = false;
-        while(!done)
-        {
-            if(pt->key<cur->key)
-            {
-                if(cur->left!=NULL)
-                    cur = cur->left;
-                else
-                {
-                    cur->left = pt;
-                    done=true;
-                }
-                
-                
-            }
-            else
-            {
-                if(cur->left!=NULL)
-                    cur = cur->right;
-                else
-                {
-                    cur->right = pt;
-                    done=true;
-                }
-                
-            }
-            
-        }
-    }
-
-
-    return 0;
-
-}
-*/
-
-
-void fixViolation(struct Node *root, struct Node *pt) 
+ * Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+ */
+void fixViolation(struct rbtree_entry *root, struct rbtree_entry *pt) 
 { 
-    struct Node *parent_pt = NULL; 
-    struct Node *grand_parent_pt = NULL; 
+    struct rbtree_entry *parent_pt = NULL; 
+    struct rbtree_entry *grand_parent_pt = NULL; 
   
     while ((pt != root) && (pt->color != BLACK) && 
            (pt->parent->color == RED)) 
@@ -279,7 +208,7 @@ void fixViolation(struct Node *root, struct Node *pt)
         if (parent_pt == grand_parent_pt->left) 
         { 
   
-            struct Node *uncle_pt = grand_parent_pt->right; 
+            struct rbtree_entry *uncle_pt = grand_parent_pt->right; 
   
             /* Case : 1 
                The uncle of pt is also red 
@@ -317,7 +246,7 @@ void fixViolation(struct Node *root, struct Node *pt)
            Parent of pt is right child of Grand-parent of pt */
         else
         { 
-            struct Node *uncle_pt = grand_parent_pt->left; 
+            struct rbtree_entry *uncle_pt = grand_parent_pt->left; 
   
             /*  Case : 1 
                 The uncle of pt is also red 
@@ -359,38 +288,33 @@ void fixViolation(struct Node *root, struct Node *pt)
 
 
 
-
+/*
+ * Read and Update Value for a given Key of RB-Tree
+ */
 int rbtree_dram_update(const char *key, void *value) {
-
-    //printf("CALLED");
     uint64_t uint64_key = strtoull(key, NULL, 0);
     update_tree_value(groot,uint64_key,value);
-    //printf("\n%d",groot->key);
-    //printf("\n%s",groot->value);
     return 1;
 }
 
+/*
+ * Insert Value into RBTree
+ */
 int rbtree_dram_insert(const char *key, void *value) {
     uint64_t uint64_key = strtoull(key,NULL,0);
-    struct Node *pt = (struct Node *)malloc(sizeof(struct Node)); //new Node
+    struct rbtree_entry *pt = (struct rbtree_entry *)malloc(sizeof(struct rbtree_entry)); //new Node
     pt->left = pt->right=pt->parent = NULL;
     pt->color = RED;
     pt->key = uint64_key;
     strcpy(pt->value,(const char *)value);
-
-    
-    
-  
     // Do a normal BST insert 
     groot = BSTInsert(groot,pt); 
-    
     fixViolation(groot,pt);
-
-  
-    
-    
     return 1;
 }
 
+/*
+ * Free Space of RBTree.
+ */
 void rbtree_dram_free() {
 }
