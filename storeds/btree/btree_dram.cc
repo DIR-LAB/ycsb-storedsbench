@@ -7,11 +7,51 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <iostream>
 
-#include "btree_dram.h"
 #include "btree_common.h"
 
+using namespace std;
+
 namespace ycsbc {
+    class BTreeDram : public StoredsBase {
+    public:
+        BTreeDram(const char *path) {
+            BTreeDram::init(path);
+        }
+
+        int init(const char *path);
+
+        int read(const char *key, void *&result);
+
+        int update(const char *key, void *value);
+
+        int insert(const char *key, void *value);
+
+        void destroy();
+
+        ~BTreeDram();
+
+    private:
+        struct btree_dram_node *root;
+
+        int check();
+
+        int is_node_full(int nk);
+
+        struct btree_dram_node *create_node(bool _is_leaf);
+
+        char *search(struct btree_dram_node *current_node, uint64_t key);
+
+        void split_node(int idx, struct btree_dram_node *parent, struct btree_dram_node *child);
+
+        void insert_not_full(struct btree_dram_node *node, uint64_t key, void *value);
+
+        bool update_if_found(struct btree_dram_node *current_node, uint64_t key, void *value);
+
+        void recursive_free(struct btree_dram_node *current_node);
+    };
+
     /*
      * btree_dram_check -- (internal) checks if btree has been initialized
      */
@@ -26,7 +66,7 @@ namespace ycsbc {
     /*
      * btree_dram_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
-    inline int is_node_full(int nk) {
+    inline int BTreeDram::is_node_full(int nk) {
         return nk == MAX_KEYS ? 1 : 0;
     }
 
@@ -79,10 +119,13 @@ namespace ycsbc {
      * btree_dram_read -- read 'value' of 'key' from btree and place it into '&result'
      */
     int BTreeDram::read(const char *key, void *&result) {
+        //cout << "read ... " << key  << endl;
         check();
 
         uint64_t uint64_key = strtoull(key, NULL, 0);
+        //cout << uint64_key << endl;
         result = search(root, uint64_key);
+        //cout << result << endl;
         return 1;
     }
 
@@ -275,6 +318,7 @@ namespace ycsbc {
      * btree_dram_free -- destructor
      */
     void BTreeDram::destroy() {
+        //std::cout << "destroy called" << std::endl;
         check();
 
         recursive_free(root);

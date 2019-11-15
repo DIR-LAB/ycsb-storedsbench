@@ -5,13 +5,13 @@
 #ifndef YCSB_STOREDSBENCH_STOREDS_DB_FACTORY_H
 #define YCSB_STOREDSBENCH_STOREDS_DB_FACTORY_H
 
-#include "storeds_db_client.h"
+#include "storeds_base.h"
 
 namespace ycsbc {
 
     class StoredsDbFactory {
     public:
-        static StoredsDbClient *GetDB(const char *type, const char *path);
+        static StoredsBase *GetDB(const char *type, const char *path);
     };
 
 } // ycsbc

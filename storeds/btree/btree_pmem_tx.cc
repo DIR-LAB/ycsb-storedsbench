@@ -11,14 +11,53 @@
 #include <libpmemobj.h>
 
 #include "../../lib/ex_common.h"
-#include "btree_pmem.h"
 #include "btree_common.h"
 
 namespace ycsbc {
+    class BTreePmemTx : public StoredsBase {
+    public:
+        BTreePmemTx(const char *path) {
+            init(path);
+        }
+
+        int init(const char *path);
+
+        int read(const char *key, void *&result);
+
+        int update(const char *key, void *value);
+
+        int insert(const char *key, void *value);
+
+        void destroy();
+
+    private:
+        /* Private Data */
+        PMEMobjpool *pop = NULL;
+        PMEMoid root_oid;
+        struct btree_pmem_node *root_p = NULL;
+        int total_nodes = 0;         //store the number of nodes the btree have
+
+        int check();
+
+        int is_node_full(int nk);
+
+        PMEMoid create_node(bool _is_leaf);
+
+        char *search(PMEMoid current_node_oid, uint64_t key);
+
+        void split_node(int idx, PMEMoid parent_oid, PMEMoid child_oid);
+
+        void insert_not_full(PMEMoid node_oid, uint64_t key, void *value);
+
+        bool update_if_found(PMEMoid current_node_oid, uint64_t key, void *value);
+
+        void recursive_free(PMEMoid current_node_oid);
+    };
+
     /*
-     * btree_pmem_check -- (internal) checks if btree has been initialized
+     * btree_pmem_tx_check -- (internal) checks if btree has been initialized
      */
-    int BTreePmem::check() {
+    int BTreePmemTx::check() {
         if (root_oid.off == 0) {
             fprintf(stderr, "[%s]: FATAL: btree not initialized yet\n", __FUNCTION__);
             assert(0);
@@ -27,61 +66,71 @@ namespace ycsbc {
     }
 
     /*
-     * btree_pmem_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
+     * btree_pmem_tx_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
-    int BTreePmem::is_node_full(int nk) {
+    int BTreePmemTx::is_node_full(int nk) {
         return nk == MAX_KEYS ? 1 : 0;
     }
 
     /*
-     * btree_pmem_create_node -- (internal) create new btree node
+     * btree_pmem_tx_create_node -- (internal) create new btree node
+     * this function must be called from a transaction block
      */
-    PMEMoid BTreePmem::create_node(bool _is_leaf) {
+    PMEMoid BTreePmemTx::create_node(bool _is_leaf) {
         total_nodes += 1;
-        PMEMoid new_node_oid;
-        pmemobj_alloc(pop, &new_node_oid, sizeof(struct btree_pmem_node), NODE_TYPE, NULL, NULL);
+        PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct btree_pmem_node), BTREE_NODE_TYPE);
         struct btree_pmem_node *new_node_prt = (struct btree_pmem_node *) pmemobj_direct(new_node_oid);
 
+        //struct btree_node *new_node_p = (struct btree_node *) malloc(sizeof(struct btree_node));
         new_node_prt->is_leaf = _is_leaf;
         new_node_prt->nk = 0;
+
+        // new_node_prt->entries = pmemobj_tx_alloc(MAX_KEYS * sizeof(struct entry), BTREE_ENTRY_TYPE);
+        // new_node_prt->children = pmemobj_tx_alloc((MAX_CHILDREN) * sizeof(struct btree_node), BTREE_NODE_TYPE);
 
         return new_node_oid;
     }
 
     /*
-     * btree_pmem_init -- initialize btree
+     * btree_pmem_tx_init -- initialize btree
      */
-    int BTreePmem::init(const char *path) {
+    int BTreePmemTx::init(const char *path) {
         if (file_exists(path) != 0) {
-            if ((pop = pmemobj_create(path, LAYOUT_NAME, PMEM_BTREE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
+            if ((pop = pmemobj_create(path, BTREE_LAYOUT_NAME, PMEM_BTREE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
                 fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());
                 exit(0);
             }
         } else {
-            if ((pop = pmemobj_open(path, LAYOUT_NAME)) == NULL) {
+            if ((pop = pmemobj_open(path, BTREE_LAYOUT_NAME)) == NULL) {
                 fprintf(stderr, "failed to open pool: %s\n", pmemobj_errormsg());
                 exit(0);
             }
         }
 
         root_oid = pmemobj_root(pop, sizeof(struct btree_pmem_node));
-        root_oid = create_node(true);    //root is also a leaf
-        root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
 
+        TX_BEGIN(pop) {
+            pmemobj_tx_add_range(root_oid, 0, sizeof(struct btree_pmem_node));
+            root_oid = create_node(true);    //root is also a leaf
+        } TX_ONABORT {
+            fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+            abort();
+        } TX_END
+
+        root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
         }
 
-        pmemobj_persist(pop, root_p, sizeof(struct btree_pmem_node));
         check();
         return 1;
     }
 
     /**
-     * btree_pmem_search -- (internal) search the node contains the key and return the value
+     * btree_pmem_tx_search -- (internal) search the node contains the key and return the value
      */
-    char *BTreePmem::search(PMEMoid current_node_oid, uint64_t key) {
+    char *BTreePmemTx::search(PMEMoid current_node_oid, uint64_t key) {
         int i = 0;
         struct btree_pmem_node *current_node_ptr = (struct btree_pmem_node *) pmemobj_direct(current_node_oid);
 
@@ -103,9 +152,9 @@ namespace ycsbc {
     }
 
     /**
-     * btree_pmem_read -- read 'value' of 'key' from btree and place it into '&result'
+     * btree_pmem_tx_read -- read 'value' of 'key' from btree and place it into '&result'
      */
-    int BTreePmem::read(const char *key, void *&result) {
+    int BTreePmemTx::read(const char *key, void *&result) {
         check();
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
@@ -115,9 +164,9 @@ namespace ycsbc {
     }
 
     /**
-     * btree_pmem_update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
+     * btree_pmem_tx_update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
      */
-    int BTreePmem::update(const char *key, void *value) {
+    int BTreePmemTx::update(const char *key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         insert(key, value);
@@ -125,34 +174,39 @@ namespace ycsbc {
     }
 
     /**
-     * btree_pmem_split_node -- (internal) split the children of the child node equally with the new sibling node
+     * btree_pmem_tx_split_node -- (internal) split the children of the child node equally with the new sibling node
      *
      * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
      * one children will be pushed to the parent node.
      *
      * this function will be called when the child node is full and become idx'th child of the parent,
      * the new sibling node will be the (idx+1)'th child of the parent.
+     *
+     * this function must be called from a transaction block
+     * snapshot of parent_oid must be taken in caller funciton
+     * this function will take snapshots of child_oid and sibling_oid
      */
-    void BTreePmem::split_node(int idx, PMEMoid parent_oid, PMEMoid child_oid) {
+    void BTreePmemTx::split_node(int idx, PMEMoid parent_oid, PMEMoid child_oid) {
         struct btree_pmem_node *parent_ptr = (struct btree_pmem_node *) pmemobj_direct(parent_oid);
         struct btree_pmem_node *child_ptr = (struct btree_pmem_node *) pmemobj_direct(child_oid);
 
         PMEMoid sibling_oid = create_node(child_ptr->is_leaf);    //new sibling node will get the same status as child
         struct btree_pmem_node *sibling_ptr = (struct btree_pmem_node *) pmemobj_direct(sibling_oid);
 
+        pmemobj_tx_add_range_direct(child_ptr, sizeof(struct btree_pmem_node));
+        pmemobj_tx_add_range_direct(sibling_ptr, sizeof(struct btree_pmem_node));
+
         sibling_ptr->nk = MIN_DEGREE - 1;   //new sibling child will hold the (MIN_DEGREE - 1) entries of child node
 
         //transfer the last (MIN_DEGREE - 1) entries of child node to it's sibling node
         for(int i=0; i<MIN_DEGREE-1; i+=1) {
             sibling_ptr->entries[i] = child_ptr->entries[i + MIN_DEGREE];
-            //todo: it is possible to free few of child's memory, or can try with pmemobj_memmove
         }
 
         //if child is an internal node, transfer the last (MIN_DEGREE) chiddren of child node to it's sibling node
         if(child_ptr->is_leaf == false) {
             for(int i=0; i<MIN_DEGREE; i+=1) {
                 sibling_ptr->children[i] = child_ptr->children[i + MIN_DEGREE];
-                //todo: it is possible to free few of child's memory, or can try with pmemobj_memmove
             }
         }
 
@@ -176,18 +230,15 @@ namespace ycsbc {
 
         //parent now hold a new entry, so increasing the number of keys
         parent_ptr->nk += 1;
-
-        //persist changes
-        pmemobj_persist(pop, sibling_ptr, sizeof(struct btree_pmem_node));
-        pmemobj_persist(pop, child_ptr, sizeof(struct btree_pmem_node));
-        pmemobj_persist(pop, parent_ptr, sizeof(struct btree_pmem_node));
     }
 
     /**
-     * btree_pmem_insert_not_full -- (internal) inserts <key, value> pair into node
+     * btree_pmem_tx_insert_not_full -- (internal) inserts <key, value> pair into node
      * when this function called, we can assume that the node has space to hold new data
+     *
+     * this function must be called from a transaction block
      */
-    void BTreePmem::insert_not_full(PMEMoid node_oid, uint64_t key, void *value) {
+    void BTreePmemTx::insert_not_full(PMEMoid node_oid, uint64_t key, void *value) {
         struct btree_pmem_node *node_ptr = (struct btree_pmem_node *) pmemobj_direct(node_oid);
         int i = node_ptr->nk - 1;
 
@@ -201,9 +252,6 @@ namespace ycsbc {
             node_ptr->entries[i+1].key = key;
             memcpy(node_ptr->entries[i+1].value, (char *) value, strlen((char *) value) + 1);
             node_ptr->nk += 1;
-
-            //persist the changes
-            pmemobj_persist(pop, node_ptr, sizeof(struct btree_pmem_node));
             return;
         }
 
@@ -224,14 +272,19 @@ namespace ycsbc {
                 i += 1;
             }
         }
-
-        insert_not_full(node_ptr->children[i+1], key, value);
+        TX_BEGIN(pop) {
+            pmemobj_tx_add_range(node_ptr->children[i+1], 0, sizeof(struct btree_pmem_node));
+            insert_not_full(node_ptr->children[i+1], key, value);
+        } TX_ONABORT {
+            fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+            abort();
+        } TX_END
     }
 
     /**
-     * btree_pmem_update_if_found -- (internal) search the key and if exist, update the value
+     * btree_pmem_tx_update_if_found -- (internal) search the key and if exist, update the value
      */
-    bool BTreePmem::update_if_found(PMEMoid current_node_oid, uint64_t key, void *value) {
+    bool BTreePmemTx::update_if_found(PMEMoid current_node_oid, uint64_t key, void *value) {
         int i = 0;
         struct btree_pmem_node *current_node_ptr = (struct btree_pmem_node *) pmemobj_direct(current_node_oid);
 
@@ -243,8 +296,13 @@ namespace ycsbc {
         //check if we found the key
         if(key == current_node_ptr->entries[i].key) {
             //key found, update value and return
-            memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
-            pmemobj_persist(pop, &current_node_ptr->entries[i], strlen((char *) value));
+            TX_BEGIN(pop) {
+                pmemobj_tx_add_range_direct(&current_node_ptr->entries[i], sizeof(struct entry));
+                memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
+            } TX_ONABORT {
+                fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+                abort();
+            } TX_END
             return true;
         }
 
@@ -255,9 +313,9 @@ namespace ycsbc {
     }
 
     /**
-     * btree_pmem_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
+     * btree_pmem_tx_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
      */
-    int BTreePmem::insert(const char *key, void *value) {
+    int BTreePmemTx::insert(const char *key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
 
@@ -271,45 +329,59 @@ namespace ycsbc {
         if(is_node_full(root_p->nk)) {
             int idx = 0;
 
-            PMEMoid new_root_oid = create_node(false);    //root is not a leaf anymore
-            struct btree_pmem_node *new_root_ptr = (struct btree_pmem_node *) pmemobj_direct(new_root_oid);
+            TX_BEGIN(pop) {
+                PMEMoid new_root_oid = create_node(false);    //root is not a leaf anymore
+                struct btree_pmem_node *new_root_ptr = (struct btree_pmem_node *) pmemobj_direct(new_root_oid);
 
-            new_root_ptr->children[idx] = root_oid;
-            split_node(idx, new_root_oid, root_oid);
+                pmemobj_tx_add_range_direct(new_root_ptr, sizeof(struct btree_pmem_node));
+                new_root_ptr->children[idx] = root_oid;
+                split_node(idx, new_root_oid, root_oid);
 
-            //new_root is holding two children now, decide which children will hold the new <key,value> pair
-            if(new_root_ptr->entries[idx].key < uint64_key) {
-                idx += 1;
-            }
+                //new_root is holding two children now, decide which children will hold the new <key,value> pair
+                if(new_root_ptr->entries[idx].key < uint64_key) {
+                    idx += 1;
+                }
 
-            //new_root->children[idx] will definitely have space now, go ahead and insert the data to proper place
-            insert_not_full(new_root_ptr->children[idx], uint64_key, value);
-            pmemobj_persist(pop, new_root_ptr, sizeof(struct btree_pmem_node));  //persist changes on new_root_ptr
+                //new_root->children[idx] will definitely have space now, go ahead and insert the data to proper place
+                pmemobj_tx_add_range(new_root_ptr->children[idx], 0, sizeof(struct btree_pmem_node));
+                insert_not_full(new_root_ptr->children[idx], uint64_key, value);
 
-            //update the root
-            root_oid = new_root_oid;
+                //update the root
+                pmemobj_tx_add_range_direct(root_p, sizeof(struct btree_pmem_node));
+                root_oid = new_root_oid;
 
-            //as root_oid updated, reassign root_p
-            root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
-            pmemobj_persist(pop, root_p, sizeof(struct btree_pmem_node));    //persist changes on root_p
+                //as root_oid updated, reassign root_p
+                root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
+            } TX_ONABORT {
+                fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+                abort();
+            } TX_END
         }
         else {
             //root is not full, go ahead and insert the data to proper place
-            insert_not_full(root_oid, uint64_key, value);
+            TX_BEGIN(pop) {
+                pmemobj_tx_add_range_direct(root_p, sizeof(struct btree_pmem_node));
+                insert_not_full(root_oid, uint64_key, value);
+            } TX_ONABORT {
+                fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+                abort();
+            } TX_END
         }
 
         return 1;
     }
 
     /**
-     * btree_pmem_recursive_free -- recursively visit all the btree nodes and de-allocate memory
+     * btree_pmem_tx_recursive_free -- recursively visit all the btree nodes and de-allocate memory
+     * this function must be called in a transaction block
      */
-    void BTreePmem::recursive_free(PMEMoid current_node_oid) {
+    void BTreePmemTx::recursive_free(PMEMoid current_node_oid) {
         struct btree_pmem_node *current_node_ptr = (struct btree_pmem_node *) pmemobj_direct(current_node_oid);
         //base case
         if(current_node_ptr->is_leaf) {
             //free the current_node's memory and return
-            pmemobj_free(&current_node_oid);
+            pmemobj_tx_add_range_direct(current_node_ptr, sizeof(struct btree_pmem_node));
+            pmemobj_tx_free(current_node_oid);
             return;
         }
 
@@ -321,16 +393,22 @@ namespace ycsbc {
         }
 
         //free the current_node's memory
-        pmemobj_free(&current_node_oid);
+        pmemobj_tx_add_range_direct(current_node_ptr, sizeof(struct btree_pmem_node));
+        pmemobj_tx_free(current_node_oid);
     }
 
     /**
-     * btree_pmem_free -- destructor
+     * btree_pmem_tx_free -- destructor
      */
-    void BTreePmem::destroy() {
+    void BTreePmemTx::destroy() {
         check();
 
-        recursive_free(root_oid);
-        root_oid = OID_NULL;
+        TX_BEGIN(pop) {
+            recursive_free(root_oid);
+            root_oid = OID_NULL;
+        } TX_ONABORT {
+            fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+            abort();
+        } TX_END
     }
 }   //ycsbc

@@ -29,14 +29,14 @@ namespace ycsbc {
     #define PMEM_BTREE_POOL_SIZE ((size_t) (1 << 30))
 
     /* name of layout in the pool */
-    #define LAYOUT_NAME "btree_layout"
+    #define BTREE_LAYOUT_NAME "btree_layout"
 
     /* types of allocations */
-    enum types {
-        NODE_TYPE,
-        ENTRY_TYPE,
+    enum btree_alloc_types {
+        BTREE_NODE_TYPE,
+        BTREE_ENTRY_TYPE,
 
-        MAX_TYPES
+        BTREE_MAX_TYPES
     };
 
     /* declaration of data-structures */
