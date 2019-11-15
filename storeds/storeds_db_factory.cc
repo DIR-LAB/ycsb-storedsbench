@@ -20,6 +20,7 @@
 #include "array/array_dram.cc"
 #include "array/array_pmem.cc"
 #include "array/array_pmem_tx.cc"
+#include "rbtree/rbtree_dram.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
@@ -55,7 +56,13 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new LinkedlistPmem(path);
     } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
         return new LinkedlistPmemTx(path);
-    } else {
+    } else if (strcmp(type, "rbtree-dram") == 0) {
+        return new RbtreeDram(path);
+    } /*else if (strcmp(type, "rbtree-pmem") == 0) {
+        type_index = 14;
+    } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
+        type_index = 15;
+    } */else {
         return NULL;
     }
 }
