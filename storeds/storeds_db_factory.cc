@@ -21,6 +21,7 @@
 #include "array/array_pmem.cc"
 #include "array/array_pmem_tx.cc"
 #include "rbtree/rbtree_dram.cc"
+#include "rbtree/rbtree_pmem.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
@@ -58,9 +59,9 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new LinkedlistPmemTx(path);
     } else if (strcmp(type, "rbtree-dram") == 0) {
         return new RbtreeDram(path);
-    } /*else if (strcmp(type, "rbtree-pmem") == 0) {
-        type_index = 14;
-    } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
+    } else if (strcmp(type, "rbtree-pmem") == 0) {
+        return new RbtreePmem(path);
+    } /*else if (strcmp(type, "rbtree-pmem-tx") == 0) {
         type_index = 15;
     } */else {
         return NULL;

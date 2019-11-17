@@ -8,6 +8,12 @@
 #include <libpmemobj.h>
 
 namespace ycsbc {
+    /* size of the pmem object pool -- 1 GB */
+    #define PMEM_RB_POOL_SIZE ((size_t) (1 << 30))
+
+    /* name of layout in the pool */
+    #define RB_LAYOUT_NAME "rbtree_layout"
+
     /* default length for value */
     #define DEFAULT_VALUE_LEN 101
 
@@ -23,8 +29,24 @@ namespace ycsbc {
     struct rbtree_dram_node {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
-        struct rbtree_dram_node *left, *right, *parent;
+        struct rbtree_dram_node *left;
+        struct rbtree_dram_node *right;
+        struct rbtree_dram_node *parent;
         bool color;
+    };
+
+    /* declaration of pmem data-structures */
+    struct rbtree_pmem_node {
+        uint64_t key;
+        char value[DEFAULT_VALUE_LEN];
+        PMEMoid left;
+        PMEMoid right;
+        PMEMoid parent;
+        bool color;
+    };
+
+    struct rbtree_pmem_root {
+        PMEMoid root;
     };
 }   //ycsbc
 
