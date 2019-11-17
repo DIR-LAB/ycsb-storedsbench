@@ -283,7 +283,7 @@ namespace ycsbc {
         if(key == current_node_ptr->entries[i].key) {
             //key found, update value and return
             memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
-            pmemobj_persist(pop, &current_node_ptr->entries[i], strlen((char *) value));
+            pmemobj_persist(pop, &current_node_ptr->entries[i], strlen((char *) value));    //todo: should we need to persist strlen(value) + 1???
             return true;
         }
 
