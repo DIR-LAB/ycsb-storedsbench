@@ -45,8 +45,12 @@ namespace ycsbc {
         bool color;
     };
 
-    struct rbtree_pmem_root {
-        PMEMoid root;
+    /**
+     * types -- types of linkedlist pmem allocations
+     */
+    enum rbtree_alloc_types {
+        RB_NODE_TYPE,
+        RB_MAX_TYPES
     };
 }   //ycsbc
 

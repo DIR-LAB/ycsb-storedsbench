@@ -36,18 +36,24 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct rbtree_pmem_root *pmem_root_p = NULL;
+        struct rbtree_pmem_node *pmem_root_p = NULL;
 
         int check();
 
         void lookup(PMEMoid current_node, uint64_t key, void *&result);
 
         bool update_if_found(PMEMoid current_node, uint64_t key, void *value);
+
+        PMEMoid create_new_node(uint64_t key, void *value);
+
+        PMEMoid bst_insert(PMEMoid current_node_oid, PMEMoid new_node_oid);
+
+        void fix_violation(PMEMoid &current_node);
     };
 
     int RbtreePmem::check() {
-        if (pmem_root_p->root.off == 0) {
-            fprintf(stderr, "[%s]: FATAL: linkedlist not initialized yet\n", __FUNCTION__);
+        if (root_oid.off == 0) {
+            fprintf(stderr, "[%s]: FATAL: rbtree not initialized yet\n", __FUNCTION__);
             assert(0);
         }
         return 1;
@@ -66,8 +72,8 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct rbtree_pmem_root));
-        pmem_root_p = (struct rbtree_pmem_root *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct rbtree_pmem_node));
+        pmem_root_p = (struct rbtree_pmem_node *) pmemobj_direct(root_oid);
         if(pmem_root_p == NULL) {
             printf("FATAL: The Root Object Not Initalized Yet, Exit!\n");
             exit(0);
@@ -100,7 +106,7 @@ namespace ycsbc {
         check();
 
         uint64_t uint64_key = strtoull(key, NULL, 0);
-        lookup(pmem_root_p->root, uint64_key, result);
+        lookup(root_oid, uint64_key, result);
         return 1;
     }
 
@@ -134,9 +140,80 @@ namespace ycsbc {
         }
     }
 
+    /*
+     * create_new_node -- (internal) allocate memory for new node
+     */
+    PMEMoid RbtreePmem::create_new_node(uint64_t key, void *value) {
+        //prepare new in-memory node
+        struct rbtree_pmem_node *in_memory_node_ptr = (struct rbtree_pmem_node *) malloc(sizeof(struct rbtree_pmem_node));
+        in_memory_node_ptr->left = in_memory_node_ptr->right = in_memory_node_ptr->parent = OID_NULL;
+        in_memory_node_ptr->color = RED;
+        in_memory_node_ptr->key = key;
+        strcpy(in_memory_node_ptr->value, (char *) value);
+
+        //copy in-memory node to pmem-node
+        PMEMoid new_node_oid;
+        pmemobj_zalloc(pop, &new_node_oid, sizeof(struct rbtree_pmem_node), RB_NODE_TYPE);
+        struct rbtree_pmem_node *pmem_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
+        memcpy(pmem_node_ptr, in_memory_node_ptr, sizeof(struct rbtree_pmem_node));
+        
+        //freeing in-memory node
+        free(in_memory_node_ptr);
+
+        return new_node_oid;
+    }
+
+    /*
+     * bst_insert -- (internal) insert into raw bst, will update the balance later scope
+     */
+    //todo: we are persisting too many things ... we should convert this to iterative process to avoid unnecessary persist
+    PMEMoid RbtreePmem::bst_insert(PMEMoid current_node_oid, PMEMoid new_node_oid) {
+        if (current_node_oid.off == 0) {
+            return new_node_oid;
+        }
+
+        /* Otherwise, recur down the tree */
+        struct rbtree_pmem_node *current_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+        struct rbtree_pmem_node *new_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
+        if (new_node_ptr->key < current_node_ptr->key) {
+            current_node_ptr->left = bst_insert(current_node_ptr->left, new_node_oid);
+            struct rbtree_pmem_node *left_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_node_ptr->left);
+            left_ptr->parent = current_node_oid;
+
+            pmemobj_persist(pop, &current_node_ptr->left, sizeof(struct rbtree_pmem_node));
+            pmemobj_persist(pop, &left_ptr->parent, sizeof(struct rbtree_pmem_node));
+        }
+        else {
+            current_node_ptr->right = bst_insert(current_node_ptr->right, new_node_oid);
+            struct rbtree_pmem_node *right_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_node_ptr->right);
+            right_ptr->parent = current_node_oid;
+
+            pmemobj_persist(pop, &current_node_ptr->right, sizeof(struct rbtree_pmem_node));
+            pmemobj_persist(pop, &right_ptr->parent, sizeof(struct rbtree_pmem_node));
+        }
+
+        /* return the (unchanged) node */
+        return current_node_oid;
+    }
+
+    /*
+     * fix_violation -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+     */
+    void RbtreePmem::fix_violation(PMEMoid &current_node) {
+        //todo: implement logic here
+    }
+
     int RbtreePmem::insert(const char *key, void *value) {
+        //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+
         uint64_t uint64_key = strtoull(key, NULL, 0);
-        //todo: update logic
+
+        if(update_if_found(root_oid, uint64_key, value)) return 1;
+        PMEMoid new_node = create_new_node(uint64_key, value);
+
+        // Do a normal BST insert
+        root_oid = bst_insert(root_oid, new_node);
+        fix_violation(new_node);
         return 1;
     }
 
