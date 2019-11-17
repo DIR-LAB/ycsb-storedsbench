@@ -8,7 +8,7 @@
 #include <assert.h>
 #include<stdbool.h>
 #include<algorithm>
-
+#include<bits/stdc++.h>
 #include "rbtree_common.h"
 
 namespace ycsbc {
@@ -26,6 +26,8 @@ namespace ycsbc {
 
         int insert(const char *key, void *value);
 
+        void levelorder();
+
         void destroy();
 
         ~RbtreeDram();
@@ -40,13 +42,13 @@ namespace ycsbc {
 
         bool update_if_found(struct rbtree_dram_node *current_node, uint64_t key, void *value);
 
-        void rotateLeft(struct rbtree_dram_node *root, struct rbtree_dram_node *pt);
+        void rotate_left(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt);
 
-        void rotateRight(struct rbtree_dram_node *root, struct rbtree_dram_node *pt);
+        void rotate_right(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt);
 
-        struct rbtree_dram_node* BSTInsert(struct rbtree_dram_node* root, struct rbtree_dram_node *pt);
+        struct rbtree_dram_node* bst_insert(struct rbtree_dram_node* root, struct rbtree_dram_node *pt);
 
-        void fixViolation(struct rbtree_dram_node *root, struct rbtree_dram_node *pt);
+        void fix_violation(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt);
     };
 
     /*
@@ -73,20 +75,23 @@ namespace ycsbc {
      */
     void RbtreeDram::lookup(struct rbtree_dram_node *current_node, uint64_t key, void *&result) {
         //base case
+        //cout<<"key of node "<<current_node->key<<endl;
         if(current_node == NULL) {
             return;
         }
 
         if(current_node->key == key) {
             //data found
+            //cout<<"reach found "<<current_node->value<<endl;
             result = current_node->value;
             return;
         }
 
-        if(current_node->key < key) {
+        if(current_node->key > key) {
             return lookup(current_node->left, key, result);
         }
         else {
+            //cout<<"going right "<<endl;
             return lookup(current_node->right, key, result);
         }
     }
@@ -96,14 +101,15 @@ namespace ycsbc {
      */
     int RbtreeDram::read(const char* key, void *&result) {
         check();
-
         uint64_t uint64_key = strtoull(key, NULL, 0);
+        //cout<<"read "<<uint64_key<<endl;
         lookup(root_p, uint64_key, result);
+        
         return 1;
     }
 
     /*
-     * update_if_found -- Read and update Value for a given Key of RBTree
+     * update_if_found -- private method --Read and update Value for a given Key of RBTree
      */
     bool RbtreeDram::update_if_found(struct rbtree_dram_node *current_node, uint64_t key, void *value) {
         //base case
@@ -116,7 +122,7 @@ namespace ycsbc {
             return true;
         }
 
-        if(current_node->key < key) {
+        if(current_node->key > key) {
             return update_if_found(current_node->left, key, value);
         }
         else {
@@ -125,7 +131,7 @@ namespace ycsbc {
     }
 
     /*
-     * update -- Read and Update Value for a given Key of RB-Tree
+     * update -- private method -- Read and Update Value for a given Key of RB-Tree
      */
     int RbtreeDram::update(const char *key, void *value) {
         check();
@@ -136,9 +142,9 @@ namespace ycsbc {
     }
 
     /*
-     * rotateLeft -- Rotate Sub-Tree of RBTree to the Left
+     * rotate_left -- private method -- Rotate Sub-Tree of RBTree to the Left
      */
-    void RbtreeDram::rotateLeft(struct rbtree_dram_node *root, struct rbtree_dram_node *pt) {
+    void RbtreeDram::rotate_left(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt) {
         struct rbtree_dram_node *pt_right = pt->right;
         pt->right = pt_right->left;
         if (pt->right != NULL) {
@@ -159,9 +165,10 @@ namespace ycsbc {
     }
 
     /*
-     * rotateRight -- Rotate Sub-Tree of RBTree to right
+     * rotate_right -- private method -- Rotate Sub-Tree of RBTree to right
      */
-    void RbtreeDram::rotateRight(struct rbtree_dram_node *root, struct rbtree_dram_node *pt) {
+    void RbtreeDram::rotate_right(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt) {
+        //cout<<endl<<"rotate right called"<<endl;
         struct rbtree_dram_node *pt_left = pt->left;
         pt->left = pt_left->right;
         if (pt->left != NULL) {
@@ -182,20 +189,20 @@ namespace ycsbc {
     }
 
     /*
-     * btree_dram_check -- Insert into Binary Search Tree, before doing fix to balance to make RBTree.
+     * btree_dram_check -- private method -- Insert into Binary Search Tree, before doing fix to balance to make RBTree.
      */
-    struct rbtree_dram_node* RbtreeDram::BSTInsert(struct rbtree_dram_node* root, struct rbtree_dram_node *pt) {
+    struct rbtree_dram_node* RbtreeDram::bst_insert(struct rbtree_dram_node* root, struct rbtree_dram_node *pt) {
         if (root == NULL) {
             return pt;
         }
 
         /* Otherwise, recur down the tree */
         if (pt->key < root->key) {
-            root->left  = BSTInsert(root->left, pt);
+            root->left  = bst_insert(root->left, pt);
             root->left->parent = root;
         }
         else if (pt->key > root->key) {
-            root->right = BSTInsert(root->right, pt);
+            root->right = bst_insert(root->right, pt);
             root->right->parent = root;
         }
 
@@ -204,9 +211,9 @@ namespace ycsbc {
     }
 
     /*
-     * fixViolation -- Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+     * fix_violation -- private method -- Rebalance RB-Tree. This operation can be done in relaxed or active manner.
      */
-    void RbtreeDram::fixViolation(struct rbtree_dram_node *root, struct rbtree_dram_node *pt)
+    void RbtreeDram::fix_violation(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt)
     {
         struct rbtree_dram_node *parent_pt = NULL;
         struct rbtree_dram_node *grand_parent_pt = NULL;
@@ -232,13 +239,13 @@ namespace ycsbc {
                 else {
                     /* Case : 2 # pt is right child of its parent Left-rotation required */
                     if (pt == parent_pt->right) {
-                        rotateLeft(root, parent_pt);
+                        rotate_left(root, parent_pt);
                         pt = parent_pt;
                         parent_pt = pt->parent;
                     }
 
                     /* Case : 3 # pt is left child of its parent Right-rotation required */
-                    rotateRight(root, grand_parent_pt);
+                    rotate_right(root, grand_parent_pt);
                     std::swap(parent_pt->color, grand_parent_pt->color);
                     pt = parent_pt;
                 }
@@ -258,13 +265,13 @@ namespace ycsbc {
                 else {
                     /* Case : 2 # pt is left child of its parent Right-rotation required */
                     if (pt == parent_pt->left) {
-                        rotateRight(root, parent_pt);
+                        rotate_right(root, parent_pt);
                         pt = parent_pt;
                         parent_pt = pt->parent;
                     }
 
                     /* Case : 3 # pt is right child of its parent Left-rotation required */
-                    rotateLeft(root, grand_parent_pt);
+                    rotate_left(root, grand_parent_pt);
                     std::swap(parent_pt->color, grand_parent_pt->color);
                     pt = parent_pt;
                 }
@@ -275,8 +282,9 @@ namespace ycsbc {
     }
 
     /*
-     * insert -- Insert Value into RBTree
+     * insert -- private method -- Insert Value into RBTree
      */
+    
     int RbtreeDram::insert(const char *key, void *value) {
         uint64_t uint64_key = strtoull(key,NULL,0);
         struct rbtree_dram_node *pt = (struct rbtree_dram_node *)malloc(sizeof(struct rbtree_dram_node)); //new Node
@@ -285,8 +293,8 @@ namespace ycsbc {
         pt->key = uint64_key;
         strcpy(pt->value,(const char *)value);
         // Do a normal BST insert
-        root_p = BSTInsert(root_p,pt);
-        fixViolation(root_p,pt);
+        root_p = bst_insert(root_p,pt);
+        fix_violation(root_p,pt);
         return 1;
     }
 
