@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include<stdbool.h>
-#include<algorithm>
+#include<algorithm>     //todo: remove this after implementing swap
 #include<bits/stdc++.h>
 #include "rbtree_common.h"
 
@@ -186,9 +186,9 @@ namespace ycsbc {
     }
 
     /*
-     * btree_dram_check -- (internal) insert into raw bst, will update the balance later scope
+     * bst_insert -- (internal) insert into raw bst, will update the balance later scope
      */
-    struct rbtree_dram_node* RbtreeDram::bst_insert(struct rbtree_dram_node* current_node, struct rbtree_dram_node *new_node) {
+    struct rbtree_dram_node* RbtreeDram::bst_insert(struct rbtree_dram_node *current_node, struct rbtree_dram_node *new_node) {
         if (current_node == NULL) {
             return new_node;
         }
@@ -198,7 +198,7 @@ namespace ycsbc {
             current_node->left = bst_insert(current_node->left, new_node);
             current_node->left->parent = current_node;
         }
-        else if (new_node->key > current_node->key) {
+        else {
             current_node->right = bst_insert(current_node->right, new_node);
             current_node->right->parent = current_node;
         }
@@ -239,6 +239,7 @@ namespace ycsbc {
 
                     /* Case: current_node is left child of its parent Right-rotation required */
                     rotate_right(grand_parent_pt);
+                    //todo: implement swap
                     std::swap(parent_pt->color, grand_parent_pt->color);
                     current_node = parent_pt;
                 }
@@ -265,6 +266,7 @@ namespace ycsbc {
 
                     /* Case: current_node is right child of its parent Left-rotation required */
                     rotate_left(grand_parent_pt);
+                    //todo: implement swap
                     std::swap(parent_pt->color, grand_parent_pt->color);
                     current_node = parent_pt;
                 }
@@ -274,6 +276,9 @@ namespace ycsbc {
         root_p->color = BLACK;
     }
 
+    /*
+     * create_new_node -- (internal) allocate memory for new node
+     */
     struct rbtree_dram_node * RbtreeDram::create_new_node(uint64_t key, void *value) {
         //allocate memory to new node
         struct rbtree_dram_node *new_node = (struct rbtree_dram_node *) malloc(sizeof(struct rbtree_dram_node));
