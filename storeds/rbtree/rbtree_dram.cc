@@ -42,13 +42,15 @@ namespace ycsbc {
 
         bool update_if_found(struct rbtree_dram_node *current_node, uint64_t key, void *value);
 
-        void rotate_left(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt);
+        void rotate_left(struct rbtree_dram_node *&ptr);
 
-        void rotate_right(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt);
+        void rotate_right(struct rbtree_dram_node *&ptr);
 
-        struct rbtree_dram_node* bst_insert(struct rbtree_dram_node* root, struct rbtree_dram_node *pt);
+        struct rbtree_dram_node *bst_insert(struct rbtree_dram_node *current_node, struct rbtree_dram_node *new_node);
 
-        void fix_violation(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt);
+        void fix_violation(struct rbtree_dram_node *&current_node);
+
+        struct rbtree_dram_node *create_new_node(uint64_t key, void *value);
     };
 
     /*
@@ -60,7 +62,7 @@ namespace ycsbc {
     }
 
     /*
-     * check -- check whether rb-tree is initialized or not
+     * check -- (internal) check whether rb-tree is initialized or not
      */
     int RbtreeDram::check() {
         if (root_p == NULL) {
@@ -71,18 +73,16 @@ namespace ycsbc {
     }
 
     /*
-     * lookup -- Read and return Value for a given Key of RBTree
+     * lookup -- (internal) Read and return Value for a given Key of RBTree
      */
     void RbtreeDram::lookup(struct rbtree_dram_node *current_node, uint64_t key, void *&result) {
         //base case
-        //cout<<"key of node "<<current_node->key<<endl;
         if(current_node == NULL) {
             return;
         }
 
         if(current_node->key == key) {
             //data found
-            //cout<<"reach found "<<current_node->value<<endl;
             result = current_node->value;
             return;
         }
@@ -91,7 +91,6 @@ namespace ycsbc {
             return lookup(current_node->left, key, result);
         }
         else {
-            //cout<<"going right "<<endl;
             return lookup(current_node->right, key, result);
         }
     }
@@ -102,14 +101,13 @@ namespace ycsbc {
     int RbtreeDram::read(const char* key, void *&result) {
         check();
         uint64_t uint64_key = strtoull(key, NULL, 0);
-        //cout<<"read "<<uint64_key<<endl;
         lookup(root_p, uint64_key, result);
         
         return 1;
     }
 
     /*
-     * update_if_found -- private method --Read and update Value for a given Key of RBTree
+     * update_if_found -- (internal) Read and update Value for a given Key of RBTree
      */
     bool RbtreeDram::update_if_found(struct rbtree_dram_node *current_node, uint64_t key, void *value) {
         //base case
@@ -131,170 +129,175 @@ namespace ycsbc {
     }
 
     /*
-     * update -- private method -- Read and Update Value for a given Key of RB-Tree
+     * update -- if key exists, update <key, value> pair. if key not exist, insert <key, value pair>
      */
     int RbtreeDram::update(const char *key, void *value) {
         check();
-
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        update_if_found(root_p, uint64_key, value);
+        insert(key, value);
         return 1;
     }
 
     /*
-     * rotate_left -- private method -- Rotate Sub-Tree of RBTree to the Left
+     * rotate_left -- (internal) Rotate Sub-Tree of RBTree to the Left
      */
-    void RbtreeDram::rotate_left(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt) {
-        struct rbtree_dram_node *pt_right = pt->right;
-        pt->right = pt_right->left;
-        if (pt->right != NULL) {
-            pt->right->parent = pt;
+    void RbtreeDram::rotate_left(struct rbtree_dram_node *&ptr) {
+        struct rbtree_dram_node *right_p = ptr->right;
+        ptr->right = right_p->left;
+        if (ptr->right != NULL) {
+            ptr->right->parent = ptr;
         }
-        pt_right->parent = pt->parent;
-        if (pt->parent == NULL) {
-            root = pt_right;
+        right_p->parent = ptr->parent;
+
+        if (ptr->parent == NULL) {
+            root_p = right_p;
         }
-        else if (pt == pt->parent->left) {
-            pt->parent->left = pt_right;
+        else if (ptr == ptr->parent->left) {
+            ptr->parent->left = right_p;
         }
         else {
-            pt->parent->right = pt_right;
+            ptr->parent->right = right_p;
         }
-        pt_right->left = pt;
-        pt->parent = pt_right;
+        right_p->left = ptr;
+        ptr->parent = right_p;
     }
 
     /*
-     * rotate_right -- private method -- Rotate Sub-Tree of RBTree to right
+     * rotate_right -- (internal) Rotate Sub-Tree of RBTree to right
      */
-    void RbtreeDram::rotate_right(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt) {
-        //cout<<endl<<"rotate right called"<<endl;
-        struct rbtree_dram_node *pt_left = pt->left;
-        pt->left = pt_left->right;
-        if (pt->left != NULL) {
-            pt->left->parent = pt;
+    void RbtreeDram::rotate_right(struct rbtree_dram_node *&ptr) {
+        struct rbtree_dram_node *left_p = ptr->left;
+        ptr->left = left_p->right;
+        if (ptr->left != NULL) {
+            ptr->left->parent = ptr;
         }
-        pt_left->parent = pt->parent;
-        if (pt->parent == NULL) {
-            root = pt_left;
+        left_p->parent = ptr->parent;
+
+        if (ptr->parent == NULL) {
+            root_p = left_p;
         }
-        else if (pt == pt->parent->left) {
-            pt->parent->left = pt_left;
+        else if (ptr == ptr->parent->left) {
+            ptr->parent->left = left_p;
         }
         else {
-            pt->parent->right = pt_left;
+            ptr->parent->right = left_p;
         }
-        pt_left->right = pt;
-        pt->parent = pt_left;
+        left_p->right = ptr;
+        ptr->parent = left_p;
     }
 
     /*
-     * btree_dram_check -- private method -- Insert into Binary Search Tree, before doing fix to balance to make RBTree.
+     * btree_dram_check -- (internal) insert into raw bst, will update the balance later scope
      */
-    struct rbtree_dram_node* RbtreeDram::bst_insert(struct rbtree_dram_node* root, struct rbtree_dram_node *pt) {
-        if (root == NULL) {
-            return pt;
+    struct rbtree_dram_node* RbtreeDram::bst_insert(struct rbtree_dram_node* current_node, struct rbtree_dram_node *new_node) {
+        if (current_node == NULL) {
+            return new_node;
         }
 
         /* Otherwise, recur down the tree */
-        if (pt->key < root->key) {
-            root->left  = bst_insert(root->left, pt);
-            root->left->parent = root;
+        if (new_node->key < current_node->key) {
+            current_node->left = bst_insert(current_node->left, new_node);
+            current_node->left->parent = current_node;
         }
-        else if (pt->key > root->key) {
-            root->right = bst_insert(root->right, pt);
-            root->right->parent = root;
+        else if (new_node->key > current_node->key) {
+            current_node->right = bst_insert(current_node->right, new_node);
+            current_node->right->parent = current_node;
         }
 
         /* return the (unchanged) node pointer */
-        return root;
+        return current_node;
     }
 
     /*
-     * fix_violation -- private method -- Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+     * fix_violation -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
      */
-    void RbtreeDram::fix_violation(struct rbtree_dram_node *&root, struct rbtree_dram_node *&pt)
-    {
+    void RbtreeDram::fix_violation(struct rbtree_dram_node *&current_node) {
         struct rbtree_dram_node *parent_pt = NULL;
         struct rbtree_dram_node *grand_parent_pt = NULL;
 
-        while ((pt != root) && (pt->color != BLACK) && (pt->parent->color == RED)) {
+        while ((current_node != root_p) && (current_node->color != BLACK) && (current_node->parent->color == RED)) {
+            parent_pt = current_node->parent;
+            grand_parent_pt = current_node->parent->parent;
 
-            parent_pt = pt->parent;
-            grand_parent_pt = pt->parent->parent;
-
-            /*  Case : A
-                Parent of pt is left child of Grand-parent of pt */
+            /*  Case: Parent of current_node is left child of Grand-parent of current_node */
             if (parent_pt == grand_parent_pt->left) {
                 struct rbtree_dram_node *uncle_pt = grand_parent_pt->right;
 
-                /* Case : 1 # The uncle of pt is also red Only Recoloring required */
+                /* Case: The uncle of current_node is also red Only Recoloring required */
                 if (uncle_pt != NULL && uncle_pt->color == RED) {
                     grand_parent_pt->color = RED;
                     parent_pt->color = BLACK;
                     uncle_pt->color = BLACK;
-                    pt = grand_parent_pt;
+                    current_node = grand_parent_pt;
                 }
-
                 else {
-                    /* Case : 2 # pt is right child of its parent Left-rotation required */
-                    if (pt == parent_pt->right) {
-                        rotate_left(root, parent_pt);
-                        pt = parent_pt;
-                        parent_pt = pt->parent;
+                    /* Case: current_node is right child of its parent Left-rotation required */
+                    if (current_node == parent_pt->right) {
+                        rotate_left(parent_pt);
+                        current_node = parent_pt;
+                        parent_pt = current_node->parent;
                     }
 
-                    /* Case : 3 # pt is left child of its parent Right-rotation required */
-                    rotate_right(root, grand_parent_pt);
+                    /* Case: current_node is left child of its parent Right-rotation required */
+                    rotate_right(grand_parent_pt);
                     std::swap(parent_pt->color, grand_parent_pt->color);
-                    pt = parent_pt;
+                    current_node = parent_pt;
                 }
             }
 
-                /* Case : B # Parent of pt is right child of Grand-parent of pt */
+            /* Case: Parent of current_node is right child of Grand-parent of current_node */
             else {
                 struct rbtree_dram_node *uncle_pt = grand_parent_pt->left;
 
-                /*  Case : 1 # The uncle of pt is also red Only Recoloring required */
+                /*  Case: The uncle of current_node is also red Only Recoloring required */
                 if ((uncle_pt != NULL) && (uncle_pt->color == RED)) {
                     grand_parent_pt->color = RED;
                     parent_pt->color = BLACK;
                     uncle_pt->color = BLACK;
-                    pt = grand_parent_pt;
+                    current_node = grand_parent_pt;
                 }
                 else {
-                    /* Case : 2 # pt is left child of its parent Right-rotation required */
-                    if (pt == parent_pt->left) {
-                        rotate_right(root, parent_pt);
-                        pt = parent_pt;
-                        parent_pt = pt->parent;
+                    /* Case: current_node is left child of its parent Right-rotation required */
+                    if (current_node == parent_pt->left) {
+                        rotate_right(parent_pt);
+                        current_node = parent_pt;
+                        parent_pt = current_node->parent;
                     }
 
-                    /* Case : 3 # pt is right child of its parent Left-rotation required */
-                    rotate_left(root, grand_parent_pt);
+                    /* Case: current_node is right child of its parent Left-rotation required */
+                    rotate_left(grand_parent_pt);
                     std::swap(parent_pt->color, grand_parent_pt->color);
-                    pt = parent_pt;
+                    current_node = parent_pt;
                 }
             }
         }
 
-        root->color = BLACK;
+        root_p->color = BLACK;
+    }
+
+    struct rbtree_dram_node * RbtreeDram::create_new_node(uint64_t key, void *value) {
+        //allocate memory to new node
+        struct rbtree_dram_node *new_node = (struct rbtree_dram_node *) malloc(sizeof(struct rbtree_dram_node));
+
+        new_node->left = new_node->right = new_node->parent = NULL;
+        new_node->color = RED;
+        new_node->key = key;
+        strcpy(new_node->value, (char *) value);
+
+        return new_node;
     }
 
     /*
-     * insert -- private method -- Insert Value into RBTree
+     * insert -- if key not exist, insert <key, value pair>. if key exists, update <key, value> pair.
      */
-    
     int RbtreeDram::insert(const char *key, void *value) {
-        uint64_t uint64_key = strtoull(key,NULL,0);
-        struct rbtree_dram_node *pt = (struct rbtree_dram_node *)malloc(sizeof(struct rbtree_dram_node)); //new Node
-        pt->left = pt->right=pt->parent = NULL;
-        pt->color = RED;
-        pt->key = uint64_key;
-        strcpy(pt->value,(const char *)value);
+        uint64_t uint64_key = strtoull(key, NULL, 0);
+
+        if(update_if_found(root_p, uint64_key, value)) return 1;
+        struct rbtree_dram_node *new_node = create_new_node(uint64_key, value);
+
         // Do a normal BST insert
-        root_p = bst_insert(root_p,pt);
-        fix_violation(root_p,pt);
+        root_p = bst_insert(root_p, new_node);
+        fix_violation(new_node);
         return 1;
     }
 
@@ -302,5 +305,6 @@ namespace ycsbc {
      * destroy -- Free Space of RBTree.
      */
     void RbtreeDram::destroy() {
+        //todo: @Ani please update this
     }
 }   //ycsbc
