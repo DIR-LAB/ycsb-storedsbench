@@ -50,6 +50,8 @@ namespace ycsbc {
 
         void fix_violation(struct rbtree_dram_node *&current_node);
 
+        void free_node(rbtree_dram_node *&current_node);
+
         struct rbtree_dram_node *create_new_node(uint64_t key, void *value);
     };
 
@@ -306,10 +308,18 @@ namespace ycsbc {
         return 1;
     }
 
+    void RbtreeDram::free_node(rbtree_dram_node *&current){
+        if(current!=NULL){
+            free_node(current->left);
+            free_node(current->right);
+
+            free(current);
+        }
+    }
     /*
      * destroy -- Free Space of RBTree.
      */
     void RbtreeDram::destroy() {
-        //todo: @Ani please update this
+        free_node(root_p);
     }
 }   //ycsbc
