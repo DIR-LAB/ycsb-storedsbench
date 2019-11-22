@@ -35,6 +35,7 @@ namespace ycsbc {
     private:
         /* Private Data */
         PMEMobjpool *pop = NULL;
+        PMEMoid rbtree_pmem_root_obj;
         PMEMoid root_oid;
         struct rbtree_pmem_node *pmem_root_p = NULL;
 
@@ -56,7 +57,7 @@ namespace ycsbc {
     };
 
     int RbtreePmem::check() {
-        if (root_oid.off == 0) {
+        if (rbtree_pmem_root_obj.off == 0) {
             fprintf(stderr, "[%s]: FATAL: rbtree not initialized yet\n", __FUNCTION__);
             assert(0);
         }
@@ -76,13 +77,14 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct rbtree_pmem_node));
-        pmem_root_p = (struct rbtree_pmem_node *) pmemobj_direct(root_oid);
-        if(pmem_root_p == NULL) {
+        rbtree_pmem_root_obj = pmemobj_root(pop, sizeof(struct rbtree_pmem_root));
+        struct rbtree_pmem_root *root_obj_ptr = (struct rbtree_pmem_root *) pmemobj_direct(rbtree_pmem_root_obj);
+        root_oid = root_obj_ptr->root_oid;
+        if(root_obj_ptr == NULL) {
             printf("FATAL: The Root Object Not Initalized Yet, Exit!\n");
             exit(0);
         }
-        root_oid.off=0;
+        //root_oid.off=0;
         return 1;
     }
 
@@ -205,7 +207,7 @@ namespace ycsbc {
     }
 
     /*
-     * fix_violation -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+     * rotate_left -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
      */
     void RbtreePmem::rotate_left(PMEMoid &current_oid){
         rbtree_pmem_node *current_ptr = (struct rbtree_pmem_node *)pmemobj_direct(current_oid);
@@ -227,6 +229,7 @@ namespace ycsbc {
         
         if(current_ptr->parent.off==0){
             root_oid = right_node_oid;
+            pmem_root_p = (struct rbtree_pmem_node *) pmemobj_direct(root_oid);
         }
 
         else {
@@ -246,6 +249,7 @@ namespace ycsbc {
          current_ptr->parent = right_node_oid;
 
     }
+
     void RbtreePmem::rotate_right(PMEMoid &current_oid){
         rbtree_pmem_node *current_ptr = (struct rbtree_pmem_node *)pmemobj_direct(current_oid);
         PMEMoid left_node_oid = current_ptr->left;
@@ -262,6 +266,7 @@ namespace ycsbc {
         
         if(current_ptr->parent.off==0){
             root_oid = left_node_oid;
+            pmem_root_p = (struct rbtree_pmem_node *) pmemobj_direct(root_oid);
         }
         
         else if((struct rbtree_pmem_node *)pmemobj_direct(current_oid) == (struct rbtree_pmem_node *)pmemobj_direct(parent_node_ptr->left)){
@@ -277,25 +282,23 @@ namespace ycsbc {
     }
 
     void RbtreePmem::fix_violation(PMEMoid &current_oid) {
-        //todo: implement logic here
         rbtree_pmem_node *current_ptr = (struct rbtree_pmem_node *)pmemobj_direct(current_oid);
-        
-        rbtree_pmem_node *parent_node_ptr;
+
         PMEMoid parent_node_oid = current_ptr->parent;
-        parent_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(parent_node_oid);
-        if(parent_node_oid.off==0){
-            rbtree_pmem_node *root_ptr = (struct rbtree_pmem_node *)pmemobj_direct(root_oid);
-            root_ptr->color = BLACK;    
-            return;
-        }
-        
-         while((current_ptr!=(struct rbtree_pmem_node *)pmemobj_direct(root_oid))&&
-            (current_ptr->color!=BLACK)&&
-            (parent_node_ptr->color==RED)){
-         
+        rbtree_pmem_node *parent_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(parent_node_oid);
+
+        //pmem_root_p = (struct rbtree_pmem_node *)pmemobj_direct(root_oid);
+         //while((current_ptr != pmem_root_p)
+         while((!OID_EQUALS(current_oid, root_oid))
+         //while((current_ptr != pmem_root_p)
+            && (current_ptr->color!=BLACK)
+            && (parent_node_ptr->color==RED)) {
              PMEMoid grandparent_node_oid = parent_node_ptr->parent;
              rbtree_pmem_node *grandparent_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(grandparent_node_oid);
-             if(parent_node_ptr==(struct rbtree_pmem_node *)pmemobj_direct(grandparent_node_ptr->left)){
+             
+             /*  Case: Parent of current_node is left child of Grand-parent of current_node */
+             if(OID_EQUALS(parent_node_oid, grandparent_node_ptr->left)) {
+             //if(parent_node_ptr==(struct rbtree_pmem_node *)pmemobj_direct(grandparent_node_ptr->left)){
          
                  PMEMoid uncle_node_oid = grandparent_node_ptr->right;
                 rbtree_pmem_node *uncle_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(uncle_node_oid);
@@ -317,9 +320,6 @@ namespace ycsbc {
                     std::swap(parent_node_ptr->color,grandparent_node_ptr->color);
                     current_ptr = parent_node_ptr;
                 }
-
-                
-
             }
             /* Case: Parent of current_node is right child of Grand-parent of current_node */
             else{
@@ -332,7 +332,6 @@ namespace ycsbc {
                         uncle_node_ptr->color = BLACK;
                         current_ptr = grandparent_node_ptr;                        
                 }
-
                 else{
                     if(current_ptr==(struct rbtree_pmem_node *)pmemobj_direct(parent_node_ptr->left)){
                         rotate_right(parent_node_oid);
@@ -340,11 +339,9 @@ namespace ycsbc {
                         parent_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(current_ptr->parent);    
                         
                     }
-                    
                     rotate_left(grandparent_node_oid);
                     std::swap(parent_node_ptr->color,grandparent_node_ptr->color);
                     current_ptr = parent_node_ptr;
-                
                 }
 
             }
@@ -357,33 +354,25 @@ namespace ycsbc {
     }
 
     int RbtreePmem::insert(const char *key, void *value) {
-        //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
+        printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         
         uint64_t uint64_key = strtoull(key, NULL, 0);
-
-
-        
-        
         PMEMoid new_oid = create_new_node(uint64_key, value);
-        
-        
-        
         rbtree_pmem_node *new_ptr = (struct rbtree_pmem_node *)pmemobj_direct(new_oid);
-        // Do a normal BST insert
-        
-        PMEMoid cur_oid = root_oid;
-        if(root_oid.off==0){
-            
-            root_oid= new_oid;
-            fix_violation(new_oid);
-            pmemobj_persist(pop,&root_oid,sizeof(struct rbtree_pmem_node));
 
+        //root is null, insert to root
+        if(root_oid.off==0){
+            root_oid = new_oid;
+            pmemobj_persist(pop,&root_oid,sizeof(struct rbtree_pmem_node));
+            fix_violation(new_oid);
+            pmem_root_p = (struct rbtree_pmem_node *) pmemobj_direct(root_oid);
             return 1;
         }
         
         if(update_if_found(root_oid, uint64_key, value)) return 1;
 
-        
+        PMEMoid cur_oid = root_oid;
+        // Do a normal BST insert
         while(cur_oid.off!=0){
             rbtree_pmem_node *cur_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(cur_oid);
             if(uint64_key < cur_node_ptr->key){
@@ -411,18 +400,8 @@ namespace ycsbc {
                     cur_oid= cur_node_ptr->right;
                 }
             }
-            
-
-
         }
         
-        
-        rbtree_pmem_node *cur_node_ptr = (struct rbtree_pmem_node *)pmemobj_direct(cur_oid);
-        rbtree_pmem_node *new_ptr_this = (struct rbtree_pmem_node *)pmemobj_direct(new_oid);
-        rbtree_pmem_node *parent_ptr = (struct rbtree_pmem_node *)pmemobj_direct(new_ptr_this->parent);
-        
-        //root_oid = bst_insert(root_oid, new_node);
-
         fix_violation(new_oid);
         return 1;
     }
