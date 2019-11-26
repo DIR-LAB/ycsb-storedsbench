@@ -162,6 +162,8 @@ void CoreWorkload::Init(const utils::Properties &p) {
         throw utils::Exception("Distribution not allowed for scan length: " +
                                scan_len_dist);
     }
+
+    rand_seed_ = time(NULL);
 }
 
 ycsbc::Generator<uint64_t> *CoreWorkload::GetFieldLenGenerator(
@@ -186,7 +188,7 @@ void CoreWorkload::BuildValues(std::vector <ycsbc::DB::KVPair> &values) {
     for (int i = 0; i < field_count_; ++i) {
         ycsbc::DB::KVPair pair;
         pair.first.append("field").append(std::to_string(i));
-        pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar());
+        pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar(rand_seed_));
         values.push_back(pair);
     }
 }
@@ -194,7 +196,7 @@ void CoreWorkload::BuildValues(std::vector <ycsbc::DB::KVPair> &values) {
 void CoreWorkload::BuildUpdate(std::vector <ycsbc::DB::KVPair> &update) {
     ycsbc::DB::KVPair pair;
     pair.first.append(NextFieldName());
-    pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar());
+    pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar(rand_seed_));
     update.push_back(pair);
 }
 

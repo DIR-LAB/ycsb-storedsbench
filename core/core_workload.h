@@ -190,6 +190,7 @@ namespace ycsbc {
         CounterGenerator insert_key_sequence_;
         bool ordered_inserts_;
         size_t record_count_;
+        unsigned int rand_seed_;
     };
 
     inline std::string CoreWorkload::NextSequenceKey() {

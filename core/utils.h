@@ -43,8 +43,8 @@ namespace utils {
 ///
 /// Returns an ASCII code that can be printed to desplay
 ///
-    inline char RandomPrintChar() {
-        return rand() % 94 + 33;
+    inline char RandomPrintChar(unsigned int seed) {
+        return rand_r(&seed) % 94 + 33;
     }
 
     class Exception : public std::exception {
