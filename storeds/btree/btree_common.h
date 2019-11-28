@@ -23,7 +23,7 @@ namespace ycsbc {
     #define MAX_CHILDREN (2 * MIN_DEGREE)
 
     /* default length for value */
-    #define DEFAULT_VALUE_LEN 101
+    #define DEFAULT_VALUE_LEN 128
 
     /* size of the pmem object pool -- 1 GB */
     #define PMEM_BTREE_POOL_SIZE ((size_t) (1 << 30))
@@ -43,7 +43,7 @@ namespace ycsbc {
     struct entry {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
-    };
+    } __attribute__ ((aligned (64)));
 
     struct btree_pmem_node {
         //flag to check if the node is leaf or not

@@ -13,7 +13,7 @@ namespace ycsbc {
     #define ARRAY_LAYOUT_NAME "array_layout"
 
     /* default length for value */
-    #define DEFAULT_VALUE_LEN 101
+    #define DEFAULT_VALUE_LEN 128
 
     /* size of the array */
     #define ARRAY_SIZE 1000000
@@ -21,11 +21,11 @@ namespace ycsbc {
     /* declaration of pmem data-structures */
     struct array_pmem_root {
         PMEMoid array;
-    };
+    } __attribute__ ((aligned (64)));
 
     struct array_pmem_elm {
         char value[DEFAULT_VALUE_LEN];
-    };
+    } __attribute__ ((aligned (64)));
 
     /**
      * types -- types of pmem allocations

@@ -15,7 +15,7 @@ namespace ycsbc {
     #define RB_LAYOUT_NAME "rbtree_layout"
 
     /* default length for value */
-    #define DEFAULT_VALUE_LEN 101
+    #define DEFAULT_VALUE_LEN 128
 
     /**
      * rbtree_color -- rbtree color list

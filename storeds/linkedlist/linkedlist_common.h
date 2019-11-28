@@ -15,14 +15,14 @@ namespace ycsbc {
     #define LL_LAYOUT_NAME "linkedlist_layout"
 
     /* default length for value */
-    #define DEFAULT_VALUE_LEN 101
+    #define DEFAULT_VALUE_LEN 128
 
     /* declaration of dram data-structures */
     struct ll_dram_node {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
         struct ll_dram_node *next;
-    };
+    } __attribute__ ((aligned (64)));
 
     /* declaration of pmem data-structures */
     struct ll_pmem_root {
@@ -35,7 +35,7 @@ namespace ycsbc {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
         PMEMoid next;
-    };
+    } __attribute__ ((aligned (64)));
 
     /**
      * types -- types of linkedlist pmem allocations

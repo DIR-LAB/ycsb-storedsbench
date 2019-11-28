@@ -31,7 +31,7 @@ namespace ycsbc {
     #define MAX_HASHSET_THRESHOLD 10
 
     /* default length for value */
-    #define DEFAULT_VALUE_LEN 101
+    #define DEFAULT_VALUE_LEN 128
 
     /* types of allocations */
     enum ht_alloc_types {
@@ -49,7 +49,7 @@ namespace ycsbc {
 
         /* next entry list pointer */
         struct dram_entry *next;
-    };
+    } __attribute__ ((aligned (64)));
 
     struct dram_buckets {
         /* number of buckets */
@@ -82,7 +82,7 @@ namespace ycsbc {
 
         /* next entry list pointer */
         PMEMoid next;
-    };
+    } __attribute__ ((aligned (64)));
 
     struct pmem_buckets {
         /* number of buckets */

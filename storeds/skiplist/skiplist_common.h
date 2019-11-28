@@ -20,7 +20,7 @@ namespace ycsbc {
     #define SK_LAYOUT_NAME "sklist_layout"
 
     /* default length for value */
-    #define DEFAULT_VALUE_LEN 101
+    #define DEFAULT_VALUE_LEN 128
 
     /* number of levels in skiplist */
     #define SKIPLIST_LEVELS_NUM 16
@@ -40,7 +40,7 @@ namespace ycsbc {
     struct sk_entry {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
-    };
+    } __attribute__ ((aligned (64)));
 
     /* declaration of dram data-structures */
     struct sk_dram_node {
