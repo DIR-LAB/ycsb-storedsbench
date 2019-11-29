@@ -40,13 +40,11 @@ namespace ycsbc {
 
         void lookup(struct rbtree_dram_node *current_node, uint64_t key, void *&result);
 
-        bool update_if_found(struct rbtree_dram_node *current_node, uint64_t key, void *value);
-
         void rotate_left(struct rbtree_dram_node *&ptr);
 
         void rotate_right(struct rbtree_dram_node *&ptr);
 
-        struct rbtree_dram_node *bst_insert(struct rbtree_dram_node *current_node, struct rbtree_dram_node *new_node);
+        struct rbtree_dram_node *bst_upsert(struct rbtree_dram_node *current_node, uint64_t key, void *value);
 
         void fix_violation(struct rbtree_dram_node *&current_node);
 
@@ -79,20 +77,19 @@ namespace ycsbc {
      */
     void RbtreeDram::lookup(struct rbtree_dram_node *current_node, uint64_t key, void *&result) {
         //base case
-        if(current_node == NULL) {
+        if (current_node == NULL) {
             return;
         }
 
-        if(current_node->key == key) {
+        if (current_node->key == key) {
             //data found
             result = current_node->value;
             return;
         }
 
-        if(current_node->key > key) {
+        if (current_node->key > key) {
             return lookup(current_node->left, key, result);
-        }
-        else {
+        } else {
             return lookup(current_node->right, key, result);
         }
     }
@@ -100,34 +97,12 @@ namespace ycsbc {
     /*
      * read -- Read RBTree DRAM and return value into the result variable.
      */
-    int RbtreeDram::read(const char* key, void *&result) {
+    int RbtreeDram::read(const char *key, void *&result) {
         check();
         uint64_t uint64_key = strtoull(key, NULL, 0);
         lookup(root_p, uint64_key, result);
-        
+
         return 1;
-    }
-
-    /*
-     * update_if_found -- (internal) Read and update Value for a given Key of RBTree
-     */
-    bool RbtreeDram::update_if_found(struct rbtree_dram_node *current_node, uint64_t key, void *value) {
-        //base case
-        if(current_node == NULL) {
-            return false;
-        }
-
-        if(current_node->key == key) {
-            memcpy(current_node->value, (char *) value, strlen((char *) value) + 1);
-            return true;
-        }
-
-        if(current_node->key > key) {
-            return update_if_found(current_node->left, key, value);
-        }
-        else {
-            return update_if_found(current_node->right, key, value);
-        }
     }
 
     /*
@@ -152,11 +127,9 @@ namespace ycsbc {
 
         if (ptr->parent == NULL) {
             root_p = right_p;
-        }
-        else if (ptr == ptr->parent->left) {
+        } else if (ptr == ptr->parent->left) {
             ptr->parent->left = right_p;
-        }
-        else {
+        } else {
             ptr->parent->right = right_p;
         }
         right_p->left = ptr;
@@ -176,11 +149,9 @@ namespace ycsbc {
 
         if (ptr->parent == NULL) {
             root_p = left_p;
-        }
-        else if (ptr == ptr->parent->left) {
+        } else if (ptr == ptr->parent->left) {
             ptr->parent->left = left_p;
-        }
-        else {
+        } else {
             ptr->parent->right = left_p;
         }
         left_p->right = ptr;
@@ -188,25 +159,45 @@ namespace ycsbc {
     }
 
     /*
-     * bst_insert -- (internal) insert into raw bst, will update the balance later scope
+     * RbtreeDram::bst_upsert -- (internal) update the value if key already exist and return NULL as a signature of update
+     * if the key not exist, insert a new node as like as normal unbalanced bst and return the newly inserted node
+     * will update the balance in later scope
      */
-    struct rbtree_dram_node* RbtreeDram::bst_insert(struct rbtree_dram_node *current_node, struct rbtree_dram_node *new_node) {
-        if (current_node == NULL) {
-            return new_node;
+    struct rbtree_dram_node *RbtreeDram::bst_upsert(struct rbtree_dram_node *current_node, uint64_t key, void *value) {
+        while (current_node != NULL) {
+            if (key == current_node->key) {
+                //key already exist, update the value and return
+                memcpy(current_node->value, (char *) value, strlen((char *) value) + 1);
+
+                //return status: updated!
+                return NULL;
+            } else if (key < current_node->key) {
+                if (current_node->left == NULL) {
+                    struct rbtree_dram_node *new_node = create_new_node(key, value);
+                    current_node->left = new_node;
+                    new_node->parent = current_node;
+
+                    //return status: inserted!
+                    return new_node;
+                } else {
+                    current_node = current_node->left;
+                }
+            } else {
+                if (current_node->right == NULL) {
+                    struct rbtree_dram_node *new_node = create_new_node(key, value);
+                    current_node->right = new_node;
+                    new_node->parent = current_node;
+
+                    //return status: inserted!
+                    return new_node;
+                } else {
+                    current_node = current_node->right;
+                }
+            }
         }
 
-        /* Otherwise, recur down the tree */
-        if (new_node->key < current_node->key) {
-            current_node->left = bst_insert(current_node->left, new_node);
-            current_node->left->parent = current_node;
-        }
-        else {
-            current_node->right = bst_insert(current_node->right, new_node);
-            current_node->right->parent = current_node;
-        }
-
-        /* return the (unchanged) node pointer */
-        return current_node;
+        fprintf(stderr, "[%s]: FATAL: failed to insert or update!\n", __FUNCTION__);
+        assert(0);
     }
 
     /*
@@ -230,8 +221,7 @@ namespace ycsbc {
                     parent_pt->color = BLACK;
                     uncle_pt->color = BLACK;
                     current_node = grand_parent_pt;
-                }
-                else {
+                } else {
                     /* Case: current_node is right child of its parent Left-rotation required */
                     if (current_node == parent_pt->right) {
                         rotate_left(parent_pt);
@@ -247,7 +237,7 @@ namespace ycsbc {
                 }
             }
 
-            /* Case: Parent of current_node is right child of Grand-parent of current_node */
+                /* Case: Parent of current_node is right child of Grand-parent of current_node */
             else {
                 struct rbtree_dram_node *uncle_pt = grand_parent_pt->left;
 
@@ -257,8 +247,7 @@ namespace ycsbc {
                     parent_pt->color = BLACK;
                     uncle_pt->color = BLACK;
                     current_node = grand_parent_pt;
-                }
-                else {
+                } else {
                     /* Case: current_node is left child of its parent Right-rotation required */
                     if (current_node == parent_pt->left) {
                         rotate_right(parent_pt);
@@ -281,7 +270,7 @@ namespace ycsbc {
     /*
      * create_new_node -- (internal) allocate memory for new node
      */
-    struct rbtree_dram_node * RbtreeDram::create_new_node(uint64_t key, void *value) {
+    struct rbtree_dram_node *RbtreeDram::create_new_node(uint64_t key, void *value) {
         //allocate memory to new node
         struct rbtree_dram_node *new_node = (struct rbtree_dram_node *) malloc(sizeof(struct rbtree_dram_node));
 
@@ -297,25 +286,33 @@ namespace ycsbc {
      * insert -- if key not exist, insert <key, value pair>. if key exists, update <key, value> pair.
      */
     int RbtreeDram::insert(const char *key, void *value) {
+        //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         uint64_t uint64_key = strtoull(key, NULL, 0);
 
-        if(update_if_found(root_p, uint64_key, value)) return 1;
-        struct rbtree_dram_node *new_node = create_new_node(uint64_key, value);
+        //root is null, insert to root node
+        if (root_p == NULL) {
+            root_p = create_new_node(uint64_key, value);
+
+            //fix violation will update the color
+            fix_violation(root_p);
+            return 1;
+        }
 
         // Do a normal BST insert
-        root_p = bst_insert(root_p, new_node);
-        fix_violation(new_node);
+        struct rbtree_dram_node *new_node = bst_upsert(root_p, uint64_key, value);
+        if (new_node) fix_violation(new_node);
         return 1;
     }
 
-    void RbtreeDram::free_node(rbtree_dram_node *&current){
-        if(current!=NULL){
+    void RbtreeDram::free_node(rbtree_dram_node *&current) {
+        if (current != NULL) {
             free_node(current->left);
             free_node(current->right);
 
             free(current);
         }
     }
+
     /*
      * destroy -- Free Space of RBTree.
      */

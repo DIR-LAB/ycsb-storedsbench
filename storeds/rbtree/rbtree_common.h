@@ -46,7 +46,7 @@ namespace ycsbc {
     };
 
     struct rbtree_pmem_root {
-        PMEMoid root_oid;
+        PMEMoid root_node_oid;
     };
 
     /**
