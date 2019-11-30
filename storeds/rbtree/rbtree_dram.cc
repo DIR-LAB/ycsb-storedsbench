@@ -115,7 +115,7 @@ namespace ycsbc {
     }
 
     /*
-     * rotate_left -- (internal) Rotate Sub-Tree of RBTree to the Left
+     * RbtreeDram::rotate_left -- (internal) Rotate Sub-Tree of RBTree to the Left
      */
     void RbtreeDram::rotate_left(struct rbtree_dram_node *&ptr) {
         struct rbtree_dram_node *right_p = ptr->right;
@@ -127,9 +127,11 @@ namespace ycsbc {
 
         if (ptr->parent == NULL) {
             root_p = right_p;
-        } else if (ptr == ptr->parent->left) {
+        }
+        else if (ptr == ptr->parent->left) {
             ptr->parent->left = right_p;
-        } else {
+        }
+        else {
             ptr->parent->right = right_p;
         }
         right_p->left = ptr;
@@ -137,7 +139,7 @@ namespace ycsbc {
     }
 
     /*
-     * rotate_right -- (internal) Rotate Sub-Tree of RBTree to right
+     * RbtreeDram::rotate_right -- (internal) Rotate Sub-Tree of RBTree to right
      */
     void RbtreeDram::rotate_right(struct rbtree_dram_node *&ptr) {
         struct rbtree_dram_node *left_p = ptr->left;
@@ -149,9 +151,11 @@ namespace ycsbc {
 
         if (ptr->parent == NULL) {
             root_p = left_p;
-        } else if (ptr == ptr->parent->left) {
+        }
+        else if (ptr == ptr->parent->left) {
             ptr->parent->left = left_p;
-        } else {
+        }
+        else {
             ptr->parent->right = left_p;
         }
         left_p->right = ptr;
@@ -201,7 +205,7 @@ namespace ycsbc {
     }
 
     /*
-     * fix_violation -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+     * fix_violation -- (internal) Re-balance RB-Tree. This operation can be done in relaxed or active manner.
      */
     void RbtreeDram::fix_violation(struct rbtree_dram_node *&current_node) {
         struct rbtree_dram_node *parent_pt = NULL;
@@ -211,25 +215,25 @@ namespace ycsbc {
             parent_pt = current_node->parent;
             grand_parent_pt = current_node->parent->parent;
 
-            /*  Case: Parent of current_node is left child of Grand-parent of current_node */
+            /* case: parent is left child of grandparent node */
             if (parent_pt == grand_parent_pt->left) {
                 struct rbtree_dram_node *uncle_pt = grand_parent_pt->right;
 
-                /* Case: The uncle of current_node is also red Only Recoloring required */
+                /* case: uncle is also red, only recoloring is required */
                 if (uncle_pt != NULL && uncle_pt->color == RED) {
                     grand_parent_pt->color = RED;
                     parent_pt->color = BLACK;
                     uncle_pt->color = BLACK;
                     current_node = grand_parent_pt;
-                } else {
-                    /* Case: current_node is right child of its parent Left-rotation required */
+                }
+                else {
+                    /* case: current_node is right child of its parent -> left-rotation required */
                     if (current_node == parent_pt->right) {
                         rotate_left(parent_pt);
                         current_node = parent_pt;
                         parent_pt = current_node->parent;
                     }
-
-                    /* Case: current_node is left child of its parent Right-rotation required */
+                    /* case: current_node is now become the left child of its parent -> right-rotation required */
                     rotate_right(grand_parent_pt);
                     //todo: implement swap
                     std::swap(parent_pt->color, grand_parent_pt->color);
@@ -237,25 +241,25 @@ namespace ycsbc {
                 }
             }
 
-                /* Case: Parent of current_node is right child of Grand-parent of current_node */
+            /* case: parent is right child of grandparent node */
             else {
                 struct rbtree_dram_node *uncle_pt = grand_parent_pt->left;
-
-                /*  Case: The uncle of current_node is also red Only Recoloring required */
+                /* case: uncle is also red, only recoloring is required */
                 if ((uncle_pt != NULL) && (uncle_pt->color == RED)) {
                     grand_parent_pt->color = RED;
                     parent_pt->color = BLACK;
                     uncle_pt->color = BLACK;
                     current_node = grand_parent_pt;
-                } else {
-                    /* Case: current_node is left child of its parent Right-rotation required */
+                }
+                else {
+                    /* case: current_node is left child of its parent -> right-rotation required */
                     if (current_node == parent_pt->left) {
                         rotate_right(parent_pt);
                         current_node = parent_pt;
                         parent_pt = current_node->parent;
                     }
 
-                    /* Case: current_node is right child of its parent Left-rotation required */
+                    /* case: current_node is right child of its parent -> left-rotation required */
                     rotate_left(grand_parent_pt);
                     //todo: implement swap
                     std::swap(parent_pt->color, grand_parent_pt->color);
