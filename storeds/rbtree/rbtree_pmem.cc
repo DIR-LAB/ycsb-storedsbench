@@ -55,6 +55,9 @@ namespace ycsbc {
         void free_node(PMEMoid current_node_oid);
     };
 
+    /**
+     * RbtreePmem::check -- checks if the root object has been initialized
+     */
     int RbtreePmem::check() {
         if (root_oid.off == 0) {
             fprintf(stderr, "[%s]: FATAL: rbtree not initialized yet\n", __FUNCTION__);
@@ -63,6 +66,9 @@ namespace ycsbc {
         return 1;
     }
 
+    /**
+     * RbtreePmem::init -- rbtree initializer
+     */
     int RbtreePmem::init(const char *path) {
         if (file_exists(path) != 0) {
             if ((pop = pmemobj_create(path, RB_LAYOUT_NAME, PMEM_RB_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
@@ -87,6 +93,9 @@ namespace ycsbc {
         return 1;
     }
 
+    /**
+     * RbtreePmem::lookup -- (internal) recursively search the value of a key
+     */
     void RbtreePmem::lookup(PMEMoid current_node, uint64_t key, void *&result) {
         //base case
         if (current_node.off == 0) {
@@ -107,6 +116,9 @@ namespace ycsbc {
         }
     }
 
+    /**
+     * RbtreePmem::read -- read 'value' of 'key' and place it into '&result'
+     */
     int RbtreePmem::read(const char *key, void *&result) {
         check();
 
@@ -115,14 +127,18 @@ namespace ycsbc {
         return 1;
     }
 
+    /**
+     * RbtreePmem::update -- update the value if key already exist
+     * if the key not exist, insert a new node and balance the tree
+     */
     int RbtreePmem::update(const char *key, void *value) {
         check();
         insert(key, value);
         return 1;
     }
 
-    /*
-     * create_new_node -- (internal) allocate memory for new node
+    /**
+     * RbtreePmem::create_new_node -- (internal) allocate memory for new node
      */
     PMEMoid RbtreePmem::create_new_node(uint64_t key, void *value) {
         //prepare new in-memory node
@@ -144,7 +160,7 @@ namespace ycsbc {
         return new_node_oid;
     }
 
-    /*
+    /**
      * RbtreePmem::bst_upsert -- (internal) update the value if key already exist and return a NULL OID as a signature of update
      * if the key not exist, insert a new node as like as normal unbalanced bst and return the newly inserted node OID
      * will update the balance in later scope
@@ -195,8 +211,8 @@ namespace ycsbc {
         assert(0);
     }
 
-    /*
-     * RbtreePmem::rotate_left -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+    /**
+     * RbtreePmem::rotate_left -- (internal) Rebalance RB-Tree.
      */
     void RbtreePmem::rotate_left(PMEMoid &current_node_oid) {
         struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
@@ -240,7 +256,7 @@ namespace ycsbc {
         pmemobj_persist(pop, &current_node_oid, sizeof(struct rbtree_pmem_node));
     }
 
-    /*
+    /**
      * RbtreePmem::rotate_right -- (internal) Rotate Sub-Tree of RBTree to right
      */
     void RbtreePmem::rotate_right(PMEMoid &current_node_oid) {
@@ -285,8 +301,8 @@ namespace ycsbc {
         pmemobj_persist(pop, &current_node_oid, sizeof(struct rbtree_pmem_node));
     }
 
-    /*
-     * RbtreePmem::fix_violation -- (internal) Re-balance RB-Tree. This operation can be done in relaxed or active manner.
+    /**
+     * RbtreePmem::fix_violation -- (internal) Re-balance RB-Tree.
      */
     void RbtreePmem::fix_violation(PMEMoid &current_node_oid) {
         struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
@@ -395,6 +411,10 @@ namespace ycsbc {
         pmemobj_persist(pop, root_node_p, sizeof(struct rbtree_pmem_node));
     }
 
+    /**
+     * RbtreePmem::insert -- update the value if key already exist
+     * if the key not exist, insert a new node and balance the tree
+     */
     int RbtreePmem::insert(const char *key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         uint64_t uint64_key = strtoull(key, NULL, 0);
@@ -414,6 +434,9 @@ namespace ycsbc {
         return 1;
     }
 
+    /**
+     * RbtreePmem::free_node -- (internal) recursively free the tree node's memory
+     */
     void RbtreePmem::free_node(PMEMoid current_node_oid) {
         if (current_node_oid.off != 0) {
             struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
@@ -424,6 +447,9 @@ namespace ycsbc {
         }
     }
 
+    /**
+     * RbtreePmem::destroy -- destructor
+     */
     void RbtreePmem::destroy() {
         check();
         free_node(root_p->root_node_oid);
