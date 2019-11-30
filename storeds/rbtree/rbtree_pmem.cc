@@ -133,8 +133,8 @@ namespace ycsbc {
         //copy in-memory node to pmem-node
         PMEMoid new_node_oid;
         pmemobj_zalloc(pop, &new_node_oid, sizeof(struct rbtree_pmem_node), RB_NODE_TYPE);
-        struct rbtree_pmem_node *pmem_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
-        memcpy(pmem_node_ptr, in_memory_node_p, sizeof(struct rbtree_pmem_node));
+        struct rbtree_pmem_node *pmem_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
+        memcpy(pmem_node_p, in_memory_node_p, sizeof(struct rbtree_pmem_node));
 
         //freeing in-memory node
         free(in_memory_node_p);
@@ -149,7 +149,7 @@ namespace ycsbc {
      */
     PMEMoid RbtreePmem::bst_upsert(PMEMoid current_node_oid, uint64_t key, void *value) {
         while (current_node_oid.off != 0) {
-            rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+            struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
             if (key == current_node_p->key) {
                 //key already exist, update the value and return
                 pmemobj_memcpy_persist(pop, current_node_p->value, (char *) value, strlen((char *) value) + 1);
@@ -159,7 +159,7 @@ namespace ycsbc {
             } else if (key < current_node_p->key) {
                 if (current_node_p->left.off == 0) {
                     PMEMoid new_node_oid = create_new_node(key, value);
-                    rbtree_pmem_node *new_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
+                    struct rbtree_pmem_node *new_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
 
                     current_node_p->left = new_node_oid;
                     new_node_p->parent = current_node_oid;
@@ -174,7 +174,7 @@ namespace ycsbc {
             } else {
                 if (current_node_p->right.off == 0) {
                     PMEMoid new_node_oid = create_new_node(key, value);
-                    rbtree_pmem_node *new_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
+                    struct rbtree_pmem_node *new_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
 
                     current_node_p->right = new_node_oid;
                     new_node_p->parent = current_node_oid;
@@ -194,155 +194,203 @@ namespace ycsbc {
     }
 
     /*
-     * rotate_left -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
+     * RbtreePmem::rotate_left -- (internal) Rebalance RB-Tree. This operation can be done in relaxed or active manner.
      */
-    void RbtreePmem::rotate_left(PMEMoid &current_oid) {
-        rbtree_pmem_node *current_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_oid);
-        PMEMoid right_node_oid = current_ptr->right;
-        rbtree_pmem_node *right_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(right_node_oid);
-        PMEMoid left_of_right = right_node_ptr->left;
-        current_ptr->right = left_of_right;
-        pmemobj_persist(pop, &current_ptr->right, sizeof(struct rbtree_pmem_node));
-        if (right_node_oid.off != 0) {
-            right_node_ptr->parent = current_oid;
-            pmemobj_persist(pop, &right_node_ptr->parent, sizeof(struct rbtree_pmem_node));
+    void RbtreePmem::rotate_left(PMEMoid &current_node_oid) {
+        struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+
+        PMEMoid old_right_node_oid = current_node_p->right;
+        struct rbtree_pmem_node *old_right_node_p = (struct rbtree_pmem_node *) pmemobj_direct(old_right_node_oid);
+        current_node_p->right = old_right_node_p->left;
+        //pmemobj_persist(pop, &current_node_p->right, sizeof(struct rbtree_pmem_node));
+
+        if (current_node_p->right.off != 0) {
+            struct rbtree_pmem_node *new_right_node_p = (struct rbtree_pmem_node *) pmemobj_direct(
+                    current_node_p->right);
+            new_right_node_p->parent = current_node_oid;
+            pmemobj_persist(pop, &new_right_node_p->parent, sizeof(struct rbtree_pmem_node));
         }
 
+        old_right_node_p->parent = current_node_p->parent;
+        //pmemobj_persist(pop, &old_right_node_p->parent, sizeof(struct rbtree_pmem_node));
 
-        right_node_ptr->parent = current_ptr->parent;
-
-        pmemobj_persist(pop, &right_node_ptr->parent, sizeof(struct rbtree_pmem_node));
-        PMEMoid current_parent_oid = current_ptr->parent;
-
-        rbtree_pmem_node *current_parent_node = (struct rbtree_pmem_node *) pmemobj_direct(current_parent_oid);
-
-
-        if (current_ptr->parent.off == 0) {
-            root_p->root_node_oid = right_node_oid;
+        if (current_node_p->parent.off == 0) {
+            root_p->root_node_oid = old_right_node_oid;
             pmemobj_persist(pop, &root_p->root_node_oid, sizeof(struct rbtree_pmem_node));
         } else {
-            PMEMoid parent_left_oid = current_parent_node->left;
+            PMEMoid parent_node_oid = current_node_p->parent;
+            struct rbtree_pmem_node *parent_node_p = (struct rbtree_pmem_node *) pmemobj_direct(parent_node_oid);
 
-            if (current_ptr == (struct rbtree_pmem_node *) pmemobj_direct(parent_left_oid)) {
-                current_parent_node->left = right_node_oid;
-                pmemobj_persist(pop, &current_parent_node->left, sizeof(struct rbtree_pmem_node));
+            if (OID_EQUALS(current_node_oid, parent_node_p->left)) {
+                parent_node_p->left = old_right_node_oid;
+                pmemobj_persist(pop, &parent_node_p->left, sizeof(struct rbtree_pmem_node));
             } else {
-                current_parent_node->right = right_node_oid;
-                pmemobj_persist(pop, &current_parent_node->right, sizeof(struct rbtree_pmem_node));
+                parent_node_p->right = old_right_node_oid;
+                pmemobj_persist(pop, &parent_node_p->right, sizeof(struct rbtree_pmem_node));
             }
         }
-        right_node_ptr->left = current_oid;
-        pmemobj_persist(pop, &right_node_ptr->left, sizeof(struct rbtree_pmem_node));
-        current_ptr->parent = right_node_oid;
-        pmemobj_persist(pop, &current_ptr->parent, sizeof(struct rbtree_pmem_node));
+        old_right_node_p->left = current_node_oid;
+        //pmemobj_persist(pop, &old_right_node_p->left, sizeof(struct rbtree_pmem_node));
+        current_node_p->parent = old_right_node_oid;
+        //pmemobj_persist(pop, &current_node_p->parent, sizeof(struct rbtree_pmem_node));
 
+        pmemobj_persist(pop, &old_right_node_oid, sizeof(struct rbtree_pmem_node));
+        pmemobj_persist(pop, &current_node_oid, sizeof(struct rbtree_pmem_node));
     }
 
-    void RbtreePmem::rotate_right(PMEMoid &current_oid) {
-        rbtree_pmem_node *current_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_oid);
-        PMEMoid left_node_oid = current_ptr->left;
-        rbtree_pmem_node *left_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(left_node_oid);
-        current_ptr->left = left_node_ptr->right;
-        if (left_node_oid.off != 0) {
-            left_node_ptr->parent = current_oid;
-            pmemobj_persist(pop, &left_node_ptr->parent, sizeof(struct rbtree_pmem_node));
+    /*
+     * RbtreePmem::rotate_right -- (internal) Rotate Sub-Tree of RBTree to right
+     */
+    void RbtreePmem::rotate_right(PMEMoid &current_node_oid) {
+        struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+
+        PMEMoid old_left_node_oid = current_node_p->left;
+        struct rbtree_pmem_node *old_left_node_p = (struct rbtree_pmem_node *) pmemobj_direct(old_left_node_oid);
+        current_node_p->left = old_left_node_p->right;
+        //pmemobj_persist(pop, &current_node_p->left, sizeof(struct rbtree_pmem_node));
+
+        if (current_node_p->left.off != 0) {
+            struct rbtree_pmem_node *new_left_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_p->left);
+            new_left_node_p->parent = current_node_oid;
+            pmemobj_persist(pop, &new_left_node_p->parent, sizeof(struct rbtree_pmem_node));
         }
+        old_left_node_p->parent = current_node_p->parent;
+        //pmemobj_persist(pop, &old_left_node_p->parent, sizeof(struct rbtree_pmem_node));
 
-        PMEMoid parent_node_oid = current_ptr->parent;
-        rbtree_pmem_node *parent_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(parent_node_oid);
-
-        left_node_ptr->parent = current_ptr->parent;
-        pmemobj_persist(pop, &left_node_ptr->parent, sizeof(struct rbtree_pmem_node));
-
-        if (current_ptr->parent.off == 0) {
-            root_p->root_node_oid = left_node_oid;
+        if (current_node_p->parent.off == 0) {
+            root_p->root_node_oid = old_left_node_oid;
             pmemobj_persist(pop, &root_p->root_node_oid, sizeof(struct rbtree_pmem_node));
-        } else if ((struct rbtree_pmem_node *) pmemobj_direct(current_oid) ==
-                   (struct rbtree_pmem_node *) pmemobj_direct(parent_node_ptr->left)) {
-            parent_node_ptr->left = left_node_oid;
-            pmemobj_persist(pop, &parent_node_ptr->left, sizeof(struct rbtree_pmem_node));
-        } else {
-            parent_node_ptr->right = left_node_oid;
-            pmemobj_persist(pop, &parent_node_ptr->right, sizeof(struct rbtree_pmem_node));
+        }
+        else {
+            PMEMoid parent_node_oid = current_node_p->parent;
+            struct rbtree_pmem_node *parent_node_p = (struct rbtree_pmem_node *) pmemobj_direct(parent_node_oid);
+
+            if (OID_EQUALS(current_node_oid, parent_node_p->left)) {
+                parent_node_p->left = old_left_node_oid;
+                pmemobj_persist(pop, &parent_node_p->left, sizeof(struct rbtree_pmem_node));
+            } else {
+                parent_node_p->right = old_left_node_oid;
+                pmemobj_persist(pop, &parent_node_p->right, sizeof(struct rbtree_pmem_node));
+            }
         }
 
-        left_node_ptr->right = current_oid;
-        pmemobj_persist(pop, &left_node_ptr->right, sizeof(struct rbtree_pmem_node));
-        current_ptr->parent = left_node_oid;
-        pmemobj_persist(pop, &current_ptr->parent, sizeof(struct rbtree_pmem_node));
+        old_left_node_p->right = current_node_oid;
+        //pmemobj_persist(pop, &old_left_node_p->right, sizeof(struct rbtree_pmem_node));
+        current_node_p->parent = old_left_node_oid;
+        //pmemobj_persist(pop, &current_node_p->parent, sizeof(struct rbtree_pmem_node));
+
+        pmemobj_persist(pop, &old_left_node_oid, sizeof(struct rbtree_pmem_node));
+        pmemobj_persist(pop, &current_node_oid, sizeof(struct rbtree_pmem_node));
     }
 
-    void RbtreePmem::fix_violation(PMEMoid &current_oid) {
-        rbtree_pmem_node *current_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_oid);
+    /*
+     * RbtreePmem::fix_violation -- (internal) Re-balance RB-Tree. This operation can be done in relaxed or active manner.
+     */
+    void RbtreePmem::fix_violation(PMEMoid &current_node_oid) {
+        struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
 
-        PMEMoid parent_node_oid = current_ptr->parent;
-        rbtree_pmem_node *parent_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(parent_node_oid);
+        while ((!OID_EQUALS(current_node_oid, root_p->root_node_oid))
+               && (current_node_p->color != BLACK)
+               && (((struct rbtree_pmem_node *) pmemobj_direct(current_node_p->parent))->color == RED)) {
 
-        while ((!OID_EQUALS(current_oid, root_p->root_node_oid))
-               && (current_ptr->color != BLACK)
-               && (parent_node_ptr->color == RED)) {
-            PMEMoid grandparent_node_oid = parent_node_ptr->parent;
-            rbtree_pmem_node *grandparent_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(grandparent_node_oid);
+            //printf("current node pointer: %p\n", current_node_p);
 
-            /*  Case: Parent of current_node is left child of Grand-parent of current_node */
-            if (OID_EQUALS(parent_node_oid, grandparent_node_ptr->left)) {
-                //if(parent_node_ptr==(struct rbtree_pmem_node *)pmemobj_direct(grandparent_node_ptr->left)){
+            PMEMoid parent_node_oid = current_node_p->parent;
+            struct rbtree_pmem_node *parent_node_p = (struct rbtree_pmem_node *) pmemobj_direct(parent_node_oid);
 
-                PMEMoid uncle_node_oid = grandparent_node_ptr->right;
-                rbtree_pmem_node *uncle_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(uncle_node_oid);
+            PMEMoid grandparent_node_oid = parent_node_p->parent;
+            struct rbtree_pmem_node *grandparent_node_p = (struct rbtree_pmem_node *) pmemobj_direct(
+                    grandparent_node_oid);
 
-                if (uncle_node_oid.off != 0 && uncle_node_ptr->color == RED) {
-                    grandparent_node_ptr->color = RED;
-                    parent_node_ptr->color = BLACK;
-                    uncle_node_ptr->color = BLACK;
-                    pmemobj_persist(pop, &grandparent_node_ptr, sizeof(struct rbtree_pmem_node));
-                    pmemobj_persist(pop, &parent_node_ptr, sizeof(struct rbtree_pmem_node));
-                    pmemobj_persist(pop, &uncle_node_ptr, sizeof(struct rbtree_pmem_node));
-                    current_ptr = grandparent_node_ptr;
+            /* case: parent is left child of grandparent node */
+            if (OID_EQUALS(parent_node_oid, grandparent_node_p->left)) {
+                PMEMoid uncle_node_oid = grandparent_node_p->right;
+                struct rbtree_pmem_node *uncle_node_p = (struct rbtree_pmem_node *) pmemobj_direct(uncle_node_oid);
+
+                /* case: uncle is also red, only recoloring is required */
+                if (uncle_node_oid.off != 0 && uncle_node_p->color == RED) {
+                    //update the colors
+                    grandparent_node_p->color = RED;
+                    parent_node_p->color = BLACK;
+                    uncle_node_p->color = BLACK;
+
+                    pmemobj_persist(pop, grandparent_node_p, sizeof(struct rbtree_pmem_node));
+                    pmemobj_persist(pop, parent_node_p, sizeof(struct rbtree_pmem_node));
+                    pmemobj_persist(pop, uncle_node_p, sizeof(struct rbtree_pmem_node));
+
+                    current_node_oid = grandparent_node_oid;
+                    current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
                 } else {
-                    if (current_ptr == (struct rbtree_pmem_node *) pmemobj_direct(parent_node_ptr->right)) {
+                    /* case: current_node is right child of its parent -> left-rotation required */
+                    if (OID_EQUALS(current_node_oid, parent_node_p->right)) {
                         rotate_left(parent_node_oid);
-                        current_ptr = parent_node_ptr;
-                        parent_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_ptr->parent);
 
+                        current_node_oid = parent_node_oid;
+                        current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+                        parent_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_p->parent);
                     }
+                    /* case: current_node is now become the left child of its parent -> right-rotation required */
                     rotate_right(grandparent_node_oid);
-                    std::swap(parent_node_ptr->color, grandparent_node_ptr->color);
-                    current_ptr = parent_node_ptr;
+                    
+                    //std::swap(parent_node_p->color, grandparent_node_p->color);
+                    bool parent_node_color = parent_node_p->color;
+                    parent_node_p->color = grandparent_node_p->color;
+                    grandparent_node_p->color = parent_node_color;
+
+                    pmemobj_persist(pop, &parent_node_oid, sizeof(struct rbtree_pmem_node));
+                    pmemobj_persist(pop, &grandparent_node_oid, sizeof(struct rbtree_pmem_node));
+                    
+                    current_node_oid = parent_node_oid;
+                    current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
                 }
             }
-                /* Case: Parent of current_node is right child of Grand-parent of current_node */
+                /* case: parent is right child of grandparent node */
             else {
-                PMEMoid uncle_node_oid = grandparent_node_ptr->left;
-                rbtree_pmem_node *uncle_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(uncle_node_oid);
-                /*Case: If the uncle of the node is also red, then we only require recoloring */
-                if (current_ptr == (struct rbtree_pmem_node *) pmemobj_direct(parent_node_ptr->left)) {
-                    grandparent_node_ptr->color = RED;
-                    parent_node_ptr->color = BLACK;
-                    uncle_node_ptr->color = BLACK;
-                    pmemobj_persist(pop, &grandparent_node_ptr, sizeof(struct rbtree_pmem_node));
-                    pmemobj_persist(pop, &parent_node_ptr, sizeof(struct rbtree_pmem_node));
-                    pmemobj_persist(pop, &uncle_node_ptr, sizeof(struct rbtree_pmem_node));
-                    current_ptr = grandparent_node_ptr;
+                PMEMoid uncle_node_oid = grandparent_node_p->left;
+                struct rbtree_pmem_node *uncle_node_p = (struct rbtree_pmem_node *) pmemobj_direct(uncle_node_oid);
+
+                /* case: uncle is also red, only recoloring is required */
+                if (uncle_node_oid.off != 0 && uncle_node_p->color == RED) {
+                    grandparent_node_p->color = RED;
+                    parent_node_p->color = BLACK;
+                    uncle_node_p->color = BLACK;
+
+                    pmemobj_persist(pop, grandparent_node_p, sizeof(struct rbtree_pmem_node));
+                    pmemobj_persist(pop, parent_node_p, sizeof(struct rbtree_pmem_node));
+                    pmemobj_persist(pop, uncle_node_p, sizeof(struct rbtree_pmem_node));
+
+                    current_node_oid = grandparent_node_oid;
+                    current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
                 } else {
-                    if (current_ptr == (struct rbtree_pmem_node *) pmemobj_direct(parent_node_ptr->left)) {
+                    /* case: current_node is left child of its parent -> right-rotation required */
+                    if (OID_EQUALS(current_node_oid, parent_node_p->left)) {
                         rotate_right(parent_node_oid);
-                        current_ptr = parent_node_ptr;
-                        parent_node_ptr = (struct rbtree_pmem_node *) pmemobj_direct(current_ptr->parent);
 
+                        current_node_oid = parent_node_oid;
+                        current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+                        parent_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_p->parent);
                     }
-                    rotate_left(grandparent_node_oid);
-                    std::swap(parent_node_ptr->color, grandparent_node_ptr->color);
-                    current_ptr = parent_node_ptr;
-                }
 
+                    /* case: current_node is right child of its parent -> left-rotation required */
+                    rotate_left(grandparent_node_oid);
+                    
+                    //std::swap(parent_node_p->color, grandparent_node_p->color);
+                    bool parent_node_color = parent_node_p->color;
+                    parent_node_p->color = grandparent_node_p->color;
+                    grandparent_node_p->color = parent_node_color;
+
+                    pmemobj_persist(pop, &parent_node_oid, sizeof(struct rbtree_pmem_node));
+                    pmemobj_persist(pop, &grandparent_node_oid, sizeof(struct rbtree_pmem_node));
+
+                    current_node_oid = parent_node_oid;
+                    current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+                }
             }
         }
 
-        rbtree_pmem_node *root_ptr = (struct rbtree_pmem_node *) pmemobj_direct(root_p->root_node_oid);
-        root_ptr->color = BLACK;
-        pmemobj_persist(pop, &root_ptr, sizeof(struct rbtree_pmem_node));
-
+        struct rbtree_pmem_node *root_node_p = (struct rbtree_pmem_node *) pmemobj_direct(root_p->root_node_oid);
+        root_node_p->color = BLACK;
+        pmemobj_persist(pop, root_node_p, sizeof(struct rbtree_pmem_node));
     }
 
     int RbtreePmem::insert(const char *key, void *value) {
