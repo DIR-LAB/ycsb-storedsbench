@@ -8,6 +8,7 @@
 #include "btree/btree_dram.cc"
 #include "btree/btree_pmem.cc"
 #include "btree/btree_pmem_tx.cc"
+//#include "bplustree/bplustree_dram.cc"
 #include "hashmap/ht_dram.cc"
 #include "hashmap/ht_pmem.cc"
 #include "hashmap/ht_pmem_tx.cc"
@@ -22,6 +23,7 @@
 #include "array/array_pmem_tx.cc"
 #include "rbtree/rbtree_dram.cc"
 #include "rbtree/rbtree_pmem.cc"
+#include "rbtree/rbtree_pmem_tx.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
@@ -39,7 +41,9 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmem(path);
     } else if (strcmp(type, "btree-pmem-tx") == 0) {
         return new BTreePmemTx(path);
-    } else if (strcmp(type, "hashtable-dram") == 0) {
+    } /*else if (strcmp(type, "bplustree-dram") == 0) {
+        return new BPlusTreeDram(path);
+    }*/ else if (strcmp(type, "hashtable-dram") == 0) {
         return new HtDram(path);
     } else if (strcmp(type, "hashtable-pmem") == 0) {
         return new HtPmem(path);
@@ -61,9 +65,9 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreeDram(path);
     } else if (strcmp(type, "rbtree-pmem") == 0) {
         return new RbtreePmem(path);
-    } /*else if (strcmp(type, "rbtree-pmem-tx") == 0) {
-        type_index = 15;
-    } */else {
+    } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
+        return new RbtreePmemTx(path);
+    } else {
         return NULL;
     }
 }
