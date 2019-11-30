@@ -7,8 +7,6 @@
 #include <stdint.h>
 #include <assert.h>
 #include<stdbool.h>
-#include<algorithm>     //todo: remove this after implementing swap
-#include<bits/stdc++.h>
 #include "rbtree_common.h"
 
 namespace ycsbc {
@@ -53,16 +51,16 @@ namespace ycsbc {
         struct rbtree_dram_node *create_new_node(uint64_t key, void *value);
     };
 
-    /*
-     * init -- initialize root of tree to NULL
+    /**
+     * RbtreeDram::init -- initialize root of tree to NULL
      */
     int RbtreeDram::init(const char *path) {
         root_p = NULL;
         return 1;
     }
 
-    /*
-     * check -- (internal) check whether rb-tree is initialized or not
+    /**
+     * RbtreeDram::check -- (internal) check whether rb-tree is initialized or not
      */
     int RbtreeDram::check() {
         if (root_p == NULL) {
@@ -72,8 +70,8 @@ namespace ycsbc {
         return 1;
     }
 
-    /*
-     * lookup -- (internal) Read and return Value for a given Key of RBTree
+    /**
+     * RbtreeDram::lookup -- (internal) Read and return Value for a given Key of RBTree
      */
     void RbtreeDram::lookup(struct rbtree_dram_node *current_node, uint64_t key, void *&result) {
         //base case
@@ -94,8 +92,8 @@ namespace ycsbc {
         }
     }
 
-    /*
-     * read -- Read RBTree DRAM and return value into the result variable.
+    /**
+     * RbtreeDram::read -- Read RBTree DRAM and return value into the result variable.
      */
     int RbtreeDram::read(const char *key, void *&result) {
         check();
@@ -105,8 +103,8 @@ namespace ycsbc {
         return 1;
     }
 
-    /*
-     * update -- if key exists, update <key, value> pair. if key not exist, insert <key, value pair>
+    /**
+     * RbtreeDram::update -- if key exists, update <key, value> pair. if key not exist, insert <key, value pair>
      */
     int RbtreeDram::update(const char *key, void *value) {
         check();
@@ -114,7 +112,7 @@ namespace ycsbc {
         return 1;
     }
 
-    /*
+    /**
      * RbtreeDram::rotate_left -- (internal) Rotate Sub-Tree of RBTree to the Left
      */
     void RbtreeDram::rotate_left(struct rbtree_dram_node *&ptr) {
@@ -138,7 +136,7 @@ namespace ycsbc {
         ptr->parent = right_p;
     }
 
-    /*
+    /**
      * RbtreeDram::rotate_right -- (internal) Rotate Sub-Tree of RBTree to right
      */
     void RbtreeDram::rotate_right(struct rbtree_dram_node *&ptr) {
@@ -162,7 +160,7 @@ namespace ycsbc {
         ptr->parent = left_p;
     }
 
-    /*
+    /**
      * RbtreeDram::bst_upsert -- (internal) update the value if key already exist and return NULL as a signature of update
      * if the key not exist, insert a new node as like as normal unbalanced bst and return the newly inserted node
      * will update the balance in later scope
@@ -204,8 +202,8 @@ namespace ycsbc {
         assert(0);
     }
 
-    /*
-     * fix_violation -- (internal) Re-balance RB-Tree. This operation can be done in relaxed or active manner.
+    /**
+     * RbtreeDram::fix_violation -- (internal) Re-balance RB-Tree.
      */
     void RbtreeDram::fix_violation(struct rbtree_dram_node *&current_node) {
         struct rbtree_dram_node *parent_pt = NULL;
@@ -235,8 +233,11 @@ namespace ycsbc {
                     }
                     /* case: current_node is now become the left child of its parent -> right-rotation required */
                     rotate_right(grand_parent_pt);
-                    //todo: implement swap
-                    std::swap(parent_pt->color, grand_parent_pt->color);
+
+                    bool parent_color = parent_pt->color;
+                    parent_pt->color = grand_parent_pt->color;
+                    grand_parent_pt->color = parent_color;
+
                     current_node = parent_pt;
                 }
             }
@@ -261,8 +262,11 @@ namespace ycsbc {
 
                     /* case: current_node is right child of its parent -> left-rotation required */
                     rotate_left(grand_parent_pt);
-                    //todo: implement swap
-                    std::swap(parent_pt->color, grand_parent_pt->color);
+
+                    bool parent_color = parent_pt->color;
+                    parent_pt->color = grand_parent_pt->color;
+                    grand_parent_pt->color = parent_color;
+
                     current_node = parent_pt;
                 }
             }
@@ -271,8 +275,8 @@ namespace ycsbc {
         root_p->color = BLACK;
     }
 
-    /*
-     * create_new_node -- (internal) allocate memory for new node
+    /**
+     * RbtreeDram::create_new_node -- (internal) allocate memory for new node
      */
     struct rbtree_dram_node *RbtreeDram::create_new_node(uint64_t key, void *value) {
         //allocate memory to new node
@@ -286,8 +290,8 @@ namespace ycsbc {
         return new_node;
     }
 
-    /*
-     * insert -- if key not exist, insert <key, value pair>. if key exists, update <key, value> pair.
+    /**
+     * RbtreeDram::insert -- if key not exist, insert <key, value pair>. if key exists, update <key, value> pair.
      */
     int RbtreeDram::insert(const char *key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
@@ -308,6 +312,9 @@ namespace ycsbc {
         return 1;
     }
 
+    /**
+     * RbtreeDram::free_node -- (internal) recursively free the tree node's memory
+     */
     void RbtreeDram::free_node(rbtree_dram_node *&current) {
         if (current != NULL) {
             free_node(current->left);
@@ -317,8 +324,8 @@ namespace ycsbc {
         }
     }
 
-    /*
-     * destroy -- Free Space of RBTree.
+    /**
+     * RbtreeDram::destroy -- Free Space of RBTree.
      */
     void RbtreeDram::destroy() {
         check();
