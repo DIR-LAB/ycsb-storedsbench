@@ -51,6 +51,8 @@ namespace ycsbc {
         void rotate_right(PMEMoid &new_node_oid);
 
         void fix_violation(PMEMoid &current_node);
+
+        void free_node(PMEMoid current_node_oid);
     };
 
     int RbtreePmem::check() {
@@ -412,8 +414,22 @@ namespace ycsbc {
         return 1;
     }
 
+    void RbtreePmem::free_node(PMEMoid current_node_oid) {
+        if (current_node_oid.off != 0) {
+            struct rbtree_pmem_node *current_node_p = (struct rbtree_pmem_node *) pmemobj_direct(current_node_oid);
+            free_node(current_node_p->left);
+            free_node(current_node_p->right);
+
+            pmemobj_free(&current_node_oid);
+        }
+    }
+
     void RbtreePmem::destroy() {
         check();
-        //todo: update logic
+        free_node(root_p->root_node_oid);
+        root_p->root_node_oid = OID_NULL;
+        pmemobj_free(&root_oid);
+        root_oid = OID_NULL;
+        pmemobj_close(pop);
     }
 }   //ycsbc
