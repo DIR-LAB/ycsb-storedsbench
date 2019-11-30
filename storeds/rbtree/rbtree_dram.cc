@@ -321,6 +321,7 @@ namespace ycsbc {
      * destroy -- Free Space of RBTree.
      */
     void RbtreeDram::destroy() {
+        check();
         free_node(root_p);
     }
 }   //ycsbc
