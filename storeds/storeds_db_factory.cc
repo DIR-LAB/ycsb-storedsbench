@@ -24,6 +24,8 @@
 #include "rbtree/rbtree_dram.cc"
 #include "rbtree/rbtree_pmem.cc"
 #include "rbtree/rbtree_pmem_tx.cc"
+#include "rbtree/rbtree_dram_concurrent_lock.cc"
+#include "rbtree/rbtree_pmem_concurrent_lock.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
@@ -67,6 +69,10 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreePmem(path);
     } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
         return new RbtreePmemTx(path);
+    } else if (strcmp(type, "rbtree-dram-conc-lock") == 0) {
+        return new RbtreeDramConcurrentLock(path);
+    } else if (strcmp(type, "rbtree-pmem-conc-lock") == 0) {
+        return new RbtreePmemConcurrentLock(path);
     } else {
         return NULL;
     }
