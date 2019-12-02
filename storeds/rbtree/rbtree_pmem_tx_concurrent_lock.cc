@@ -477,8 +477,13 @@ namespace ycsbc {
             free_node(current_node_p->right);
 
             //todo: putting tx on each node takes too much time, removing this will not actually freeing the memory
-            pmemobj_tx_add_range_direct(current_node_p, sizeof(struct rbtree_pmem_node));
-            pmemobj_tx_free(current_node_oid);
+            TX_BEGIN(pop) {
+                pmemobj_tx_add_range_direct(current_node_p, sizeof(struct rbtree_pmem_node));
+                pmemobj_tx_free(current_node_oid);
+            } TX_ONABORT {
+                    fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+                    abort();
+            } TX_END
         }
     }
 
@@ -487,10 +492,10 @@ namespace ycsbc {
      */
     void RbtreePmemTxConcurrentLock::destroy() {
         check();
-        
+
+        free_node(root_p->root_node_oid);
         TX_BEGIN(pop) {
             pmemobj_tx_add_range_direct(root_p, sizeof(struct rbtree_pmem_concurrent_lock_root));
-            free_node(root_p->root_node_oid);
             root_p->root_node_oid = OID_NULL;
             pmemobj_tx_free(root_oid);
             root_oid = OID_NULL;
