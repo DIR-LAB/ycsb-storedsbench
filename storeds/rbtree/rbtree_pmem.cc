@@ -132,7 +132,6 @@ namespace ycsbc {
      * if the key not exist, insert a new node and balance the tree
      */
     int RbtreePmem::update(const char *key, void *value) {
-        check();
         insert(key, value);
         return 1;
     }
@@ -416,6 +415,8 @@ namespace ycsbc {
      * if the key not exist, insert a new node and balance the tree
      */
     int RbtreePmem::insert(const char *key, void *value) {
+        check();
+
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         uint64_t uint64_key = strtoull(key, NULL, 0);
 
