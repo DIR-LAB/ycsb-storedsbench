@@ -36,7 +36,7 @@ for file in $input_path*.spec; do
     do
       ./../../ycsbc_parallel -db storeds -threads $n_threads -dbpath /pmem/btree -type btree-pmem -P $input_path${file##*/}
       ((counter++))
-      rm /pmem/*.pmem
+      rm /pmem/btree*.pmem
     done
     echo "*****************<>*****************"
     ((n_threads*=2))
@@ -55,7 +55,7 @@ for file in $input_path*.spec; do
     do
       ./../../ycsbc_parallel -db storeds -threads $n_threads -dbpath /pmem/btree -type btree-pmem-tx -P $input_path${file##*/}
       ((counter++))
-      rm /pmem/*.pmem
+      rm /pmem/btree*.pmem
     done
     echo "*****************<>*****************"
     ((n_threads*=2))
