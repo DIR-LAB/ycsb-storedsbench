@@ -188,8 +188,9 @@ void CoreWorkload::BuildValues(std::vector <ycsbc::DB::KVPair> &values) {
     for (int i = 0; i < field_count_; ++i) {
         ycsbc::DB::KVPair pair;
         pair.first.append("field").append(std::to_string(i));
-        rand_seed_ = clock();
-        pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar(rand_seed_));
+        //rand_seed_ = clock();
+        //pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar(rand_seed_));
+        pair.second.append(field_len_generator_->Next(), utils::FixedPrintChar());
         values.push_back(pair);
     }
 }
@@ -197,8 +198,9 @@ void CoreWorkload::BuildValues(std::vector <ycsbc::DB::KVPair> &values) {
 void CoreWorkload::BuildUpdate(std::vector <ycsbc::DB::KVPair> &update) {
     ycsbc::DB::KVPair pair;
     pair.first.append(NextFieldName());
-    rand_seed_ = clock();
-    pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar(rand_seed_));
+    //rand_seed_ = clock();
+    //pair.second.append(field_len_generator_->Next(), utils::RandomPrintChar(rand_seed_));
+    pair.second.append(field_len_generator_->Next(), utils::FixedPrintChar());
     update.push_back(pair);
 }
 

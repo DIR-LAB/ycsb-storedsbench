@@ -41,10 +41,17 @@ namespace utils {
     }
 
 ///
-/// Returns an ASCII code that can be printed to desplay
+/// Returns an ASCII code that can be printed to display
 ///
     inline char RandomPrintChar(unsigned int seed) {
         return rand_r(&seed) % 94 + 33;
+    }
+
+///
+/// Returns fixed ASCII code that can be printed to display
+///
+    inline char FixedPrintChar() {
+        return 67;
     }
 
     class Exception : public std::exception {
