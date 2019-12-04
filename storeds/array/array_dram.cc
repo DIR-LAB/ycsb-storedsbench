@@ -20,11 +20,11 @@ namespace ycsbc{
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -54,26 +54,26 @@ namespace ycsbc{
         return 1;
     }
 
-    int ArrayDram::read(const char *key, void *&result) {
+    int ArrayDram::read(const uint64_t key, void *&result) {
         check();
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        int offset = (int) (uint64_key % ARRAY_SIZE);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        int offset = (int) (key % ARRAY_SIZE);
         result = array[offset];
         return 1;
     }
 
-    int ArrayDram::update(const char *key, void *value) {
+    int ArrayDram::update(const uint64_t key, void *value) {
         check();
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        int offset = (int) (uint64_key % ARRAY_SIZE);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        int offset = (int) (key % ARRAY_SIZE);
         strcpy(array[offset], (const char *) value);
         return 1;
     }
 
-    int ArrayDram::insert(const char *key, void *value) {
+    int ArrayDram::insert(const uint64_t key, void *value) {
         check();
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        int offset = (int) (uint64_key % ARRAY_SIZE);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        int offset = (int) (key % ARRAY_SIZE);
         strcpy(array[offset], (const char *) value);
         return 1;
     }

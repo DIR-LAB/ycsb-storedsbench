@@ -21,11 +21,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -128,18 +128,18 @@ namespace ycsbc {
     /**
      * read -- read 'value' of 'key' and place it into '&result'
      */
-    int HtDram::read(const char *key, void *&result) {
+    int HtDram::read(const uint64_t key, void *&result) {
         check();
 
         struct dram_buckets *buckets_p = root_p->buckets;
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        uint64_t hash_value = hash_function(uint64_key);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        uint64_t hash_value = hash_function(key);
 
         //iteration_count can be used to check the number of iteration needed to find the value of a single key
         int iteration_count = 0;
 
         for(struct dram_entry *entry_p = buckets_p->bucket[hash_value]; entry_p != NULL; entry_p = entry_p->next) {
-            if(entry_p->key == uint64_key) {
+            if(entry_p->key == key) {
                 //key found! put it to result and return
                 result = entry_p->value;
                 break;
@@ -152,7 +152,7 @@ namespace ycsbc {
     /**
      * update -- update 'value' of 'key' into the hashtable, will insert the 'value' if 'key' not exists
      */
-    int HtDram::update(const char *key, void *value) {
+    int HtDram::update(const uint64_t key, void *value) {
         return insert(key, value);
     }
 
@@ -170,18 +170,18 @@ namespace ycsbc {
     /**
      * insert -- inserts 'value' into the hashtable, will update the 'value' if 'key' already exists
      */
-    int HtDram::insert(const char *key, void *value) {
+    int HtDram::insert(const uint64_t key, void *value) {
         check();
 
         struct dram_buckets *buckets_p = root_p->buckets;
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        uint64_t hash_value = hash_function(uint64_key);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        uint64_t hash_value = hash_function(key);
 
         //iteration_count can be used further to update the size of buckets with condition
         int iteration_count = 0;
 
         for(struct dram_entry *entry_p = buckets_p->bucket[hash_value]; entry_p != NULL; entry_p = entry_p->next) {
-            if(entry_p->key == uint64_key) {
+            if(entry_p->key == key) {
                 //key found! replace the value and return
                 memcpy(entry_p->value, (char *) value, strlen((char *) value) + 1);
                 return 1;
@@ -190,7 +190,7 @@ namespace ycsbc {
         }
 
         //key not found! need to insert data into bucket[hash_value]
-        struct dram_entry *entry_p = new_entry(uint64_key, (const char*) value);
+        struct dram_entry *entry_p = new_entry(key, (const char*) value);
         entry_p->next = buckets_p->bucket[hash_value];
         buckets_p->bucket[hash_value] = entry_p;
 

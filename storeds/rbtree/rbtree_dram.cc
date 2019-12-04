@@ -18,11 +18,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void levelorder();
 
@@ -95,10 +95,10 @@ namespace ycsbc {
     /**
      * RbtreeDram::read -- Read RBTree DRAM and return value into the result variable.
      */
-    int RbtreeDram::read(const char *key, void *&result) {
+    int RbtreeDram::read(const uint64_t key, void *&result) {
         check();
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        lookup(root_p, uint64_key, result);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        lookup(root_p, key, result);
 
         return 1;
     }
@@ -106,7 +106,7 @@ namespace ycsbc {
     /**
      * RbtreeDram::update -- if key exists, update <key, value> pair. if key not exist, insert <key, value pair>
      */
-    int RbtreeDram::update(const char *key, void *value) {
+    int RbtreeDram::update(const uint64_t key, void *value) {
         check();
         insert(key, value);
         return 1;
@@ -293,13 +293,13 @@ namespace ycsbc {
     /**
      * RbtreeDram::insert -- if key not exist, insert <key, value pair>. if key exists, update <key, value> pair.
      */
-    int RbtreeDram::insert(const char *key, void *value) {
+    int RbtreeDram::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         //root is null, insert to root node
         if (root_p == NULL) {
-            root_p = create_new_node(uint64_key, value);
+            root_p = create_new_node(key, value);
 
             //fix violation will update the color
             fix_violation(root_p);
@@ -307,7 +307,7 @@ namespace ycsbc {
         }
 
         // Do a normal BST insert
-        struct rbtree_dram_node *new_node = bst_upsert(root_p, uint64_key, value);
+        struct rbtree_dram_node *new_node = bst_upsert(root_p, key, value);
         if (new_node) fix_violation(new_node);
         return 1;
     }

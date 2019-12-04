@@ -19,11 +19,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -108,15 +108,15 @@ namespace ycsbc {
     /**
      * read -- read value of key and sets into result
      */
-    int SkiplistDram::read(const char *key, void *&result) {
+    int SkiplistDram::read(const uint64_t key, void *&result) {
         check();
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
-        find(uint64_key, path);
+        find(key, path);
         possible_found = path[SKIPLIST_BASE_LEVEL]->next[SKIPLIST_BASE_LEVEL];
-        if(possible_found != NULL && possible_found->entry.key == uint64_key) {
+        if(possible_found != NULL && possible_found->entry.key == key) {
             result = possible_found->entry.value;
         }
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) result);
@@ -127,7 +127,7 @@ namespace ycsbc {
      * update -- if key exist, update the value part in skiplist
      * if key doesn't exist, insert new key-value pair into skiplist
      */
-    int SkiplistDram::update(const char *key, void *value) {
+    int SkiplistDram::update(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
 
@@ -152,23 +152,23 @@ namespace ycsbc {
      * insert -- insert new key-value pair into skiplist
      * if key already exist, update the value part in skiplist
      */
-    int SkiplistDram::insert(const char *key, void *value) {
+    int SkiplistDram::insert(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
 
-        find(uint64_key, path);
+        find(key, path);
         possible_found = path[SKIPLIST_BASE_LEVEL]->next[SKIPLIST_BASE_LEVEL];
 
-        if(possible_found != NULL && possible_found->entry.key == uint64_key) {
+        if(possible_found != NULL && possible_found->entry.key == key) {
             //key already exist, update value
             strcpy(possible_found->entry.value, (char *) value);
         }
         else {
             //key not exist, insert the new node
             struct sk_dram_node *new_node = (struct sk_dram_node *) malloc(sizeof(struct sk_dram_node));
-            new_node->entry.key = uint64_key;
+            new_node->entry.key = key;
             strcpy(new_node->entry.value, (char *) value);
             insert_node(new_node, path);
         }

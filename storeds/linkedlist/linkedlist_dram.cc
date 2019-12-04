@@ -19,11 +19,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -52,15 +52,15 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistDram::read(const char *key, void *&result) {
+    int LinkedlistDram::read(const uint64_t key, void *&result) {
         //printf("[%s]: key: %s\n", __FUNCTION__, key);
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct ll_dram_node *current_node = head;
 
         while (current_node != NULL) {
-            if (current_node->key == uint64_key) {
+            if (current_node->key == key) {
                 result = current_node->value;
                 break;
             }
@@ -70,15 +70,15 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistDram::update(const char *key, void *value) {
+    int LinkedlistDram::update(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct ll_dram_node *current_node = head;
 
         while (current_node != NULL) {
-            if (current_node->key == uint64_key) {
+            if (current_node->key == key) {
                 strcpy(current_node->value, (const char *) value);
                 break;
             }
@@ -87,13 +87,13 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistDram::insert(const char *key, void *value) {
+    int LinkedlistDram::insert(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
         //check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct ll_dram_node *new_node = (struct ll_dram_node *) malloc(sizeof(struct ll_dram_node));
-        new_node->key = uint64_key;
+        new_node->key = key;
         strcpy(new_node->value, (const char *) value);
 
         if(head == NULL) {

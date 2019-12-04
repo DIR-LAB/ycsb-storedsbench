@@ -22,11 +22,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -71,14 +71,14 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistPmem::read(const char *key, void *&result) {
+    int LinkedlistPmem::read(const uint64_t key, void *&result) {
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct ll_pmem_node *current_node = (struct ll_pmem_node *) pmemobj_direct(root_p->head);
 
         while (current_node != NULL) {
-            if (current_node->key == uint64_key) {
+            if (current_node->key == key) {
                 result = current_node->value;
                 break;
             }
@@ -87,14 +87,14 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistPmem::update(const char *key, void *value) {
+    int LinkedlistPmem::update(const uint64_t key, void *value) {
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct ll_pmem_node *current_node = (struct ll_pmem_node *) pmemobj_direct(root_p->head);
 
         while (current_node != NULL) {
-            if (current_node->key == uint64_key) {
+            if (current_node->key == key) {
                 pmemobj_memcpy_persist(pop, current_node->value, (const char *) value, strlen((char *) value) + 1);
                 break;
             }
@@ -103,10 +103,10 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistPmem::insert(const char *key, void *value) {
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+    int LinkedlistPmem::insert(const uint64_t key, void *value) {
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct ll_pmem_node *in_memory_node_ptr = (struct ll_pmem_node *) malloc(sizeof(struct ll_pmem_node));
-        in_memory_node_ptr->key = uint64_key;
+        in_memory_node_ptr->key = key;
         strcpy(in_memory_node_ptr->value, (const char *) value);
 
         PMEMoid new_node_oid;

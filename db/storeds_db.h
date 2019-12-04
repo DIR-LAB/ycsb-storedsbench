@@ -25,21 +25,21 @@ namespace ycsbc {
             storeds_ = StoredsDbFactory::GetDB(type, path);
         }
 
-        int Read(const std::string &table, const std::string &key,
+        int Read(const std::string &table, const uint64_t &key,
                  const std::vector <std::string> *fields,
-                 std::vector <KVPair> &result);
+                 std::vector <Kuint64VstrPair> &result);
 
-        int Scan(const std::string &table, const std::string &key,
+        int Scan(const std::string &table, const uint64_t &key,
                  int len, const std::vector <std::string> *fields,
-                 std::vector <std::vector<KVPair>> &result);
+                 std::vector <std::vector<Kuint64VstrPair>> &result);
 
-        int Update(const std::string &table, const std::string &key,
+        int Update(const std::string &table, const uint64_t &key,
                    std::vector <KVPair> &values);
 
-        int Insert(const std::string &table, const std::string &key,
+        int Insert(const std::string &table, const uint64_t &key,
                    std::vector <KVPair> &values);
 
-        int Delete(const std::string &table, const std::string &key);
+        int Delete(const std::string &table, const uint64_t &key);
 
         void Close();
 

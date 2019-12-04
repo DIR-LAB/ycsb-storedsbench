@@ -22,11 +22,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -144,19 +144,19 @@ namespace ycsbc {
     /**
      * btree_pmem_read -- read 'value' of 'key' from btree and place it into '&result'
      */
-    int BTreePmem::read(const char *key, void *&result) {
+    int BTreePmem::read(const uint64_t key, void *&result) {
         check();
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        result = search(root_oid, uint64_key);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        result = search(root_oid, key);
         return 1;
     }
 
     /**
      * btree_pmem_update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
      */
-    int BTreePmem::update(const char *key, void *value) {
+    int BTreePmem::update(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         insert(key, value);
@@ -296,14 +296,14 @@ namespace ycsbc {
     /**
      * btree_pmem_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
      */
-    int BTreePmem::insert(const char *key, void *value) {
+    int BTreePmem::insert(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         // if the key already exist in btree, update the value and return
-        bool is_updated = update_if_found(root_oid, uint64_key, value);
+        bool is_updated = update_if_found(root_oid, key, value);
         if(is_updated) return 1;        //we found the key, and value has been updated
 
         // if root is full
@@ -317,12 +317,12 @@ namespace ycsbc {
             split_node(idx, new_root_oid, root_oid);
 
             //new_root is holding two children now, decide which children will hold the new <key,value> pair
-            if(new_root_ptr->entries[idx].key < uint64_key) {
+            if(new_root_ptr->entries[idx].key < key) {
                 idx += 1;
             }
 
             //new_root->children[idx] will definitely have space now, go ahead and insert the data to proper place
-            insert_not_full(new_root_ptr->children[idx], uint64_key, value);
+            insert_not_full(new_root_ptr->children[idx], key, value);
             pmemobj_persist(pop, new_root_ptr, sizeof(struct btree_pmem_node));  //persist changes on new_root_ptr
 
             //update the root
@@ -334,7 +334,7 @@ namespace ycsbc {
         }
         else {
             //root is not full, go ahead and insert the data to proper place
-            insert_not_full(root_oid, uint64_key, value);
+            insert_not_full(root_oid, key, value);
         }
 
         return 1;

@@ -17,6 +17,7 @@ namespace ycsbc {
     class DB {
     public:
         typedef std::pair <std::string, std::string> KVPair;
+        typedef std::pair <uint64_t, std::string> Kuint64VstrPair;
         static const int kOK = 0;
         static const int kErrorNoData = 1;
         static const int kErrorConflict = 2;
@@ -43,9 +44,9 @@ namespace ycsbc {
         /// @param result A vector of field/value pairs for the result.
         /// @return Zero on success, or a non-zero error code on error/record-miss.
         ///
-        virtual int Read(const std::string &table, const std::string &key,
+        virtual int Read(const std::string &table, const uint64_t &key,
                          const std::vector <std::string> *fields,
-                         std::vector <KVPair> &result) = 0;
+                         std::vector <Kuint64VstrPair> &result) = 0;
 
         ///
         /// Performs a range scan for a set of records in the database.
@@ -59,9 +60,9 @@ namespace ycsbc {
         ///        pairs for one record
         /// @return Zero on success, or a non-zero error code on error.
         ///
-        virtual int Scan(const std::string &table, const std::string &key,
+        virtual int Scan(const std::string &table, const uint64_t &key,
                          int record_count, const std::vector <std::string> *fields,
-                         std::vector <std::vector<KVPair>> &result) = 0;
+                         std::vector <std::vector<Kuint64VstrPair>> &result) = 0;
 
         ///
         /// Updates a record in the database.
@@ -73,7 +74,7 @@ namespace ycsbc {
         /// @param values A vector of field/value pairs to update in the record.
         /// @return Zero on success, a non-zero error code on error.
         ///
-        virtual int Update(const std::string &table, const std::string &key,
+        virtual int Update(const std::string &table, const uint64_t &key,
                            std::vector <KVPair> &values) = 0;
 
         ///
@@ -85,7 +86,7 @@ namespace ycsbc {
         /// @param values A vector of field/value pairs to insert in the record.
         /// @return Zero on success, a non-zero error code on error.
         ///
-        virtual int Insert(const std::string &table, const std::string &key,
+        virtual int Insert(const std::string &table, const uint64_t &key,
                            std::vector <KVPair> &values) = 0;
 
         ///
@@ -95,7 +96,7 @@ namespace ycsbc {
         /// @param key The key of the record to delete.
         /// @return Zero on success, a non-zero error code on error.
         ///
-        virtual int Delete(const std::string &table, const std::string &key) = 0;
+        virtual int Delete(const std::string &table, const uint64_t &key) = 0;
 
         virtual ~DB() {}
     };

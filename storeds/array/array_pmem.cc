@@ -22,11 +22,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -97,11 +97,11 @@ namespace ycsbc {
     /**
      * read -- read data from array[key] and set the result in result
      */
-    int ArrayPmem::read(const char *key, void *&result){
+    int ArrayPmem::read(const uint64_t key, void *&result){
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        int offset = (int) (uint64_key % ARRAY_SIZE);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        int offset = (int) (key % ARRAY_SIZE);
 
         struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_pmem_elm));
         result = ptr->value;
@@ -112,11 +112,11 @@ namespace ycsbc {
     /**
      * update -- update data to array[key] by value
      */
-    int ArrayPmem::update(const char *key, void *value){
+    int ArrayPmem::update(const uint64_t key, void *value){
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        int offset = (int) (uint64_key % ARRAY_SIZE);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        int offset = (int) (key % ARRAY_SIZE);
 
         struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_pmem_elm));
         strcpy(ptr->value, (const char *) value);
@@ -128,12 +128,12 @@ namespace ycsbc {
     /**
      * insert -- insert data value into array[key]
      */
-    int ArrayPmem::insert(const char *key, void *value){
+    int ArrayPmem::insert(const uint64_t key, void *value){
         //printf("%s %s\n", key, (const char *) value);
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        int offset = (int) (uint64_key % ARRAY_SIZE);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        int offset = (int) (key % ARRAY_SIZE);
 
         struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_pmem_elm));
         strcpy(ptr->value, (const char *) value);

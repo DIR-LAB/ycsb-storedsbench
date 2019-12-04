@@ -22,11 +22,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -119,13 +119,13 @@ namespace ycsbc {
     /**
      * RbtreePmemConcurrentLock::read -- read 'value' of 'key' and place it into '&result'
      */
-    int RbtreePmemConcurrentLock::read(const char *key, void *&result) {
+    int RbtreePmemConcurrentLock::read(const uint64_t key, void *&result) {
         check();
 
         if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        lookup(root_p->root_node_oid, uint64_key, result);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        lookup(root_p->root_node_oid, key, result);
 
         pmemobj_rwlock_unlock(pop, &root_p->rwlock);
         return 1;
@@ -135,7 +135,7 @@ namespace ycsbc {
      * RbtreePmemConcurrentLock::update -- update the value if key already exist
      * if the key not exist, insert a new node and balance the tree
      */
-    int RbtreePmemConcurrentLock::update(const char *key, void *value) {
+    int RbtreePmemConcurrentLock::update(const uint64_t key, void *value) {
         check();
         insert(key, value);
         return 1;
@@ -419,16 +419,16 @@ namespace ycsbc {
      * RbtreePmemConcurrentLock::insert -- update the value if key already exist
      * if the key not exist, insert a new node and balance the tree
      */
-    int RbtreePmemConcurrentLock::insert(const char *key, void *value) {
+    int RbtreePmemConcurrentLock::insert(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
 
         if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         //root node is null, insert to root node
         if (root_p->root_node_oid.off == 0) {
-            root_p->root_node_oid = create_new_node(uint64_key, value);
+            root_p->root_node_oid = create_new_node(key, value);
 
             //fix violation will update the color and persist it
             fix_violation(root_p->root_node_oid);
@@ -437,7 +437,7 @@ namespace ycsbc {
         }
 
         // Do a normal BST insert
-        PMEMoid new_node_oid = bst_upsert(root_p->root_node_oid, uint64_key, value);
+        PMEMoid new_node_oid = bst_upsert(root_p->root_node_oid, key, value);
         if (!OID_IS_NULL(new_node_oid)) fix_violation(new_node_oid);
         pmemobj_rwlock_unlock(pop, &root_p->rwlock);
         return 1;

@@ -22,11 +22,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -118,13 +118,13 @@ namespace ycsbc {
     /**
      * btree_dram_read -- read 'value' of 'key' from btree and place it into '&result'
      */
-    int BTreeDram::read(const char *key, void *&result) {
+    int BTreeDram::read(const uint64_t key, void *&result) {
         //cout << "read ... " << key  << endl;
         check();
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
         //cout << uint64_key << endl;
-        result = search(root, uint64_key);
+        result = search(root, key);
         //cout << result << endl;
         return 1;
     }
@@ -132,7 +132,7 @@ namespace ycsbc {
     /**
      * btree_dram_update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
      */
-    int BTreeDram::update(const char *key, void *value) {
+    int BTreeDram::update(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         insert(key, value);
@@ -253,21 +253,21 @@ namespace ycsbc {
     /**
      * btree_dram_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
      */
-    int BTreeDram::insert(const char *key, void *value) {
+    int BTreeDram::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         // if btree is empty, create root
         if(root == NULL) {
             root = create_node(true);    //root is also a leaf
-            root->entries[0].key = uint64_key;
+            root->entries[0].key = key;
             memcpy(root->entries[0].value, (char *) value, strlen((char *) value) + 1);
             root->nk = 1;
             return 1;
         }
 
         // if the key already exist in btree, update the value and return
-        bool is_updated = update_if_found(root, uint64_key, value);
+        bool is_updated = update_if_found(root, key, value);
         if(is_updated) return 1;        //we found the key, and value has been updated
 
         // if root is full
@@ -278,18 +278,18 @@ namespace ycsbc {
             split_node(idx, new_root, root);
 
             //new_root is holding two children now, decide which children will hold the new <key,value> pair
-            if(new_root->entries[idx].key < uint64_key) {
+            if(new_root->entries[idx].key < key) {
                 idx += 1;
             }
 
             //new_root->children[idx] will definitely have space now, go ahead and insert the data to proper place
-            insert_not_full(new_root->children[idx], uint64_key, value);
+            insert_not_full(new_root->children[idx], key, value);
             //update the root
             root = new_root;
         }
         else {
             //root is not full, go ahead and insert the data to proper place
-            insert_not_full(root, uint64_key, value);
+            insert_not_full(root, key, value);
         }
 
         return 1;

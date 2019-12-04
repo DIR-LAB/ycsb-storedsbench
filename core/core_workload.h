@@ -145,8 +145,8 @@ namespace ycsbc {
 
         virtual std::string NextTable() { return table_name_; }
 
-        virtual std::string NextSequenceKey(); /// Used for loading data
-        virtual std::string NextTransactionKey(); /// Used for transactions
+        virtual uint64_t NextSequenceKey(); /// Used for loading data
+        virtual uint64_t NextTransactionKey(); /// Used for transactions
         virtual Operation NextOperation() { return op_chooser_.Next(); }
 
         virtual std::string NextFieldName();
@@ -175,7 +175,7 @@ namespace ycsbc {
     protected:
         static Generator<uint64_t> *GetFieldLenGenerator(const utils::Properties &p);
 
-        std::string BuildKeyName(uint64_t key_num);
+        uint64_t BuildKeyName(uint64_t key_num);
 
         std::string table_name_;
         int field_count_;
@@ -193,12 +193,12 @@ namespace ycsbc {
         unsigned int rand_seed_;
     };
 
-    inline std::string CoreWorkload::NextSequenceKey() {
+    inline uint64_t CoreWorkload::NextSequenceKey() {
         uint64_t key_num = key_generator_->Next();
         return BuildKeyName(key_num);
     }
 
-    inline std::string CoreWorkload::NextTransactionKey() {
+    inline uint64_t CoreWorkload::NextTransactionKey() {
         uint64_t key_num;
         do {
             key_num = key_chooser_->Next();
@@ -206,12 +206,23 @@ namespace ycsbc {
         return BuildKeyName(key_num);
     }
 
-    inline std::string CoreWorkload::BuildKeyName(uint64_t key_num) {
+    /**
+     * note: we are considering uint64_t type key for this project
+     * if we decide to move back to std::string type key, we need to uncomment this method and remove the bellow one
+     * */
+    /*inline std::string CoreWorkload::BuildKeyName(uint64_t key_num) {
         if (!ordered_inserts_) {
             key_num = utils::Hash(key_num);
         }
         //return std::string("user").append(std::to_string(key_num));
         return std::to_string(key_num);
+    }*/
+
+    inline uint64_t CoreWorkload::BuildKeyName(uint64_t key_num) {
+        if (!ordered_inserts_) {
+            key_num = utils::Hash(key_num);
+        }
+        return key_num;
     }
 
     inline std::string CoreWorkload::NextFieldName() {

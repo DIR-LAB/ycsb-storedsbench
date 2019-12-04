@@ -21,11 +21,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void destroy();
 
@@ -156,20 +156,20 @@ namespace ycsbc {
     /**
      * read -- read 'value' of 'key' and place it into '&result'
      */
-    int HtPmem::read(const char *key, void *&result) {
+    int HtPmem::read(const uint64_t key, void *&result) {
         check();
 
         struct pmem_buckets *buckets_p = (struct pmem_buckets *) pmemobj_direct(root_p->buckets);
         PMEMoid entry_oid = OID_NULL;
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        uint64_t hash_value = hash_function(uint64_key);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        uint64_t hash_value = hash_function(key);
 
         //iteration_count can be used to check the number of iteration needed to find the value of a single key
         int iteration_count = 0;
 
         for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct pmem_entry *) pmemobj_direct(entry_oid))->next) {
-            if(((struct pmem_entry *) pmemobj_direct(entry_oid))->key == uint64_key) {
+            if(((struct pmem_entry *) pmemobj_direct(entry_oid))->key == key) {
                 //key found! replace the value and return
                 struct pmem_entry *entry_p = (struct pmem_entry *) pmemobj_direct(entry_oid);
                 result = entry_p->value;
@@ -182,7 +182,7 @@ namespace ycsbc {
     /**
      * update -- update 'value' of 'key' into the hashtable, will insert the 'value' if 'key' not exists
      */
-    int HtPmem::update(const char *key, void *value) {
+    int HtPmem::update(const uint64_t key, void *value) {
         return insert(key, value);
     }
 
@@ -190,21 +190,21 @@ namespace ycsbc {
      * insert -- inserts 'value' into the hashtable,
      * will update the 'value' if 'key' already exists
      */
-    int HtPmem::insert(const char *key, void *value) {
+    int HtPmem::insert(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __func__, key, (char *) value);
         check();
 
         struct pmem_buckets *buckets_p = (struct pmem_buckets *) pmemobj_direct(root_p->buckets);
         PMEMoid entry_oid = OID_NULL;
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        uint64_t hash_value = hash_function(uint64_key);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        uint64_t hash_value = hash_function(key);
 
         //iteration_count can be used further to update the size of buckets with condition
         int iteration_count = 0;
 
         for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct pmem_entry *) pmemobj_direct(entry_oid))->next) {
-            if(((struct pmem_entry *) pmemobj_direct(entry_oid))->key == uint64_key) {
+            if(((struct pmem_entry *) pmemobj_direct(entry_oid))->key == key) {
                 struct pmem_entry *entry_p = (struct pmem_entry *) pmemobj_direct(entry_oid);
                 pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value) + 1);
                 return 1;
@@ -220,7 +220,7 @@ namespace ycsbc {
             abort();
         }
         struct pmem_entry *new_entry_p = (struct pmem_entry *) pmemobj_direct(new_entry_oid);
-        new_entry_p->key = uint64_key;
+        new_entry_p->key = key;
         memcpy(new_entry_p->value, (char *) value, strlen((char *) value) + 1);
         new_entry_p->next = buckets_p->bucket[hash_value];
         buckets_p->bucket[hash_value] = new_entry_oid;

@@ -53,12 +53,11 @@ void run_test(int tid, utils::Properties props) {
     // Loads data
     db->Init();
     std::string tableName = "ycsb_test_" + std::to_string(tid);
-    for(int i=1; i<=MAX_VAL; i+=1) {
-        std::string key = std::to_string(i);
+    for(uint64_t key=1; key<=MAX_VAL; key+=1) {
         std::vector <ycsbc::DB::KVPair> values;
         ycsbc::DB::KVPair pair;
         pair.first.append("field");
-        pair.second.append(std::to_string(i));
+        pair.second.append(std::to_string(key));
         values.push_back(pair);
         assert(db->Insert(tableName, key, values) == ycsbc::DB::kOK);
     }
@@ -68,12 +67,11 @@ void run_test(int tid, utils::Properties props) {
 
     // Perform read
     db->Init();
-    for(int i=1; i<=MAX_VAL; i+=1) {
-        std::string key = std::to_string(i);
-        std::vector <ycsbc::DB::KVPair> result;
+    for(uint64_t key=1; key<=MAX_VAL; key+=1) {
+        std::vector <ycsbc::DB::Kuint64VstrPair> result;
         assert(db->Read(tableName, key, NULL, result) == ycsbc::DB::kOK);
         //cout << result[0].first << " " << result[0].second << endl;
-        assert(result[0].first.compare(result[0].second) == 0);
+        assert(std::to_string(result[0].first).compare(result[0].second) == 0);
     }
     db->Close();
 
@@ -81,12 +79,11 @@ void run_test(int tid, utils::Properties props) {
 
     // Update data
     db->Init();
-    for(int i=1; i<=MAX_VAL; i+=1) {
-        std::string key = std::to_string(i);
+    for(uint64_t key=1; key<=MAX_VAL; key+=1) {
         std::vector <ycsbc::DB::KVPair> values;
         ycsbc::DB::KVPair pair;
         pair.first.append("field");
-        pair.second.append(std::to_string(MAX_VAL-i));
+        pair.second.append(std::to_string(MAX_VAL-key));
         values.push_back(pair);
         assert(db->Update(tableName, key, values) == ycsbc::DB::kOK);
     }
@@ -96,12 +93,11 @@ void run_test(int tid, utils::Properties props) {
 
     // Perform read
     db->Init();
-    for(int i=1; i<=MAX_VAL; i+=1) {
-        std::string key = std::to_string(i);
-        std::vector <ycsbc::DB::KVPair> result;
+    for(uint64_t key=1; key<=MAX_VAL; key+=1) {
+        std::vector <ycsbc::DB::Kuint64VstrPair> result;
         assert(db->Read(tableName, key, NULL, result) == ycsbc::DB::kOK);
         //cout << result[0].first << " " << result[0].second << endl;
-        assert(std::to_string(MAX_VAL-i).compare(result[0].second) == 0);
+        assert(std::to_string(MAX_VAL-key).compare(result[0].second) == 0);
     }
     db->Close();
 

@@ -19,11 +19,11 @@ namespace ycsbc {
 
         int init(const char *path);
 
-        int read(const char *key, void *&result);
+        int read(const uint64_t key, void *&result);
 
-        int update(const char *key, void *value);
+        int update(const uint64_t key, void *value);
 
-        int insert(const char *key, void *value);
+        int insert(const uint64_t key, void *value);
 
         void levelorder();
 
@@ -101,12 +101,12 @@ namespace ycsbc {
     /**
      * RbtreeDramConcurrentLock::read -- Read RBTree DRAM and return value into the result variable.
      */
-    int RbtreeDramConcurrentLock::read(const char *key, void *&result) {
+    int RbtreeDramConcurrentLock::read(const uint64_t key, void *&result) {
         check();
         if (pthread_rwlock_rdlock(&rwlock) != 0) return 0;
 
-        uint64_t uint64_key = strtoull(key, NULL, 0);
-        lookup(root_p, uint64_key, result);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        lookup(root_p, key, result);
         pthread_rwlock_unlock(&rwlock);
 
         return 1;
@@ -115,7 +115,7 @@ namespace ycsbc {
     /**
      * RbtreeDramConcurrentLock::update -- if key exists, update <key, value> pair. if key not exist, insert <key, value pair>
      */
-    int RbtreeDramConcurrentLock::update(const char *key, void *value) {
+    int RbtreeDramConcurrentLock::update(const uint64_t key, void *value) {
         check();
         insert(key, value);
         return 1;
@@ -302,15 +302,15 @@ namespace ycsbc {
     /**
      * RbtreeDramConcurrentLock::insert -- if key not exist, insert <key, value pair>. if key exists, update <key, value> pair.
      */
-    int RbtreeDramConcurrentLock::insert(const char *key, void *value) {
+    int RbtreeDramConcurrentLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
 
         if (pthread_rwlock_wrlock(&rwlock) != 0) return 0;
-        uint64_t uint64_key = strtoull(key, NULL, 0);
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         //root is null, insert to root node
         if (root_p == NULL) {
-            root_p = create_new_node(uint64_key, value);
+            root_p = create_new_node(key, value);
 
             //fix violation will update the color
             fix_violation(root_p);
@@ -319,7 +319,7 @@ namespace ycsbc {
         }
 
         // Do a normal BST insert
-        struct rbtree_dram_node *new_node = bst_upsert(root_p, uint64_key, value);
+        struct rbtree_dram_node *new_node = bst_upsert(root_p, key, value);
         if (new_node) fix_violation(new_node);
         pthread_rwlock_unlock(&rwlock);
 
