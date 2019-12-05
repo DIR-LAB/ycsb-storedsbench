@@ -21,11 +21,11 @@ namespace ycsbc {
     /* declaration of pmem data-structures */
     struct array_pmem_root {
         PMEMoid array;
-    } __attribute__ ((aligned (64)));
+    };
 
     struct array_pmem_elm {
         char value[DEFAULT_VALUE_LEN];
-    } __attribute__ ((aligned (64)));
+    };
 
     /**
      * types -- types of pmem allocations

@@ -43,7 +43,7 @@ namespace ycsbc {
     struct entry {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
-    } __attribute__ ((aligned (64)));
+    } __attribute__ ((aligned (8)));
 
     struct btree_pmem_node {
         //flag to check if the node is leaf or not

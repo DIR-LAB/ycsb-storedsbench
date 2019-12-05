@@ -32,7 +32,7 @@ namespace ycsbc{
 
     private:
         /* Private Data */
-        char (*array)[DEFAULT_VALUE_LEN] __attribute__ ((aligned (64)));
+        char (*array)[DEFAULT_VALUE_LEN] __attribute__ ((aligned (8)));
 
         int check();
     };
