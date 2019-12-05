@@ -40,7 +40,7 @@ namespace ycsbc {
     struct sk_entry {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
-    } __attribute__ ((aligned (64)));
+    } __attribute__ ((aligned (8)));
 
     /* declaration of dram data-structures */
     struct sk_dram_node {

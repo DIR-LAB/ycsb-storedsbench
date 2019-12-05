@@ -49,7 +49,7 @@ namespace ycsbc {
 
         /* next entry list pointer */
         struct dram_entry *next;
-    } __attribute__ ((aligned (64)));
+    } __attribute__ ((aligned (8)));
 
     struct dram_buckets {
         /* number of buckets */
@@ -82,7 +82,7 @@ namespace ycsbc {
 
         /* next entry list pointer */
         PMEMoid next;
-    } __attribute__ ((aligned (64)));
+    };
 
     struct pmem_buckets {
         /* number of buckets */
