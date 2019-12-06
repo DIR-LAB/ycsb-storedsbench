@@ -12,6 +12,9 @@
 #include "hashmap/ht_dram.cc"
 #include "hashmap/ht_pmem.cc"
 #include "hashmap/ht_pmem_tx.cc"
+#include "hashmap/ht_dram_concurrent_lock.cc"
+#include "hashmap/ht_pmem_concurrent_lock.cc"
+#include "hashmap/ht_pmem_tx_concurrent_lock.cc"
 #include "skiplist/skiplist_dram.cc"
 #include "skiplist/skiplist_pmem.cc"
 #include "skiplist/skiplist_pmem_tx.cc"
@@ -52,6 +55,12 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new HtPmem(path);
     } else if (strcmp(type, "hashtable-pmem-tx") == 0) {
         return new HtPmemTx(path);
+    } else if (strcmp(type, "hashtable-dram-conc-lock") == 0) {
+        return new HtDramConcurrentLock(path);
+    } else if (strcmp(type, "hashtable-pmem-conc-lock") == 0) {
+        return new HtPmemConcurrentLock(path);
+    } else if (strcmp(type, "hashtable-pmem-tx-conc-lock") == 0) {
+        return new HtPmemTxConcurrentLock(path);
     } else if (strcmp(type, "skiplist-dram") == 0) {
         return new SkiplistDram(path);
     } else if (strcmp(type, "skiplist-pmem") == 0) {

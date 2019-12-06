@@ -107,6 +107,25 @@ namespace ycsbc {
         /* buckets */
         PMEMoid buckets;
     };
+
+    struct pmem_hashtable_concurrent_lock {
+        /* random number generator seed */
+        uint32_t seed;
+
+        /* hash function coefficients */
+        uint32_t hash_fun_coeff_a;	//hash_fun_a can not contain value '0'
+        uint32_t hash_fun_coeff_b;
+        uint64_t hash_fun_coeff_p;
+
+        /* number of values inserted */
+        uint64_t count;
+
+        /* buckets */
+        PMEMoid buckets;
+
+        /* lock for concurrency */
+        PMEMrwlock rwlock;
+    };
 }   //ycsbc
 
 #endif //YCSB_STOREDSBENCH_HT_COMMON_H
