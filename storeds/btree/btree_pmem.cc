@@ -41,7 +41,7 @@ namespace ycsbc {
 
         int is_node_full(int nk);
 
-        PMEMoid create_node(bool _is_leaf);
+        PMEMoid create_node(int _is_leaf);
 
         char *search(PMEMoid current_node_oid, uint64_t key);
 
@@ -75,7 +75,7 @@ namespace ycsbc {
     /*
      * btree_pmem_create_node -- (internal) create new btree node
      */
-    PMEMoid BTreePmem::create_node(bool _is_leaf) {
+    PMEMoid BTreePmem::create_node(int _is_leaf) {
         total_nodes += 1;
         PMEMoid new_node_oid;
         pmemobj_alloc(pop, &new_node_oid, sizeof(struct btree_pmem_node), BTREE_NODE_TYPE, NULL, NULL);
@@ -104,7 +104,7 @@ namespace ycsbc {
         }
 
         root_oid = pmemobj_root(pop, sizeof(struct btree_pmem_node));
-        root_oid = create_node(true);    //root is also a leaf
+        root_oid = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
         root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
 
         if(root_p == NULL) {
@@ -188,7 +188,7 @@ namespace ycsbc {
         }
 
         //if child is an internal node, transfer the last (MIN_DEGREE) chiddren of child node to it's sibling node
-        if(child_ptr->is_leaf == false) {
+        if(child_ptr->is_leaf == LEAF_NODE_FALSE_FLAG) {
             for(int i=0; i<MIN_DEGREE; i+=1) {
                 sibling_ptr->children[i] = child_ptr->children[i + MIN_DEGREE];
                 //todo: it is possible to free few of child's memory, or can try with pmemobj_memmove
@@ -310,7 +310,7 @@ namespace ycsbc {
         if(is_node_full(root_p->nk)) {
             int idx = 0;
 
-            PMEMoid new_root_oid = create_node(false);    //root is not a leaf anymore
+            PMEMoid new_root_oid = create_node(LEAF_NODE_FALSE_FLAG);    //root is not a leaf anymore
             struct btree_pmem_node *new_root_ptr = (struct btree_pmem_node *) pmemobj_direct(new_root_oid);
 
             new_root_ptr->children[idx] = root_oid;

@@ -31,6 +31,9 @@ namespace ycsbc {
     /* name of layout in the pool */
     #define BTREE_LAYOUT_NAME "btree_layout"
 
+    #define LEAF_NODE_TRUE_FLAG 1
+    #define LEAF_NODE_FALSE_FLAG 0
+
     /* types of allocations */
     enum btree_alloc_types {
         BTREE_NODE_TYPE,
@@ -47,7 +50,7 @@ namespace ycsbc {
 
     struct btree_pmem_node {
         //flag to check if the node is leaf or not
-        bool is_leaf;
+        int is_leaf;
 
         //current number of keys
         int nk;
@@ -61,7 +64,7 @@ namespace ycsbc {
 
     struct btree_dram_node {
         //flag to check if the node is leaf or not
-        bool is_leaf;
+        int is_leaf;
 
         //current number of keys
         int nk;

@@ -39,7 +39,7 @@ namespace ycsbc {
 
         int is_node_full(int nk);
 
-        struct btree_dram_node *create_node(bool _is_leaf);
+        struct btree_dram_node *create_node(int _is_leaf);
 
         char *search(struct btree_dram_node *current_node, uint64_t key);
 
@@ -81,7 +81,7 @@ namespace ycsbc {
     /*
      * btree_dram_create_node -- (internal) create new btree node
      */
-    inline struct btree_dram_node *BTreeDram::create_node(bool _is_leaf) {
+    inline struct btree_dram_node *BTreeDram::create_node(int _is_leaf) {
         struct btree_dram_node *new_node_p = (struct btree_dram_node *) malloc(sizeof(struct btree_dram_node));
         new_node_p->is_leaf = _is_leaf;
         new_node_p->nk = 0;
@@ -158,7 +158,7 @@ namespace ycsbc {
         }
 
         //if child is an internal node, transfer the last (MIN_DEGREE) chiddren of child node to it's sibling node
-        if(child->is_leaf == false) {
+        if(child->is_leaf == LEAF_NODE_FALSE_FLAG) {
             for(int i=0; i<MIN_DEGREE; i+=1) {
                 sibling->children[i] = child->children[i + MIN_DEGREE];
             }
@@ -259,7 +259,7 @@ namespace ycsbc {
 
         // if btree is empty, create root
         if(root == NULL) {
-            root = create_node(true);    //root is also a leaf
+            root = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
             root->entries[0].key = key;
             memcpy(root->entries[0].value, (char *) value, strlen((char *) value) + 1);
             root->nk = 1;
@@ -273,7 +273,7 @@ namespace ycsbc {
         // if root is full
         if(is_node_full(root->nk)) {
             int idx = 0;
-            struct btree_dram_node *new_root = create_node(false);    //root is not a leaf anymore
+            struct btree_dram_node *new_root = create_node(LEAF_NODE_FALSE_FLAG);    //root is not a leaf anymore
             new_root->children[idx] = root;
             split_node(idx, new_root, root);
 

@@ -41,7 +41,7 @@ namespace ycsbc {
 
         int is_node_full(int nk);
 
-        PMEMoid create_node(bool _is_leaf);
+        PMEMoid create_node(int _is_leaf);
 
         char *search(PMEMoid current_node_oid, uint64_t key);
 
@@ -76,7 +76,7 @@ namespace ycsbc {
      * btree_pmem_tx_create_node -- (internal) create new btree node
      * this function must be called from a transaction block
      */
-    PMEMoid BTreePmemTx::create_node(bool _is_leaf) {
+    PMEMoid BTreePmemTx::create_node(int _is_leaf) {
         total_nodes += 1;
         PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct btree_pmem_node), BTREE_NODE_TYPE);
         struct btree_pmem_node *new_node_prt = (struct btree_pmem_node *) pmemobj_direct(new_node_oid);
@@ -111,7 +111,7 @@ namespace ycsbc {
 
         TX_BEGIN(pop) {
             pmemobj_tx_add_range(root_oid, 0, sizeof(struct btree_pmem_node));
-            root_oid = create_node(true);    //root is also a leaf
+            root_oid = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
             abort();
@@ -204,7 +204,7 @@ namespace ycsbc {
         }
 
         //if child is an internal node, transfer the last (MIN_DEGREE) chiddren of child node to it's sibling node
-        if(child_ptr->is_leaf == false) {
+        if(child_ptr->is_leaf == LEAF_NODE_FALSE_FLAG) {
             for(int i=0; i<MIN_DEGREE; i+=1) {
                 sibling_ptr->children[i] = child_ptr->children[i + MIN_DEGREE];
             }
@@ -330,7 +330,7 @@ namespace ycsbc {
             int idx = 0;
 
             TX_BEGIN(pop) {
-                PMEMoid new_root_oid = create_node(false);    //root is not a leaf anymore
+                PMEMoid new_root_oid = create_node(LEAF_NODE_FALSE_FLAG);    //root is not a leaf anymore
                 struct btree_pmem_node *new_root_ptr = (struct btree_pmem_node *) pmemobj_direct(new_root_oid);
 
                 pmemobj_tx_add_range_direct(new_root_ptr, sizeof(struct btree_pmem_node));
