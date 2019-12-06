@@ -18,6 +18,9 @@
 #include "skiplist/skiplist_dram.cc"
 #include "skiplist/skiplist_pmem.cc"
 #include "skiplist/skiplist_pmem_tx.cc"
+#include "skiplist/skiplist_dram_concurrent_lock.cc"
+#include "skiplist/skiplist_pmem_concurrent_lock.cc"
+#include "skiplist/skiplist_pmem_tx_concurrent_lock.cc"
 #include "linkedlist/linkedlist_dram.cc"
 #include "linkedlist/linkedlist_pmem.cc"
 #include "linkedlist/linkedlist_pmem_tx.cc"
@@ -76,6 +79,12 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new SkiplistPmem(path);
     } else if (strcmp(type, "skiplist-pmem-tx") == 0) {
         return new SkiplistPmemTx(path);
+    } else if (strcmp(type, "skiplist-dram-conc-lock") == 0) {
+        return new SkiplistDramConcurrentLock(path);
+    } else if (strcmp(type, "skiplist-pmem-conc-lock") == 0) {
+        return new SkiplistPmemConcurrentLock(path);
+    } else if (strcmp(type, "skiplist-pmem-tx-conc-lock") == 0) {
+        return new SkiplistPmemTxConcurrentLock(path);
     } else if (strcmp(type, "linkedlist-dram") == 0) {
         return new LinkedlistDram(path);
     } else if (strcmp(type, "linkedlist-pmem") == 0) {
