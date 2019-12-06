@@ -23,6 +23,11 @@ namespace ycsbc {
         PMEMoid array;
     };
 
+    struct array_pmem_concurrent_lock_root {
+        PMEMoid array;
+        PMEMrwlock rwlock;
+    };
+
     struct array_pmem_elm {
         char value[DEFAULT_VALUE_LEN];
     };

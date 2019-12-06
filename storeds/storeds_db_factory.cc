@@ -24,6 +24,9 @@
 #include "array/array_dram.cc"
 #include "array/array_pmem.cc"
 #include "array/array_pmem_tx.cc"
+#include "array/array_dram_concurrent_lock.cc"
+#include "array/array_pmem_concurrent_lock.cc"
+#include "array/array_pmem_tx_concurrent_lock.cc"
 #include "rbtree/rbtree_dram.cc"
 #include "rbtree/rbtree_pmem.cc"
 #include "rbtree/rbtree_pmem_tx.cc"
@@ -41,6 +44,12 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new ArrayPmem(path);
     } else if (strcmp(type, "array-pmem-tx") == 0) {
         return new ArrayPmemTx(path);
+    } else if (strcmp(type, "array-dram-conc-lock") == 0) {
+        return new ArrayDramConcurrentLock(path);
+    } else if (strcmp(type, "array-pmem-conc-lock") == 0) {
+        return new ArrayPmemConcurrentLock(path);
+    } else if (strcmp(type, "array-pmem-tx-conc-lock") == 0) {
+        return new ArrayPmemTxConcurrentLock(path);
     } else if (strcmp(type, "btree-dram") == 0) {
         return new BTreeDram(path);
     } else if (strcmp(type, "btree-pmem") == 0) {
