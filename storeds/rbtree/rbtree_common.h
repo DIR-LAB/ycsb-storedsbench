@@ -33,6 +33,7 @@ namespace ycsbc {
         struct rbtree_dram_node *right;
         struct rbtree_dram_node *parent;
         bool color;
+        char padding[7];
     } __attribute__ ((aligned (8)));
 
     /* declaration of pmem data-structures */
@@ -43,6 +44,7 @@ namespace ycsbc {
         PMEMoid right;
         PMEMoid parent;
         bool color;
+        char padding[7];
     };
 
     struct rbtree_pmem_root {
