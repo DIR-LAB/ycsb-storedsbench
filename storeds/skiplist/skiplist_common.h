@@ -59,6 +59,10 @@ namespace ycsbc {
         /* next entry pointer */
         PMEMoid next[SKIPLIST_LEVELS_NUM];
     };
+
+    struct sk_pmem_root {
+        PMEMoid root_node_oid;
+    };
 }   //ycsbc
 
 #endif //YCSB_STOREDSBENCH_SKIPLIST_COMMON_H

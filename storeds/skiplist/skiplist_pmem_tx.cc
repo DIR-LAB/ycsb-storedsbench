@@ -35,7 +35,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct sk_pmem_node *root_p = NULL;
+        struct sk_pmem_root *root_p = NULL;
 
         int check();
 
@@ -78,20 +78,20 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct sk_pmem_node));
-        root_p = (struct sk_pmem_node *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct sk_pmem_root));
+        root_p = (struct sk_pmem_root *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
         }
 
-        // TX_BEGIN(pop) {
-        //     pmemobj_tx_add_range(root_oid, 0, sizeof(struct sk_pmem_node));
-
-        // } TX_ONABORT {
-        // 	fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
-        // 	abort();
-        // } TX_END
+        TX_BEGIN(pop) {
+            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_root));
+            root_p->root_node_oid = pmemobj_tx_alloc(sizeof(struct sk_pmem_node), SK_NODE_TYPE);
+        } TX_ONABORT {
+            fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+            abort();
+        } TX_END
 
         check();
         return 1;
@@ -102,7 +102,7 @@ namespace ycsbc {
      * or if node doesn't exist, it will return path to place where key should be.
      */
     void SkiplistPmemTx::find(uint64_t key, PMEMoid *path) {
-        PMEMoid active_node_oid = root_oid;
+        PMEMoid active_node_oid = root_p->root_node_oid;
         for(int current_level = SKIPLIST_LEVELS_NUM - 1; current_level >= 0; current_level -= 1) {
             PMEMoid current_node_oid = ((struct sk_pmem_node *) pmemobj_direct(active_node_oid))->next[current_level];
             while(current_node_oid.off != 0 && ((struct sk_pmem_node *) pmemobj_direct(current_node_oid))->entry.key < key) {
@@ -242,16 +242,17 @@ namespace ycsbc {
     void SkiplistPmemTx::destroy() {
         check();
         TX_BEGIN(pop) {
-            while(root_p->next[0].off != 0) {
-                PMEMoid next_oid = root_p->next[0];
+            struct sk_pmem_node *root_node_p = (struct sk_pmem_node *) pmemobj_direct(root_p->root_node_oid);
+            while(root_node_p->next[0].off != 0) {
+                PMEMoid next_oid = root_node_p->next[0];
                 remove_free(((struct sk_pmem_node *) pmemobj_direct(next_oid))->entry.key);
             }
-            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_node));
+            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_root));
             pmemobj_tx_free(root_oid);
             root_oid = OID_NULL;
         } TX_ONABORT {
-                fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
-                abort();
+            fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
+            abort();
         } TX_END
     }
 }   //ycsbc
