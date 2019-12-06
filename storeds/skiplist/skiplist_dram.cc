@@ -109,8 +109,8 @@ namespace ycsbc {
      * read -- read value of key and sets into result
      */
     int SkiplistDram::read(const uint64_t key, void *&result) {
-        check();
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
+        check();
 
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
@@ -119,7 +119,6 @@ namespace ycsbc {
         if(possible_found != NULL && possible_found->entry.key == key) {
             result = possible_found->entry.value;
         }
-        //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) result);
         return 1;
     }
 
@@ -128,9 +127,7 @@ namespace ycsbc {
      * if key doesn't exist, insert new key-value pair into skiplist
      */
     int SkiplistDram::update(const uint64_t key, void *value) {
-        check();
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
-
         insert(key, value);
         return 1;
     }
@@ -153,8 +150,8 @@ namespace ycsbc {
      * if key already exist, update the value part in skiplist
      */
     int SkiplistDram::insert(const uint64_t key, void *value) {
-        check();
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
+        check();
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
 

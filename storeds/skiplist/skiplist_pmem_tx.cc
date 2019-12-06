@@ -117,10 +117,8 @@ namespace ycsbc {
      * read -- read value of key and sets into result
      */
     int SkiplistPmemTx::read(const uint64_t key, void *&result) {
-        check();
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
-
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        check();
 
         PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
         //todo: need to pass by refference
@@ -132,7 +130,6 @@ namespace ycsbc {
                 result = possible_found_ptr->entry.value;
             }
         }
-        //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) result);
         return 1;
     }
 
@@ -141,9 +138,7 @@ namespace ycsbc {
      * if key doesn't exist, insert new key-value pair into skiplist
      */
     int SkiplistPmemTx::update(const uint64_t key, void *value) {
-        check();
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
-
         insert(key, value);
         return 1;
     }
@@ -170,11 +165,10 @@ namespace ycsbc {
      * if key already exist, update the value part in skiplist
      */
     int SkiplistPmemTx::insert(const uint64_t key, void *value) {
-        check();
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
-        PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
+        check();
 
+        PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
         find(key, path_oid);
         possible_found_oid = ((struct sk_pmem_node *) pmemobj_direct(path_oid[SKIPLIST_BASE_LEVEL]))->next[SKIPLIST_BASE_LEVEL];
 
