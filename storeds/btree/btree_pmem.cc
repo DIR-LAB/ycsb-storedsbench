@@ -371,5 +371,7 @@ namespace ycsbc {
         root_p->root_node_oid = OID_NULL;
         pmemobj_free(&root_oid);
         root_oid = OID_NULL;
+
+        pmemobj_close(pop);
     }
 }   //ycsbc

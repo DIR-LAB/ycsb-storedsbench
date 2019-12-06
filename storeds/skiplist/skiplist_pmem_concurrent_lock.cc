@@ -237,5 +237,7 @@ namespace ycsbc {
         }
         pmemobj_free(&root_oid);
         root_oid = OID_NULL;
+
+        pmemobj_close(pop);
     }
 }   //ycsbc

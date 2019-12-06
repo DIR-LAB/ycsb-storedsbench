@@ -177,4 +177,5 @@ class LinkedlistDram_CAS {
             head = head->next;
             free(current_node);
         }
+        pmemobj_close(pop);
     }

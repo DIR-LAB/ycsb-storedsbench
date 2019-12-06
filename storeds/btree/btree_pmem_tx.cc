@@ -412,5 +412,7 @@ namespace ycsbc {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
             abort();
         } TX_END
+
+        pmemobj_close(pop);
     }
 }   //ycsbc
