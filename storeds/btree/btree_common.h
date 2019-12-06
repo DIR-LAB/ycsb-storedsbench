@@ -66,6 +66,11 @@ namespace ycsbc {
         PMEMoid root_node_oid;
     };
 
+    struct btree_pmem_root_concurrent_lock {
+        PMEMoid root_node_oid;
+        PMEMrwlock rwlock;
+    };
+
     struct btree_dram_node {
         //flag to check if the node is leaf or not
         int is_leaf;
