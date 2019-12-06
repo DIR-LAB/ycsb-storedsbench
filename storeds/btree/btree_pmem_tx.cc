@@ -316,7 +316,6 @@ namespace ycsbc {
      */
     int BTreePmemTx::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        check();
 
         // if the key already exist in btree, update the value and return
         bool is_updated = update_if_found(root_p->root_node_oid, key, value);

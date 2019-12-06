@@ -298,7 +298,6 @@ namespace ycsbc {
      */
     int BTreePmemConcurrentLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        check();
 
         if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
 
