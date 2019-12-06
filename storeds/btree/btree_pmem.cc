@@ -34,7 +34,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct btree_pmem_node *root_p = NULL;
+        struct btree_pmem_root *root_p = NULL;
         int total_nodes = 0;         //store the number of nodes the btree have
 
         int check();
@@ -103,16 +103,15 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct btree_pmem_node));
-        root_oid = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
-        root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
-
+        root_oid = pmemobj_root(pop, sizeof(struct btree_pmem_root));
+        root_p = (struct btree_pmem_root *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
         }
 
-        pmemobj_persist(pop, root_p, sizeof(struct btree_pmem_node));
+        root_p->root_node_oid = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
+        pmemobj_persist(pop, &root_p->root_node_oid, sizeof(struct btree_pmem_node));
         check();
         return 1;
     }
@@ -149,7 +148,7 @@ namespace ycsbc {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
 
         //uint64_t uint64_key = strtoull(key, NULL, 0);
-        result = search(root_oid, key);
+        result = search(root_p->root_node_oid, key);
         return 1;
     }
 
@@ -297,24 +296,23 @@ namespace ycsbc {
      * btree_pmem_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
      */
     int BTreePmem::insert(const uint64_t key, void *value) {
-        check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        check();
 
         // if the key already exist in btree, update the value and return
-        bool is_updated = update_if_found(root_oid, key, value);
+        bool is_updated = update_if_found(root_p->root_node_oid, key, value);
         if(is_updated) return 1;        //we found the key, and value has been updated
 
+        struct btree_pmem_node *root_node_ptr = (struct btree_pmem_node *) pmemobj_direct(root_p->root_node_oid);
         // if root is full
-        if(is_node_full(root_p->nk)) {
+        if(is_node_full(root_node_ptr->nk)) {
             int idx = 0;
 
             PMEMoid new_root_oid = create_node(LEAF_NODE_FALSE_FLAG);    //root is not a leaf anymore
             struct btree_pmem_node *new_root_ptr = (struct btree_pmem_node *) pmemobj_direct(new_root_oid);
 
-            new_root_ptr->children[idx] = root_oid;
-            split_node(idx, new_root_oid, root_oid);
+            new_root_ptr->children[idx] = root_p->root_node_oid;
+            split_node(idx, new_root_oid, root_p->root_node_oid);
 
             //new_root is holding two children now, decide which children will hold the new <key,value> pair
             if(new_root_ptr->entries[idx].key < key) {
@@ -326,15 +324,15 @@ namespace ycsbc {
             pmemobj_persist(pop, new_root_ptr, sizeof(struct btree_pmem_node));  //persist changes on new_root_ptr
 
             //update the root
-            root_oid = new_root_oid;
+            root_p->root_node_oid = new_root_oid;
 
-            //as root_oid updated, reassign root_p
-            root_p = (struct btree_pmem_node *) pmemobj_direct(root_oid);
-            pmemobj_persist(pop, root_p, sizeof(struct btree_pmem_node));    //persist changes on root_p
+            //as root_p->root_node_oid updated, reassign root_p
+            root_node_ptr = (struct btree_pmem_node *) pmemobj_direct(root_p->root_node_oid);
+            pmemobj_persist(pop, root_node_ptr, sizeof(struct btree_pmem_node));    //persist changes on root_p
         }
         else {
             //root is not full, go ahead and insert the data to proper place
-            insert_not_full(root_oid, key, value);
+            insert_not_full(root_p->root_node_oid, key, value);
         }
 
         return 1;
@@ -369,7 +367,9 @@ namespace ycsbc {
     void BTreePmem::destroy() {
         check();
 
-        recursive_free(root_oid);
+        recursive_free(root_p->root_node_oid);
+        root_p->root_node_oid = OID_NULL;
+        pmemobj_free(&root_oid);
         root_oid = OID_NULL;
     }
 }   //ycsbc

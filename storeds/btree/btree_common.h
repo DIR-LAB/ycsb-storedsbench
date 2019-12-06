@@ -62,6 +62,10 @@ namespace ycsbc {
         PMEMoid children[MAX_CHILDREN];
     };
 
+    struct btree_pmem_root {
+        PMEMoid root_node_oid;
+    };
+
     struct btree_dram_node {
         //flag to check if the node is leaf or not
         int is_leaf;
