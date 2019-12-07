@@ -47,7 +47,7 @@ namespace ycsbc {
 
     struct bplustree_dram_node {
         //flag to check if the node is leaf or not
-        bool is_leaf;
+        int is_leaf;
 
         //current number of keys
         int nk;
@@ -61,6 +61,7 @@ namespace ycsbc {
         //used for leaf type nodes
         struct bplustree_dram_node *next;
         struct bplustree_dram_node *previous;
+        struct bplustree_dram_node *parent;
     };
 }   //ycsbc
 

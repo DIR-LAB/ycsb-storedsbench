@@ -11,7 +11,7 @@
 #include "btree/btree_dram_concurrent_lock.cc"
 #include "btree/btree_pmem_concurrent_lock.cc"
 #include "btree/btree_pmem_tx_concurrent_lock.cc"
-//#include "bplustree/bplustree_dram.cc"
+#include "bplustree/bplustree_dram.cc"
 #include "hashmap/ht_dram.cc"
 #include "hashmap/ht_pmem.cc"
 #include "hashmap/ht_pmem_tx.cc"
@@ -68,9 +68,9 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmemConcurrentLock(path);
     } else if (strcmp(type, "btree-pmem-tx-conc-lock") == 0) {
         return new BTreePmemTxConcurrentLock(path);
-    } /*else if (strcmp(type, "bplustree-dram") == 0) {
+    } else if (strcmp(type, "bplustree-dram") == 0) {
         return new BPlusTreeDram(path);
-    }*/ else if (strcmp(type, "hashtable-dram") == 0) {
+    } else if (strcmp(type, "hashtable-dram") == 0) {
         return new HtDram(path);
     } else if (strcmp(type, "hashtable-pmem") == 0) {
         return new HtPmem(path);
