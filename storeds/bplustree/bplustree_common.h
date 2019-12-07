@@ -31,6 +31,9 @@ namespace ycsbc {
     /* name of layout in the pool */
     #define BPLUSTREE_LAYOUT_NAME "bplustree_layout"
 
+    #define LEAF_NODE_TRUE_FLAG 1
+    #define LEAF_NODE_FALSE_FLAG 0
+
     /* types of allocations */
     enum bplustree_alloc_types {
         BPLUSTREE_NODE_TYPE,

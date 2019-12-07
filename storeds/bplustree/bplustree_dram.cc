@@ -40,7 +40,7 @@ namespace ycsbc {
 
         int is_node_full(int nk);
 
-        struct bplustree_dram_node *create_node(bool _is_leaf);
+        struct bplustree_dram_node *create_node(int _is_leaf);
 
         char *search(struct bplustree_dram_node *current_node, uint64_t key);
 
@@ -127,34 +127,13 @@ namespace ycsbc {
     /**
      * BPlusTreeDram::create_node -- (internal) create new bplus tree node
      */
-    inline struct bplustree_dram_node *BPlusTreeDram::create_node(bool _is_leaf) {
+    inline struct bplustree_dram_node *BPlusTreeDram::create_node(int _is_leaf) {
         struct bplustree_dram_node *new_node_p = (struct bplustree_dram_node *) malloc(sizeof(struct bplustree_dram_node));
         new_node_p->is_leaf = _is_leaf;
         new_node_p->nk = 0;
         new_node_p->parent = new_node_p->next = new_node_p->previous = NULL;
 
         return new_node_p;
-    }
-
-    /**
-     * BPlusTreeDram::split_node -- (internal) split the children of the child node equally with the new sibling node
-     *
-     * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
-     * one children will be pushed to the parent node.
-     *
-     * this function will be called when the child node is full and become idx'th child of the parent,
-     * the new sibling node will be the (idx+1)'th child of the parent.
-     */
-    void BPlusTreeDram::split_node(int idx, struct bplustree_dram_node *parent, struct bplustree_dram_node *child) {
-        //
-    }
-
-    /**
-     * BPlusTreeDram::insert_not_full -- (internal) inserts <key, value> pair into node
-     * when this function called, we can assume that the node has space to hold new data
-     */
-    void BPlusTreeDram::insert_not_full(struct bplustree_dram_node *node, uint64_t key, void *value) {
-        //
     }
 
     /**
@@ -185,6 +164,93 @@ namespace ycsbc {
     }
 
     /**
+     * BPlusTreeDram::split_node -- (internal) split the children of the child node equally with the new sibling node
+     *
+     * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
+     * one children will be pushed to the parent node.
+     *
+     * this function will be called when the child node is full and become idx'th child of the parent,
+     * the new sibling node will be the (idx+1)'th child of the parent.
+     */
+    void BPlusTreeDram::split_node(int idx, struct bplustree_dram_node *parent, struct bplustree_dram_node *child) {
+        struct bplustree_dram_node *sibling = create_node(child->is_leaf);    //new sibling node will get the same status as child
+        sibling->nk = MIN_DEGREE - 1;   //new sibling child will hold the (MIN_DEGREE - 1) entries of child node
+
+        //transfer the last (MIN_DEGREE - 1) entries of child node to it's sibling node
+        for(int i=0; i<MIN_DEGREE-1; i+=1) {
+            sibling->entries[i] = child->entries[i + MIN_DEGREE];
+        }
+
+        //if child is an internal node, transfer the last (MIN_DEGREE) chiddren of child node to it's sibling node
+        if(child->is_leaf == LEAF_NODE_FALSE_FLAG) {
+            for(int i=0; i<MIN_DEGREE; i+=1) {
+                sibling->children[i] = child->children[i + MIN_DEGREE];
+            }
+        }
+
+        child->nk = MIN_DEGREE - 1;
+
+        //as parent node is going to get a new child at (idx+1)-th place, make a room for it
+        for(int i=parent->nk; i>=idx+1; i-=1) {
+            parent->children[i+1] = parent->children[i];
+        }
+
+        //place sibling node as parent's children
+        parent->children[idx+1] = sibling;
+
+        //a entry of child node will move to the parent node, make a room for it
+        for(int i=parent->nk-1; i>=idx; i-=1) {
+            parent->entries[i+1] = parent->entries[i];
+        }
+
+        //place the middle entry of child node to parent node
+        parent->entries[idx] = child->entries[MIN_DEGREE - 1];
+
+        //parent now hold a new entry, so increasing the number of keys
+        parent->nk += 1;
+    }
+
+    /**
+     * BPlusTreeDram::insert_not_full -- (internal) inserts <key, value> pair into node
+     * when this function called, we can assume that the node has space to hold new data
+     */
+    void BPlusTreeDram::insert_not_full(struct bplustree_dram_node *node, uint64_t key, void *value) {
+        int i = node->nk - 1;
+
+        // if node is a leaf, insert the data to actual position and return
+        if(node->is_leaf) {
+            while(i>=0 && node->entries[i].key > key) {
+                node->entries[i+1] = node->entries[i];
+                i -= 1;
+            }
+
+            node->entries[i+1].key = key;
+            memcpy(node->entries[i+1].value, (char *) value, strlen((char *) value) + 1);
+            node->nk += 1;
+            return;
+        }
+
+        // the node is not a leaf
+        // find the child which is going to store the new data
+        while(i>=0 && node->entries[i].key > key) {
+            i -= 1;
+        }
+
+        //check if the child is full
+        if(is_node_full(node->children[i+1]->nk)) {
+            //child is full, need to split
+            split_node(i+1, node, node->children[i+1]);
+
+            //after the split, child's middle entry is pushed to parent
+            //decide which children will hold the new <key,value> pair
+            if(node->entries[i+1].key < key) {
+                i += 1;
+            }
+        }
+        insert_not_full(node->children[i+1], key, value);
+    }
+
+    /**
      * BPlusTreeDram::insert -- inserts <key, value> pair into bplus tree, will update the 'value' if 'key' already exists
      */
     int BPlusTreeDram::insert(const uint64_t key, void *value) {
@@ -192,7 +258,7 @@ namespace ycsbc {
 
         // if bplus tree is empty, create root
         if(root == NULL) {
-            root = create_node(true);    //root is also a leaf
+            root = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
             root->entries[0].key = key;
             memcpy(root->entries[0].value, (char *) value, strlen((char *) value) + 1);
             root->nk = 1;
@@ -201,12 +267,12 @@ namespace ycsbc {
 
         // if the key already exist in bplus tree, update the value and return
         bool is_updated = update_if_found(root, key, value);
-        if(is_updated) return 1;        //we found the key, and value has been updated
+        if(is_updated) return 1;
 
         // if root is full
         if(is_node_full(root->nk)) {
             int idx = 0;
-            struct bplustree_dram_node *new_root = create_node(false);    //root is not a leaf anymore
+            struct bplustree_dram_node *new_root = create_node(LEAF_NODE_FALSE_FLAG);    //root is not a leaf anymore
             new_root->children[idx] = root;
             split_node(idx, new_root, root);
 
