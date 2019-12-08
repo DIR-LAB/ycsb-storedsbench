@@ -35,7 +35,6 @@ namespace ycsbc {
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
         struct btree_pmem_root *root_p = NULL;
-        int total_nodes = 0;         //store the number of nodes the btree have
 
         int check();
 
@@ -77,7 +76,6 @@ namespace ycsbc {
      * this function must be called from a transaction block
      */
     PMEMoid BTreePmemTx::create_node(int _is_leaf) {
-        total_nodes += 1;
         PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct btree_pmem_node), BTREE_NODE_TYPE);
         struct btree_pmem_node *new_node_prt = (struct btree_pmem_node *) pmemobj_direct(new_node_oid);
 
