@@ -46,7 +46,7 @@ namespace ycsbc {
     struct bplustree_entry {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
-    };
+    } __attribute__ ((aligned (8)));
 
     struct bplustree_dram_node {
         //flag to check if the node is leaf or not
@@ -64,6 +64,28 @@ namespace ycsbc {
         //used for leaf type nodes
         struct bplustree_dram_node *next;
         struct bplustree_dram_node *previous;
+    };
+
+    struct bplustree_pmem_root {
+        PMEMoid root_node_oid;
+    };
+
+    struct bplustree_pmem_node {
+        //flag to check if the node is leaf or not
+        int is_leaf;
+
+        //current number of keys
+        int nk;
+
+        //array of <key-value> entries
+        struct bplustree_entry entries[MAX_KEYS];
+
+        //array of child pointer
+        PMEMoid children[MAX_CHILDREN];
+
+        //used for leaf type nodes
+        PMEMoid next;
+        PMEMoid previous;
     };
 }   //ycsbc
 
