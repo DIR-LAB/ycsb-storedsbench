@@ -295,7 +295,7 @@ namespace ycsbc {
         if(key == current_node_ptr->entries[i].key) {
             //key found, update value and return
             TX_BEGIN(pop) {
-                pmemobj_tx_add_range_direct(&current_node_ptr->entries[i], sizeof(struct entry));
+                pmemobj_tx_add_range_direct(&current_node_ptr->entries[i].value, strlen(current_node_ptr->entries[i].value));
                 memcpy(current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
             } TX_ONABORT {
                 fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
