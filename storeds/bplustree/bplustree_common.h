@@ -64,7 +64,6 @@ namespace ycsbc {
         //used for leaf type nodes
         struct bplustree_dram_node *next;
         struct bplustree_dram_node *previous;
-        struct bplustree_dram_node *parent;
     };
 }   //ycsbc
 
