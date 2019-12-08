@@ -70,7 +70,7 @@ namespace ycsbc {
      * BPlusTreeDram::print_leaf_chain -- (internal) print the leaf chain to check the integrity of bplus-tree
      */
     void BPlusTreeDram::print_leaf_chain() {
-        bplustree_dram_node *current_node = root;
+        struct bplustree_dram_node *current_node = root;
         while (current_node != NULL && !current_node->is_leaf) {
             current_node = current_node->children[0];
         }
