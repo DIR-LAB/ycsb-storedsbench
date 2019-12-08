@@ -68,7 +68,7 @@ namespace ycsbc {
         struct dram_buckets *buckets_p = root_p->buckets;
 
         printf("a: %d, b: %d, p: %lu\n", root_p->hash_fun_coeff_a, root_p->hash_fun_coeff_b, root_p->hash_fun_coeff_p);
-        printf("total entry count: %lu, buckets: %lu\n", root_p->count, buckets_p->nbuckets);
+        printf("total buckets: %lu\n", buckets_p->nbuckets);
 
         for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
             if (buckets_p->bucket[i] == NULL) continue;
@@ -117,7 +117,6 @@ namespace ycsbc {
 
         root_p->hash_fun_coeff_b = (uint32_t) rand();
         root_p->hash_fun_coeff_p = HASH_FUNC_COEFF_P;
-        root_p->count = 0;
         root_p->buckets = (struct dram_buckets *) malloc(sizeof(struct dram_buckets));
         root_p->buckets->nbuckets = len;
         root_p->buckets->bucket = (struct dram_entry **) calloc(len, sizeof(struct dram_entry));
@@ -135,16 +134,12 @@ namespace ycsbc {
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         uint64_t hash_value = hash_function(key);
 
-        //iteration_count can be used to check the number of iteration needed to find the value of a single key
-        int iteration_count = 0;
-
         for(struct dram_entry *entry_p = buckets_p->bucket[hash_value]; entry_p != NULL; entry_p = entry_p->next) {
             if(entry_p->key == key) {
                 //key found! put it to result and return
                 result = entry_p->value;
                 break;
             }
-            iteration_count += 1;
         }
         return 1;
     }
@@ -177,28 +172,18 @@ namespace ycsbc {
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         uint64_t hash_value = hash_function(key);
 
-        //iteration_count can be used further to update the size of buckets with condition
-        int iteration_count = 0;
-
         for(struct dram_entry *entry_p = buckets_p->bucket[hash_value]; entry_p != NULL; entry_p = entry_p->next) {
             if(entry_p->key == key) {
                 //key found! replace the value and return
                 memcpy(entry_p->value, (char *) value, strlen((char *) value) + 1);
                 return 1;
             }
-            iteration_count += 1;
         }
 
         //key not found! need to insert data into bucket[hash_value]
         struct dram_entry *entry_p = new_entry(key, (const char*) value);
         entry_p->next = buckets_p->bucket[hash_value];
         buckets_p->bucket[hash_value] = entry_p;
-
-        root_p->count += 1;
-        iteration_count += 1;
-
-        //note: acording to the value of 'iteration_count',
-        //we can add custom logic to reinitialize the hash table with new bigger bucket size
         return 1;
     }
 

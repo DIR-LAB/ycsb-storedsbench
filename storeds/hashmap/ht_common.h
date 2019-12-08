@@ -68,9 +68,6 @@ namespace ycsbc {
         uint32_t hash_fun_coeff_b;
         uint64_t hash_fun_coeff_p;
 
-        /* number of values inserted */
-        uint64_t count;
-
         /* buckets */
         struct dram_buckets *buckets;
     };
@@ -101,9 +98,6 @@ namespace ycsbc {
         uint32_t hash_fun_coeff_b;
         uint64_t hash_fun_coeff_p;
 
-        /* number of values inserted */
-        uint64_t count;
-
         /* buckets */
         PMEMoid buckets;
     };
@@ -116,9 +110,6 @@ namespace ycsbc {
         uint32_t hash_fun_coeff_a;	//hash_fun_a can not contain value '0'
         uint32_t hash_fun_coeff_b;
         uint64_t hash_fun_coeff_p;
-
-        /* number of values inserted */
-        uint64_t count;
 
         /* buckets */
         PMEMoid buckets;

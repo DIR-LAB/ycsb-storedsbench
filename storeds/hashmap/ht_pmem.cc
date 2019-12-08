@@ -65,7 +65,7 @@ namespace ycsbc {
         PMEMoid entry_oid = OID_NULL;
 
         printf("a: %d, b: %d, p: %lu\n", root_p->hash_fun_coeff_a, root_p->hash_fun_coeff_b, root_p->hash_fun_coeff_p);
-        printf("total entry count: %lu, buckets: %lu\n", root_p->count, buckets_p->nbuckets);
+        printf("total buckets: %lu\n", buckets_p->nbuckets);
 
         for (size_t i = 0; i < buckets_p->nbuckets; ++i) {
             if (buckets_p->bucket[i].off == 0) continue;
@@ -135,8 +135,6 @@ namespace ycsbc {
         root_p->hash_fun_coeff_b = (uint32_t) rand();
         root_p->hash_fun_coeff_p = HASH_FUNC_COEFF_P;
 
-        root_p->count = 0;
-
         size_t len = INIT_BUCKETS_NUM;
         size_t buckets_sz = sizeof(struct pmem_buckets) + len * sizeof(struct pmem_entry);
 
@@ -165,16 +163,12 @@ namespace ycsbc {
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         uint64_t hash_value = hash_function(key);
 
-        //iteration_count can be used to check the number of iteration needed to find the value of a single key
-        int iteration_count = 0;
-
         for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct pmem_entry *) pmemobj_direct(entry_oid))->next) {
             if(((struct pmem_entry *) pmemobj_direct(entry_oid))->key == key) {
                 //key found! replace the value and return
                 struct pmem_entry *entry_p = (struct pmem_entry *) pmemobj_direct(entry_oid);
                 result = entry_p->value;
             }
-            iteration_count += 1;
         }
         return 1;
     }
@@ -200,16 +194,12 @@ namespace ycsbc {
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         uint64_t hash_value = hash_function(key);
 
-        //iteration_count can be used further to update the size of buckets with condition
-        int iteration_count = 0;
-
         for(entry_oid = buckets_p->bucket[hash_value]; entry_oid.off != 0; entry_oid = ((struct pmem_entry *) pmemobj_direct(entry_oid))->next) {
             if(((struct pmem_entry *) pmemobj_direct(entry_oid))->key == key) {
                 struct pmem_entry *entry_p = (struct pmem_entry *) pmemobj_direct(entry_oid);
                 pmemobj_memcpy_persist(pop, entry_p->value, (char *) value, strlen((char *) value) + 1);
                 return 1;
             }
-            iteration_count += 1;
         }
 
         //key not found! need to insert data into bucket[hash_value]
@@ -225,12 +215,6 @@ namespace ycsbc {
         new_entry_p->next = buckets_p->bucket[hash_value];
         buckets_p->bucket[hash_value] = new_entry_oid;
         pmemobj_persist(pop, &(buckets_p->bucket[hash_value]), sizeof(struct pmem_entry));
-
-        root_p->count += 1;
-        pmemobj_persist(pop, &root_p->count, sizeof(uint64_t));
-
-        iteration_count += 1;
-        //todo: acording to the value of 'iteration_count', we can add custom logic to reinitialize the hash table with new bigger bucket size
 
         return 1;
     }
