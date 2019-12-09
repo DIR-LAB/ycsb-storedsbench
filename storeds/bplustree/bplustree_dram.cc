@@ -12,8 +12,6 @@
 
 #include "bplustree_common.h"
 
-using namespace std;
-
 namespace ycsbc {
     class BPlusTreeDram : public StoredsBase {
     public:
@@ -103,8 +101,51 @@ namespace ycsbc {
         return 1;
     }
 
+    /**
+     * BPlusTreeDram::scan -- perform range query
+     */
     int BPlusTreeDram::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
-        throw "Scan: function not implemented!";
+        check();
+
+        struct bplustree_dram_node *current_node = root;
+
+        //going down upto the leaf
+        while(current_node != NULL && !current_node->is_leaf) {
+            int i = 0;
+
+            while (i < current_node->nk && key > current_node->entries[i].key) {
+                i += 1;
+            }
+            current_node = current_node->children[i];
+        }
+
+        //reached the leaf
+        if(current_node != NULL) {
+            int i = 0;
+            //find the starting point to start the scan
+            while (i < current_node->nk && key > current_node->entries[i].key) {
+                i += 1;
+            }
+
+            int len_count = 0;
+            //forward scan through the leaf chain
+            while(current_node != NULL) {
+                while (i < current_node->nk) {
+                    std::vector <DB::Kuint64VstrPair> tmp;
+                    tmp.push_back(std::make_pair(current_node->entries[i].key, current_node->entries[i].value));
+                    result.push_back(tmp);
+
+                    len_count += 1;
+                    if(len_count == len) break;
+                    i += 1;
+                }
+                if(len_count == len) break;
+                current_node = current_node->next;
+                i = 0;
+            }
+        }
+
+        return 1;
     }
 
     /**
