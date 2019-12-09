@@ -24,7 +24,7 @@ namespace ycsbc {
 
         int read(const uint64_t key, void *&result);
 
-        int scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result);
+        int scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result);
 
         int update(const uint64_t key, void *value);
 
@@ -105,7 +105,7 @@ namespace ycsbc {
         return 1;
     }
 
-    int ArrayPmemTx::scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result) {
+    int ArrayPmemTx::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         throw "Scan: function not implemented!";
     }
 

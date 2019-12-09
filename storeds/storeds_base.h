@@ -6,6 +6,7 @@
 #define YCSB_STOREDSBENCH_STOREDS_BASE_H
 
 #include <stdint.h>
+#include "../core/db.h"
 
 namespace ycsbc {
 
@@ -15,7 +16,7 @@ namespace ycsbc {
 
         virtual int read(const uint64_t key, void *&result) = 0;
 
-        virtual int scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result) = 0;
+        virtual int scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) = 0;
 
         virtual int update(const uint64_t key, void *value) = 0;
 
