@@ -1,0 +1,195 @@
+[Benchmark] array-dram, #of_threads:  1 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  2 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  4 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  8 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  16 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  32 , workload: workloada.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-dram, #of_threads:  1 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  2 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  4 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  8 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  16 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  32 , workload: workloadb.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-dram, #of_threads:  1 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  2 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  4 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  8 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  16 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  32 , workload: workloadc.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-dram, #of_threads:  1 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  2 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  4 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  8 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  16 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  32 , workload: workloadd.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-dram, #of_threads:  1 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  2 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  4 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  8 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  16 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-dram, #of_threads:  32 , workload: workloade.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem, #of_threads:  1 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  2 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  4 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  8 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  16 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  32 , workload: workloada.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem, #of_threads:  1 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  2 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  4 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  8 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  16 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  32 , workload: workloadb.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem, #of_threads:  1 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  2 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  4 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  8 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  16 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  32 , workload: workloadc.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem, #of_threads:  1 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  2 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  4 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  8 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  16 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  32 , workload: workloadd.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem, #of_threads:  1 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  2 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  4 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  8 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  16 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem, #of_threads:  32 , workload: workloade.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem-tx, #of_threads:  1 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  2 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  4 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  8 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  16 , workload: workloada.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  32 , workload: workloada.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem-tx, #of_threads:  1 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  2 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  4 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  8 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  16 , workload: workloadb.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  32 , workload: workloadb.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem-tx, #of_threads:  1 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  2 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  4 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  8 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  16 , workload: workloadc.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  32 , workload: workloadc.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem-tx, #of_threads:  1 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  2 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  4 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  8 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  16 , workload: workloadd.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  32 , workload: workloadd.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
+[Benchmark] array-pmem-tx, #of_threads:  1 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  2 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  4 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  8 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  16 , workload: workloade.spec
+*****************<>*****************
+[Benchmark] array-pmem-tx, #of_threads:  32 , workload: workloade.spec
+*****************<>*****************
+~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~
