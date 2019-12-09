@@ -11,8 +11,6 @@
 #include <pthread.h>
 #include "btree_common.h"
 
-using namespace std;
-
 namespace ycsbc {
     class BTreeDramConcurrentLock : public StoredsBase {
     public:

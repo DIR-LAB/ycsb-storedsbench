@@ -8,10 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <iostream>
-
 #include "btree_common.h"
-
-using namespace std;
 
 namespace ycsbc {
     class BTreeDram : public StoredsBase {
