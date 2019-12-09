@@ -93,7 +93,24 @@ namespace ycsbc {
     }
 
     int SkiplistPmem::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
-        throw "Scan: function not implemented!";
+        //printf("[%s]: PARAM: key: %s\n", __func__, key);
+        check();
+
+        PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
+        find(key, path_oid);
+        possible_found_oid = ((struct sk_pmem_node *) pmemobj_direct(path_oid[SKIPLIST_BASE_LEVEL]))->next[SKIPLIST_BASE_LEVEL];
+        int len_count = 0;
+        while(possible_found_oid.off != 0) {
+            struct sk_pmem_node *possible_found_ptr = (struct sk_pmem_node *) pmemobj_direct(possible_found_oid);
+            std::vector <DB::Kuint64VstrPair> tmp;
+            tmp.push_back(std::make_pair(possible_found_ptr->entry.key, possible_found_ptr->entry.value));
+            result.push_back(tmp);
+
+            len_count += 1;
+            if(len_count == len) break;
+            possible_found_oid = possible_found_ptr->next[SKIPLIST_BASE_LEVEL];
+        }
+        return 1;
     }
 
     /**

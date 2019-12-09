@@ -91,7 +91,23 @@ namespace ycsbc {
     }
 
     int SkiplistDram::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
-        throw "Scan: function not implemented!";
+        //printf("[%s]: PARAM: key: %s\n", __func__, key);
+        check();
+
+        struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
+        find(key, path);
+        possible_found = path[SKIPLIST_BASE_LEVEL]->next[SKIPLIST_BASE_LEVEL];
+        int len_count = 0;
+        while(possible_found != NULL) {
+            std::vector <DB::Kuint64VstrPair> tmp;
+            tmp.push_back(std::make_pair(possible_found->entry.key, possible_found->entry.value));
+            result.push_back(tmp);
+
+            len_count += 1;
+            if(len_count == len) break;
+            possible_found = possible_found->next[SKIPLIST_BASE_LEVEL];
+        }
+        return 1;
     }
 
     /**
