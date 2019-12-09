@@ -23,6 +23,8 @@ namespace ycsbc {
 
         int read(const uint64_t key, void *&result);
 
+        int scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result);
+
         int update(const uint64_t key, void *value);
 
         int insert(const uint64_t key, void *value);
@@ -95,6 +97,10 @@ namespace ycsbc {
 
         check();
         return 1;
+    }
+
+    int SkiplistPmemTxConcurrentLock::scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result) {
+        throw "Scan: function not implemented!";
     }
 
     /**

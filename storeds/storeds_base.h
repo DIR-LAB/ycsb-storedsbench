@@ -15,6 +15,8 @@ namespace ycsbc {
 
         virtual int read(const uint64_t key, void *&result) = 0;
 
+        virtual int scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result) = 0;
+
         virtual int update(const uint64_t key, void *value) = 0;
 
         virtual int insert(const uint64_t key, void *value) = 0;

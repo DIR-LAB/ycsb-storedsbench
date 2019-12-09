@@ -25,7 +25,8 @@ namespace ycsbc {
     int StoredsDB::Scan(const string &table, const uint64_t &key,
                         int len, const vector <string> *fields,
                         vector <vector<Kuint64VstrPair>> &result) {
-        throw "Scan: function not implemented!";
+        storeds_->scan(key, len, result);
+        return DB::kOK;
     }
 
     int StoredsDB::Insert(const std::string &table, const uint64_t &key,

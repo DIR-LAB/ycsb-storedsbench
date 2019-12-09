@@ -24,6 +24,8 @@ namespace ycsbc {
 
         int read(const uint64_t key, void *&result);
 
+        int scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result);
+
         int update(const uint64_t key, void *value);
 
         int insert(const uint64_t key, void *value);
@@ -90,6 +92,10 @@ namespace ycsbc {
         //new_node_p->children = (struct btree_node **) malloc((MAX_CHILDREN) * sizeof(struct btree_node));
 
         return new_node_p;
+    }
+
+    int BTreeDram::scan(const uint64_t key, int len, vector<vector<Kuint64VstrPair>> &result) {
+        throw "Scan: function not implemented!";
     }
 
     /**
