@@ -7,16 +7,16 @@
 
 input_path="../../workloads/"
 
-#rbtree-dram
+#hashtable-dram
 for file in $input_path*.spec; do
   n_threads=1
   while [ $n_threads -le 32 ]
   do
     counter=1
-    echo "[Benchmark] rbtree-dram, #of_threads: " $n_threads ", workload: ${file##*/}"
+    echo "[Benchmark] hashtable-dram, #of_threads: " $n_threads ", workload: ${file##*/}"
     while [ $counter -le 10 ]
     do
-      ./../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-dram-conc-lock -P $input_path${file##*/}
+      ./../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-dram-conc-lock -P $input_path${file##*/}
       ((counter++))
     done
     echo "*****************<>*****************"
@@ -25,18 +25,18 @@ for file in $input_path*.spec; do
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 done
 
-#rbtree-pmem
+#hashtable-pmem
 for file in $input_path*.spec; do
   n_threads=1
   while [ $n_threads -le 32 ]
   do
     counter=1
-    echo "[Benchmark] rbtree-pmem, #of_threads: " $n_threads ", workload: ${file##*/}"
+    echo "[Benchmark] hashtable-pmem, #of_threads: " $n_threads ", workload: ${file##*/}"
     while [ $counter -le 10 ]
     do
-      ./../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-conc-lock -P $input_path${file##*/}
+      ./../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-conc-lock -P $input_path${file##*/}
       ((counter++))
-      rm /pmem/rbtree.pmem
+      rm /pmem/hashtable.pmem
     done
     echo "*****************<>*****************"
     ((n_threads*=2))
@@ -44,18 +44,18 @@ for file in $input_path*.spec; do
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 done
 
-#rbtree-pmem-tx
+#hashtable-pmem-tx
 for file in $input_path*.spec; do
   n_threads=1
   while [ $n_threads -le 32 ]
   do
     counter=1
-    echo "[Benchmark] rbtree-pmem-tx, #of_threads: " $n_threads ", workload: ${file##*/}"
+    echo "[Benchmark] hashtable-pmem-tx, #of_threads: " $n_threads ", workload: ${file##*/}"
     while [ $counter -le 10 ]
     do
-      ./../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-tx-conc-lock -P $input_path${file##*/}
+      ./../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-tx-conc-lock -P $input_path${file##*/}
       ((counter++))
-      rm /pmem/rbtree.pmem
+      rm /pmem/hashtable.pmem
     done
     echo "*****************<>*****************"
     ((n_threads*=2))
