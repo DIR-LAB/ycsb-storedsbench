@@ -1,9 +1,9 @@
 #!/bin/bash
 
-make clean
-make
+#make clean
+#make
 
-input_path="workloads/"
+input_path="../../workloads/"
 
 #skiplist-dram
 for file in $input_path*.spec; do
@@ -11,7 +11,7 @@ for file in $input_path*.spec; do
   echo "[Benchmark] skiplist-dram, workload: ${file##*/}"
   while [ $counter -le 10 ]
   do
-    ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P $input_path${file##*/}
+    ./../../ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-dram -P $input_path${file##*/}
     ((counter++))
   done
   echo "*****************<>*****************"
@@ -23,9 +23,9 @@ for file in $input_path*.spec; do
   echo "[Benchmark] skiplist-pmem, workload: ${file##*/}"
   while [ $counter -le 10 ]
   do
-    rm /pmem/skiplist.pmem
-    ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P $input_path${file##*/}
+    ./../../ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem -P $input_path${file##*/}
     ((counter++))
+    rm /pmem/skiplist.pmem
   done
   echo "*****************<>*****************"
 done
@@ -36,9 +36,9 @@ for file in $input_path*.spec; do
   echo "[Benchmark] skiplist-pmem-tx, workload: ${file##*/}"
   while [ $counter -le 10 ]
   do
-    rm /pmem/skiplist.pmem
-    ./ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P $input_path${file##*/}
+    ./../../ycsbc -db storeds -threads 1 -dbpath /pmem/skiplist.pmem -type skiplist-pmem-tx -P $input_path${file##*/}
     ((counter++))
+    rm /pmem/skiplist.pmem
   done
   echo "*****************<>*****************"
 done
