@@ -85,6 +85,15 @@ int main(const int argc, const char *argv[]) {
         //cout << result[0].first << " " << result[0].second << endl;
         assert(std::to_string(MAX_VAL-key).compare(result[0].second) == 0);
     }
+
+    //perform scan
+    /*std::vector <std::vector<ycsbc::DB::Kuint64VstrPair>> result;
+    assert(db->Scan(tableName, 1, 200, NULL, result) == ycsbc::DB::kOK);
+    for(int i=0; i<result.size(); i+=1) {
+        std::vector<ycsbc::DB::Kuint64VstrPair> tmp = result[i];
+        cout << tmp[0].first << " " << tmp[0].second << endl;
+    }*/
+
     db->Close();
 
     cout << "update passed!" << endl;
