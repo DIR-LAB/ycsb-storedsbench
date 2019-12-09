@@ -14,9 +14,9 @@
 #include "bplustree_common.h"
 
 namespace ycsbc {
-    class BPlusTreePmemTx : public StoredsBase {
+    class BPlusTreePmemTxConcurrentLock : public StoredsBase {
     public:
-        BPlusTreePmemTx(const char *path) {
+        BPlusTreePmemTxConcurrentLock(const char *path) {
             init(path);
         }
 
@@ -58,9 +58,9 @@ namespace ycsbc {
     };
 
     /**
-     * BPlusTreePmemTx::check -- (internal) checks if btree has been initialized
+     * BPlusTreePmemTxConcurrentLock::check -- (internal) checks if btree has been initialized
      */
-    int BPlusTreePmemTx::check() {
+    int BPlusTreePmemTxConcurrentLock::check() {
         if (root_oid.off == 0) {
             fprintf(stderr, "[%s]: FATAL: btree not initialized yet\n", __FUNCTION__);
             assert(0);
@@ -69,16 +69,16 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
+     * BPlusTreePmemTxConcurrentLock::is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
-    int BPlusTreePmemTx::is_node_full(int nk) {
+    int BPlusTreePmemTxConcurrentLock::is_node_full(int nk) {
         return nk == MAX_KEYS ? 1 : 0;
     }
 
     /**
-     * BPlusTreePmemTx::print_leaf_chain -- (internal) print the leaf chain to check the integrity of bplus-tree
+     * BPlusTreePmemTxConcurrentLock::print_leaf_chain -- (internal) print the leaf chain to check the integrity of bplus-tree
      */
-    void BPlusTreePmemTx::print_leaf_chain() {
+    void BPlusTreePmemTxConcurrentLock::print_leaf_chain() {
         struct bplustree_pmem_node *current_node = (struct bplustree_pmem_node *) pmemobj_direct(root_p->root_node_oid);
         while (current_node != NULL && !current_node->is_leaf) {
             current_node = (struct bplustree_pmem_node *) pmemobj_direct(current_node->children[0]);
@@ -96,10 +96,10 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::create_node -- (internal) create new btree node
+     * BPlusTreePmemTxConcurrentLock::create_node -- (internal) create new btree node
      * this function must be called from a transaction block
      */
-    PMEMoid BPlusTreePmemTx::create_node(int _is_leaf) {
+    PMEMoid BPlusTreePmemTxConcurrentLock::create_node(int _is_leaf) {
         PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct bplustree_pmem_node), BTREE_NODE_TYPE);
         struct bplustree_pmem_node *new_node_prt = (struct bplustree_pmem_node *) pmemobj_direct(new_node_oid);
 
@@ -111,9 +111,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::init -- initialize btree
+     * BPlusTreePmemTxConcurrentLock::init -- initialize btree
      */
-    int BPlusTreePmemTx::init(const char *path) {
+    int BPlusTreePmemTxConcurrentLock::init(const char *path) {
         if (file_exists(path) != 0) {
             if ((pop = pmemobj_create(path, BTREE_LAYOUT_NAME, PMEM_BTREE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
                 fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());
@@ -146,9 +146,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::scan -- perform range query
+     * BPlusTreePmemTxConcurrentLock::scan -- perform range query
      */
-    int BPlusTreePmemTx::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
+    int BPlusTreePmemTxConcurrentLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         check();
 
         if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
@@ -195,9 +195,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::search -- (internal) search the node contains the key and return the value
+     * BPlusTreePmemTxConcurrentLock::search -- (internal) search the node contains the key and return the value
      */
-    char *BPlusTreePmemTx::search(PMEMoid current_node_oid, uint64_t key) {
+    char *BPlusTreePmemTxConcurrentLock::search(PMEMoid current_node_oid, uint64_t key) {
         int i = 0;
         struct bplustree_pmem_node *current_node_ptr = (struct bplustree_pmem_node *) pmemobj_direct(current_node_oid);
 
@@ -222,9 +222,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::read -- read 'value' of 'key' from btree and place it into '&result'
+     * BPlusTreePmemTxConcurrentLock::read -- read 'value' of 'key' from btree and place it into '&result'
      */
-    int BPlusTreePmemTx::read(const uint64_t key, void *&result) {
+    int BPlusTreePmemTxConcurrentLock::read(const uint64_t key, void *&result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
 
@@ -236,9 +236,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
+     * BPlusTreePmemTxConcurrentLock::update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
      */
-    int BPlusTreePmemTx::update(const uint64_t key, void *value) {
+    int BPlusTreePmemTxConcurrentLock::update(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         check();
         insert(key, value);
@@ -246,9 +246,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::update_if_found -- (internal) search the key and if exist, update the value
+     * BPlusTreePmemTxConcurrentLock::update_if_found -- (internal) search the key and if exist, update the value
      */
-    bool BPlusTreePmemTx::update_if_found(PMEMoid current_node_oid, uint64_t key, void *value) {
+    bool BPlusTreePmemTxConcurrentLock::update_if_found(PMEMoid current_node_oid, uint64_t key, void *value) {
         int i = 0;
         struct bplustree_pmem_node *current_node_ptr = (struct bplustree_pmem_node *) pmemobj_direct(current_node_oid);
 
@@ -280,7 +280,7 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::split_node -- (internal) split the children of the child node equally with the new sibling node
+     * BPlusTreePmemTxConcurrentLock::split_node -- (internal) split the children of the child node equally with the new sibling node
      *
      * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
      * one children will be pushed to the parent node.
@@ -292,7 +292,7 @@ namespace ycsbc {
      * snapshot of parent_oid must be taken in caller funciton
      * this function will take snapshots of child_oid and sibling_oid
      */
-    void BPlusTreePmemTx::split_node(int idx, PMEMoid parent_oid, PMEMoid child_oid) {
+    void BPlusTreePmemTxConcurrentLock::split_node(int idx, PMEMoid parent_oid, PMEMoid child_oid) {
         struct bplustree_pmem_node *parent_ptr = (struct bplustree_pmem_node *) pmemobj_direct(parent_oid);
         struct bplustree_pmem_node *child_ptr = (struct bplustree_pmem_node *) pmemobj_direct(child_oid);
 
@@ -386,12 +386,12 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::insert_not_full -- (internal) inserts <key, value> pair into node
+     * BPlusTreePmemTxConcurrentLock::insert_not_full -- (internal) inserts <key, value> pair into node
      * when this function called, we can assume that the node has space to hold new data
      *
      * this function must be called from a transaction block
      */
-    void BPlusTreePmemTx::insert_not_full(PMEMoid node_oid, uint64_t key, void *value) {
+    void BPlusTreePmemTxConcurrentLock::insert_not_full(PMEMoid node_oid, uint64_t key, void *value) {
         struct bplustree_pmem_node *node_ptr = (struct bplustree_pmem_node *) pmemobj_direct(node_oid);
         int i = node_ptr->nk - 1;
 
@@ -435,9 +435,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
+     * BPlusTreePmemTxConcurrentLock::insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
      */
-    int BPlusTreePmemTx::insert(const uint64_t key, void *value) {
+    int BPlusTreePmemTxConcurrentLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
 
@@ -498,10 +498,10 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::recursive_free -- recursively visit all the btree nodes and de-allocate memory
+     * BPlusTreePmemTxConcurrentLock::recursive_free -- recursively visit all the btree nodes and de-allocate memory
      * this function must be called in a transaction block
      */
-    void BPlusTreePmemTx::recursive_free(PMEMoid current_node_oid) {
+    void BPlusTreePmemTxConcurrentLock::recursive_free(PMEMoid current_node_oid) {
         struct bplustree_pmem_node *current_node_ptr = (struct bplustree_pmem_node *) pmemobj_direct(current_node_oid);
         //base case
         if(current_node_ptr->is_leaf) {
@@ -524,9 +524,9 @@ namespace ycsbc {
     }
 
     /**
-     * BPlusTreePmemTx::destroy -- destructor
+     * BPlusTreePmemTxConcurrentLock::destroy -- destructor
      */
-    void BPlusTreePmemTx::destroy() {
+    void BPlusTreePmemTxConcurrentLock::destroy() {
         check();
 
         TX_BEGIN(pop) {
