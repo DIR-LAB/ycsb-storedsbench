@@ -63,7 +63,18 @@ namespace ycsbc{
     }
 
     int ArrayDramConcurrentLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
-        throw "Scan: function not implemented!";
+        check();
+        if (pthread_rwlock_rdlock(&rwlock) != 0) return 0;
+
+        int offset = (int) (key % ARRAY_SIZE);
+        for(int i=0; i<len && i<ARRAY_SIZE; i+=1) {
+            std::vector <DB::Kuint64VstrPair> tmp;
+            tmp.push_back(std::make_pair((offset + i), array[offset + i]));
+            result.push_back(tmp);
+        }
+
+        pthread_rwlock_unlock(&rwlock);
+        return 1;
     }
 
     int ArrayDramConcurrentLock::read(const uint64_t key, void *&result) {

@@ -97,7 +97,15 @@ namespace ycsbc {
     }
 
     int ArrayPmem::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
-        throw "Scan: function not implemented!";
+        check();
+        int offset = (int) (key % ARRAY_SIZE);
+        for(int i=0; i<len && i<ARRAY_SIZE; i+=1) {
+            std::vector <DB::Kuint64VstrPair> tmp;
+            struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + (offset + i) * sizeof(struct array_pmem_elm));
+            tmp.push_back(std::make_pair((offset + i), ptr->value));
+            result.push_back(tmp);
+        }
+        return 1;
     }
 
     /**
