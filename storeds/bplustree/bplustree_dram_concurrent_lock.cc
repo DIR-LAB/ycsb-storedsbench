@@ -79,7 +79,7 @@ namespace ycsbc {
         while (current_node != NULL) {
             printf("[");
             for (int i = 0; i < current_node->nk; i += 1) {
-                printf(" %ld", current_node->entries[i].key);
+                printf(" <%ld, %s>", current_node->entries[i].key, current_node->entries[i].value);
             }
             printf("] -> ");
             current_node = current_node->next;
@@ -179,6 +179,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
+        if (i < MAX_KEYS && key == current_node->entries[i].key) i += 1;
         return search(current_node->children[i], key);
     }
 
@@ -242,6 +243,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
+        if (i < MAX_KEYS && key == current_node->entries[i].key) i += 1;
         return update_if_found(current_node->children[i], key, value);
     }
 
