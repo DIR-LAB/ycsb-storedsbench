@@ -14,7 +14,7 @@ for file in $input_path*.spec; do
   do
     counter=1
     echo "[Benchmark] rbtree-dram, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 1 ]
+    while [ $counter -le 10 ]
     do
       ./../../ycsbc_parallel -db storeds -threads $n_threads -dbpath /pmem/rbtree -type rbtree-dram -P $input_path${file##*/}
       ((counter++))
@@ -32,7 +32,7 @@ for file in $input_path*.spec; do
   do
     counter=1
     echo "[Benchmark] rbtree-pmem, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 1 ]
+    while [ $counter -le 10 ]
     do
       ./../../ycsbc_parallel -db storeds -threads $n_threads -dbpath /pmem/rbtree -type rbtree-pmem -P $input_path${file##*/}
       ((counter++))
@@ -51,7 +51,7 @@ for file in $input_path*.spec; do
   do
     counter=1
     echo "[Benchmark] rbtree-pmem-tx, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 1 ]
+    while [ $counter -le 10 ]
     do
       ./../../ycsbc_parallel -db storeds -threads $n_threads -dbpath /pmem/rbtree -type rbtree-pmem-tx -P $input_path${file##*/}
       ((counter++))
