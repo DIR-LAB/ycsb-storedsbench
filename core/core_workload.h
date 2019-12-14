@@ -226,7 +226,8 @@ namespace ycsbc {
     }
 
     inline std::string CoreWorkload::NextFieldName() {
-        return std::string("field").append(std::to_string(field_chooser_->Next()));
+        return std::string("field");
+        //return std::string("field").append(std::to_string(field_chooser_->Next()));
     }
 
 } // ycsbc
