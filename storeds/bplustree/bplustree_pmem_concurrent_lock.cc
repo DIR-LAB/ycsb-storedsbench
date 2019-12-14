@@ -222,7 +222,9 @@ namespace ycsbc {
     int BPlusTreePmemConcurrentLock::read(const uint64_t key, void *&result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
+        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
         result = search(root_p->root_node_oid, key);
+        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
         return 1;
     }
 
