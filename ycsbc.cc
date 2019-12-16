@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Jinglei Ren <jinglei@ren.systems>.
 //
 
+#include <sched.h>
 #include <cstring>
 #include <string>
 #include <iostream>
@@ -25,8 +26,18 @@ bool StrStartWith(const char *str, const char *pre);
 
 string ParseCommandLine(int argc, const char *argv[], utils::Properties &props);
 
-int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops,
-                   bool is_loading) {
+int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bool is_loading, int thread_id) {
+    // Add cpu affinity here:
+    // Create a cpu_set_t object representing a set of CPUs. Clear it and mark only CPU "this_thread_data->tid" as set
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(thread_id, &cpuset);
+    int rc = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    if (rc != 0) {
+        printf("Error calling pthread_setaffinity_np: %d\n", rc);
+        exit(0);
+    }
+
     db->Init();
     ycsbc::Client client(*db, *wl);
     int oks = 0;
@@ -60,8 +71,7 @@ int main(const int argc, const char *argv[]) {
     vector <future<int>> actual_ops;
     int total_ops = stoi(props[ycsbc::CoreWorkload::RECORD_COUNT_PROPERTY]);
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async,
-                                      DelegateClient, db, &wl, total_ops / num_threads, true));
+        actual_ops.emplace_back(async(launch::async, DelegateClient, db, &wl, total_ops / num_threads, true, i));
     }
     assert((int) actual_ops.size() == num_threads);
 
@@ -78,8 +88,7 @@ int main(const int argc, const char *argv[]) {
     utils::Timer<double> timer;
     timer.Start();
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async,
-                                      DelegateClient, db, &wl, total_ops / num_threads, false));
+        actual_ops.emplace_back(async(launch::async, DelegateClient, db, &wl, total_ops / num_threads, false, i));
     }
     assert((int) actual_ops.size() == num_threads);
 
