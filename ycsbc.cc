@@ -31,7 +31,7 @@ int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bo
     // Create a cpu_set_t object representing a set of CPUs. Clear it and mark only CPU "this_thread_data->tid" as set
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(thread_id, &cpuset);
+    CPU_SET(thread_id*2, &cpuset);
     int rc = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (rc != 0) {
         printf("Error calling pthread_setaffinity_np: %d\n", rc);
