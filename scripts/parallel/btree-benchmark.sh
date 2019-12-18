@@ -10,7 +10,7 @@ input_path="../../workloads/"
 #btree-dram
 for file in $input_path*.spec; do
   n_threads=1
-  while [ $n_threads -le 32 ]
+  while [ $n_threads -le 16 ]
   do
     counter=1
     echo "[Benchmark] btree-dram, #of_threads: " $n_threads ", workload: ${file##*/}"
@@ -28,7 +28,7 @@ done
 #btree-pmem
 for file in $input_path*.spec; do
   n_threads=1
-  while [ $n_threads -le 32 ]
+  while [ $n_threads -le 16 ]
   do
     counter=1
     echo "[Benchmark] btree-pmem, #of_threads: " $n_threads ", workload: ${file##*/}"
@@ -47,7 +47,7 @@ done
 #btree-pmem-tx
 for file in $input_path*.spec; do
   n_threads=1
-  while [ $n_threads -le 32 ]
+  while [ $n_threads -le 16 ]
   do
     counter=1
     echo "[Benchmark] btree-pmem-tx, #of_threads: " $n_threads ", workload: ${file##*/}"
