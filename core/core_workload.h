@@ -153,6 +153,10 @@ namespace ycsbc {
 
         virtual size_t NextScanLength() { return scan_len_chooser_->Next(); }
 
+        virtual void PrepareOfflineData(int ops);
+        virtual void BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values, int idx);
+        virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update, int idx);
+
         bool read_all_fields() const { return read_all_fields_; }
 
         bool write_all_fields() const { return write_all_fields_; }
@@ -191,6 +195,10 @@ namespace ycsbc {
         bool ordered_inserts_;
         size_t record_count_;
         //unsigned int rand_seed_;
+
+        //offline data
+        std::vector <DB::KVPair> insert_value_arr[100005];
+        std::vector <DB::KVPair> update_value_arr[100005];
     };
 
     inline uint64_t CoreWorkload::NextSequenceKey() {

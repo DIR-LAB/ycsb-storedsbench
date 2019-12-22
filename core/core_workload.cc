@@ -166,6 +166,18 @@ void CoreWorkload::Init(const utils::Properties &p) {
     //rand_seed_ = clock();
 }
 
+void CoreWorkload::PrepareOfflineData(int ops) {
+    for(int i=0; i<ops; i+=1) {
+        std::vector <DB::KVPair> insert_values;
+        BuildValues(insert_values);
+        insert_value_arr[i] = insert_values;
+
+        std::vector <DB::KVPair> update_values;
+        BuildUpdate(update_values);
+        update_value_arr[i] = update_values;
+    }
+}
+
 ycsbc::Generator<uint64_t> *CoreWorkload::GetFieldLenGenerator(
         const utils::Properties &p) {
     string field_len_dist = p.GetProperty(FIELD_LENGTH_DISTRIBUTION_PROPERTY,
@@ -196,6 +208,10 @@ void CoreWorkload::BuildValues(std::vector <ycsbc::DB::KVPair> &values) {
     }
 }
 
+void CoreWorkload::BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values, int idx) {
+    values = insert_value_arr[idx];
+}
+
 void CoreWorkload::BuildUpdate(std::vector <ycsbc::DB::KVPair> &update) {
     ycsbc::DB::KVPair pair;
     pair.first.append(NextFieldName());
@@ -205,3 +221,6 @@ void CoreWorkload::BuildUpdate(std::vector <ycsbc::DB::KVPair> &update) {
     update.push_back(pair);
 }
 
+void CoreWorkload::BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update, int idx) {
+    update = update_value_arr[idx];
+}

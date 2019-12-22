@@ -26,7 +26,7 @@ bool StrStartWith(const char *str, const char *pre);
 
 string ParseCommandLine(int argc, const char *argv[], utils::Properties &props);
 
-int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bool is_loading, int thread_id) {
+int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bool is_loading, int thread_id, int num_threads) {
     // Add cpu affinity here:
     // Create a cpu_set_t object representing a set of CPUs. Clear it and mark only CPU "this_thread_data->tid" as set
     cpu_set_t cpuset;
@@ -45,7 +45,7 @@ int DelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bo
         if (is_loading) {
             oks += client.DoInsert();
         } else {
-            oks += client.DoTransaction();
+            oks += client.DoTransactionOffline(i*num_threads + thread_id);
         }
     }
     db->Close();
@@ -71,7 +71,7 @@ int main(const int argc, const char *argv[]) {
     vector <future<int>> actual_ops;
     int total_ops = stoi(props[ycsbc::CoreWorkload::RECORD_COUNT_PROPERTY]);
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async, DelegateClient, db, &wl, total_ops / num_threads, true, i));
+        actual_ops.emplace_back(async(launch::async, DelegateClient, db, &wl, total_ops / num_threads, true, i, num_threads));
     }
     assert((int) actual_ops.size() == num_threads);
 
@@ -85,10 +85,11 @@ int main(const int argc, const char *argv[]) {
     // Peforms transactions
     actual_ops.clear();
     total_ops = stoi(props[ycsbc::CoreWorkload::OPERATION_COUNT_PROPERTY]);
+    wl.PrepareOfflineData(total_ops);
     utils::Timer<double> timer;
     timer.Start();
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async, DelegateClient, db, &wl, total_ops / num_threads, false, i));
+        actual_ops.emplace_back(async(launch::async, DelegateClient, db, &wl, total_ops / num_threads, false, i, num_threads));
     }
     assert((int) actual_ops.size() == num_threads);
 
