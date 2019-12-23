@@ -99,6 +99,7 @@ int main(const int argc, const char *argv[]) {
     }
     double duration = timer.End();
     cout << "# Transaction throughput (KTPS)" << endl;
+    cout << "Duration of the program: " << duration << endl;
     cout << props["dbname"] << '\t' << file_name << '\t' << num_threads << '\t';
     cout << total_ops / duration / 1000 << endl;
     if (db) db->~DB();

@@ -75,29 +75,30 @@ namespace ycsbc {
     }
 
     inline int Client::TransactionRead() {
-        const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKey();
+        workload_.NextTable();
+        workload_.NextTransactionKey();
         std::vector <DB::Kuint64VstrPair> result;
         if (!workload_.read_all_fields()) {
             std::vector <std::string> fields;
             fields.push_back("field" + workload_.NextFieldName());
-            return db_.Read(table, key, &fields, result);
+            //return db_.Read(table, key, &fields, result);
         } else {
-            return db_.Read(table, key, NULL, result);
+            //return db_.Read(table, key, NULL, result);
         }
+        return 1;
     }
 
     inline int Client::TransactionReadModifyWrite() {
-        const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKey();
+        workload_.NextTable();
+        workload_.NextTransactionKey();
         std::vector <DB::Kuint64VstrPair> result;
 
         if (!workload_.read_all_fields()) {
             std::vector <std::string> fields;
             fields.push_back("field" + workload_.NextFieldName());
-            db_.Read(table, key, &fields, result);
+            //db_.Read(table, key, &fields, result);
         } else {
-            db_.Read(table, key, NULL, result);
+            //db_.Read(table, key, NULL, result);
         }
 
         std::vector <DB::KVPair> values;
@@ -106,41 +107,45 @@ namespace ycsbc {
         } else {
             workload_.BuildUpdate(values);
         }
-        return db_.Update(table, key, values);
+        //return db_.Update(table, key, values);
+        return 1;
     }
 
     inline int Client::TransactionScan() {
-        const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKey();
-        int len = workload_.NextScanLength();
+        workload_.NextTable();
+        workload_.NextTransactionKey();
+        workload_.NextScanLength();
         std::vector <std::vector<DB::Kuint64VstrPair>> result;
         if (!workload_.read_all_fields()) {
             std::vector <std::string> fields;
             fields.push_back("field" + workload_.NextFieldName());
-            return db_.Scan(table, key, len, &fields, result);
+            //return db_.Scan(table, key, len, &fields, result);
         } else {
-            return db_.Scan(table, key, len, NULL, result);
+            //return db_.Scan(table, key, len, NULL, result);
         }
+        return 1;
     }
 
     inline int Client::TransactionUpdate() {
-        const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKey();
+        workload_.NextTable();
+        workload_.NextTransactionKey();
         std::vector <DB::KVPair> values;
         if (workload_.write_all_fields()) {
             workload_.BuildValues(values);
         } else {
             workload_.BuildUpdate(values);
         }
-        return db_.Update(table, key, values);
+        //return db_.Update(table, key, values);
+        return 1;
     }
 
     inline int Client::TransactionInsert() {
-        const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextSequenceKey();
+        workload_.NextTable();
+        workload_.NextSequenceKey();
         std::vector <DB::KVPair> values;
         workload_.BuildValues(values);
-        return db_.Insert(table, key, values);
+        //return db_.Insert(table, key, values);
+        return 1;
     }
 
 } // ycsbc
