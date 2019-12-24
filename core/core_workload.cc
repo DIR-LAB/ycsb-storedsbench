@@ -167,14 +167,12 @@ void CoreWorkload::Init(const utils::Properties &p) {
 }
 
 void CoreWorkload::PrepareOfflineData(int ops) {
+    pthread_mutex_init(&ycsbc_offline_lock_, NULL);
+    BuildValues(insert_value_);
+    BuildValues(update_value_);
+    sequence_idx_ = 0;
     for(int i=0; i<ops; i+=1) {
-        std::vector <DB::KVPair> insert_values;
-        BuildValues(insert_values);
-        insert_value_arr[i] = insert_values;
-
-        std::vector <DB::KVPair> update_values;
-        BuildUpdate(update_values);
-        update_value_arr[i] = update_values;
+        sequence_key_arr[i] = NextSequenceKey();
     }
 }
 
@@ -208,8 +206,8 @@ void CoreWorkload::BuildValues(std::vector <ycsbc::DB::KVPair> &values) {
     }
 }
 
-void CoreWorkload::BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values, int idx) {
-    values = insert_value_arr[idx];
+void CoreWorkload::BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values) {
+    values = insert_value_;
 }
 
 void CoreWorkload::BuildUpdate(std::vector <ycsbc::DB::KVPair> &update) {
@@ -221,6 +219,6 @@ void CoreWorkload::BuildUpdate(std::vector <ycsbc::DB::KVPair> &update) {
     update.push_back(pair);
 }
 
-void CoreWorkload::BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update, int idx) {
-    update = update_value_arr[idx];
+void CoreWorkload::BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update) {
+    update = update_value_;
 }

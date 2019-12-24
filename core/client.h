@@ -24,7 +24,7 @@ namespace ycsbc {
 
         virtual bool DoTransaction();
 
-        virtual bool DoTransactionOffline(int idx);
+        virtual bool DoTransactionOffline();
 
         virtual ~Client() {}
 
@@ -32,7 +32,7 @@ namespace ycsbc {
 
         virtual int TransactionRead();
 
-        virtual int TransactionReadOffline(int idx);
+        virtual int TransactionReadOffline();
 
         virtual int TransactionReadModifyWrite();
 
@@ -40,11 +40,11 @@ namespace ycsbc {
 
         virtual int TransactionUpdate();
 
-        virtual int TransactionUpdateOffline(int idx);
+        virtual int TransactionUpdateOffline();
 
         virtual int TransactionInsert();
 
-        virtual int TransactionInsertOffline(int idx);
+        virtual int TransactionInsertOffline();
 
         DB &db_;
         CoreWorkload &workload_;
@@ -82,17 +82,17 @@ namespace ycsbc {
         return (status == DB::kOK);
     }
 
-    inline bool Client::DoTransactionOffline(int idx) {
+    inline bool Client::DoTransactionOffline() {
         int status = -1;
         switch (workload_.NextOperation()) {
             case READ:
-                status = TransactionReadOffline(idx);
+                status = TransactionReadOffline();
                 break;
             case UPDATE:
-                status = TransactionUpdateOffline(idx);
+                status = TransactionUpdateOffline();
                 break;
             case INSERT:
-                status = TransactionInsertOffline(idx);
+                status = TransactionInsertOffline();
                 break;
             default:
                 throw utils::Exception("Operation request is not recognized!");
@@ -114,17 +114,11 @@ namespace ycsbc {
         }
     }
 
-    inline int Client::TransactionReadOffline(int idx) {
+    inline int Client::TransactionReadOffline() {
         const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKey();
+        const uint64_t &key = workload_.NextTransactionKeyOffline();
         std::vector <DB::Kuint64VstrPair> result;
-        if (!workload_.read_all_fields()) {
-            std::vector <std::string> fields;
-            fields.push_back("field" + workload_.NextFieldName());
-            return db_.Read(table, key, &fields, result);
-        } else {
-            return db_.Read(table, key, NULL, result);
-        }
+        return db_.Read(table, key, NULL, result);
     }
 
     inline int Client::TransactionReadModifyWrite() {
@@ -175,14 +169,14 @@ namespace ycsbc {
         return db_.Update(table, key, values);
     }
 
-    inline int Client::TransactionUpdateOffline(int idx) {
+    inline int Client::TransactionUpdateOffline() {
         const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKey();
+        const uint64_t &key = workload_.NextTransactionKeyOffline();
         std::vector <DB::KVPair> values;
         if (workload_.write_all_fields()) {
-            workload_.BuildValuesOffline(values, idx);
+            workload_.BuildValuesOffline(values);
         } else {
-            workload_.BuildUpdateOffline(values, idx);
+            workload_.BuildUpdateOffline(values);
         }
         return db_.Update(table, key, values);
     }
@@ -195,11 +189,11 @@ namespace ycsbc {
         return db_.Insert(table, key, values);
     }
 
-    inline int Client::TransactionInsertOffline(int idx) {
+    inline int Client::TransactionInsertOffline() {
         const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextSequenceKey();
+        const uint64_t &key = workload_.NextSequenceKeyOffline();
         std::vector <DB::KVPair> values;
-        workload_.BuildValuesOffline(values, idx);
+        workload_.BuildValuesOffline(values);
         return db_.Insert(table, key, values);
     }
 

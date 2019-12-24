@@ -154,8 +154,10 @@ namespace ycsbc {
         virtual size_t NextScanLength() { return scan_len_chooser_->Next(); }
 
         virtual void PrepareOfflineData(int ops);
-        virtual void BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values, int idx);
-        virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update, int idx);
+        virtual void BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values);
+        virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update);
+        virtual uint64_t NextSequenceKeyOffline();
+        virtual uint64_t NextTransactionKeyOffline();
 
         bool read_all_fields() const { return read_all_fields_; }
 
@@ -197,8 +199,11 @@ namespace ycsbc {
         //unsigned int rand_seed_;
 
         //offline data
-        std::vector <DB::KVPair> insert_value_arr[100005];
-        std::vector <DB::KVPair> update_value_arr[100005];
+        std::vector <DB::KVPair> insert_value_;
+        std::vector <DB::KVPair> update_value_;
+        uint64_t sequence_key_arr[1000005];
+        int sequence_idx_;
+        pthread_mutex_t ycsbc_offline_lock_;
     };
 
     inline uint64_t CoreWorkload::NextSequenceKey() {
@@ -206,11 +211,28 @@ namespace ycsbc {
         return BuildKeyName(key_num);
     }
 
+    inline uint64_t CoreWorkload::NextSequenceKeyOffline() {
+        int idx;
+        pthread_mutex_lock(&ycsbc_offline_lock_);
+        idx = sequence_idx_;
+        sequence_idx_ += 1;
+        pthread_mutex_unlock(&ycsbc_offline_lock_);
+        return BuildKeyName(sequence_key_arr[idx]);
+    }
+
     inline uint64_t CoreWorkload::NextTransactionKey() {
         uint64_t key_num;
         do {
             key_num = key_chooser_->Next();
         } while (key_num > insert_key_sequence_.Last());
+        return BuildKeyName(key_num);
+    }
+
+    inline uint64_t CoreWorkload::NextTransactionKeyOffline() {
+        uint64_t key_num;
+        do {
+            key_num = key_chooser_->Next();
+        } while (key_num > sequence_key_arr[sequence_idx_]);
         return BuildKeyName(key_num);
     }
 
