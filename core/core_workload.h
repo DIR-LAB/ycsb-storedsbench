@@ -232,7 +232,7 @@ namespace ycsbc {
         uint64_t key_num;
         do {
             key_num = key_chooser_->Next();
-        } while (key_num > sequence_key_arr[sequence_idx_]);
+        } while (key_num > record_count_);
         return BuildKeyName(key_num);
     }
 
