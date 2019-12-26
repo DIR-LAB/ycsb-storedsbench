@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Jinglei Ren <jinglei@ren.systems>.
 //
 
+//#include <unistd.h>
 #include <sched.h>
 #include <cstring>
 #include <string>
@@ -86,6 +87,7 @@ int main(const int argc, const char *argv[]) {
     actual_ops.clear();
     total_ops = stoi(props[ycsbc::CoreWorkload::OPERATION_COUNT_PROPERTY]);
     wl.PrepareOfflineData(total_ops);
+    //usleep(10000000);
     utils::Timer<double> timer;
     timer.Start();
     for (int i = 0; i < num_threads; ++i) {
