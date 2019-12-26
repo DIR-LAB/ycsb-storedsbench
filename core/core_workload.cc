@@ -172,7 +172,7 @@ void CoreWorkload::PrepareOfflineData(int ops) {
     BuildValues(update_value_);
     sequence_idx_ = 0;
     for(int i=0; i<ops; i+=1) {
-        sequence_key_arr[i] = NextSequenceKey();
+        sequence_key_arr[i] = key_generator_->Next();
     }
 }
 

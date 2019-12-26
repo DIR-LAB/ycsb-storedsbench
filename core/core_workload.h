@@ -201,7 +201,7 @@ namespace ycsbc {
         //offline data
         std::vector <DB::KVPair> insert_value_;
         std::vector <DB::KVPair> update_value_;
-        uint64_t sequence_key_arr[1000005];
+        int sequence_key_arr[100005];
         int sequence_idx_;
         pthread_mutex_t ycsbc_offline_lock_;
     };
@@ -232,7 +232,7 @@ namespace ycsbc {
         uint64_t key_num;
         do {
             key_num = key_chooser_->Next();
-        } while (key_num > record_count_);
+        } while (key_num > record_count_-1);
         return BuildKeyName(key_num);
     }
 
