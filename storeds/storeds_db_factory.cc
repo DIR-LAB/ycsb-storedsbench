@@ -35,6 +35,7 @@
 #include "array/array_dram.cc"
 #include "array/array_pmem.cc"
 #include "array/array_pmem_tx.cc"
+#include "array/array_vmem.cc"
 #include "array/array_dram_concurrent_lock.cc"
 #include "array/array_pmem_concurrent_lock.cc"
 #include "array/array_pmem_tx_concurrent_lock.cc"
@@ -55,6 +56,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new ArrayPmem(path);
     } else if (strcmp(type, "array-pmem-tx") == 0) {
         return new ArrayPmemTx(path);
+    } else if (strcmp(type, "array-vmem") == 0) {
+        return new ArrayVmem(path);
     } else if (strcmp(type, "array-dram-conc-lock") == 0) {
         return new ArrayDramConcurrentLock(path);
     } else if (strcmp(type, "array-pmem-conc-lock") == 0) {

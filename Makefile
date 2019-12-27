@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-std=c++11 -g -Wall -pthread -I./ -O2
-LDFLAGS= -lpthread -ltbb -lpmemobj -lpmem
+LDFLAGS= -lpthread -ltbb -lpmemobj -lpmem -lvmem
 SUBDIRS=core db storeds
 SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(wildcard storeds/*.cc)
 OBJECTS=$(SUBSRCS:.cc=.o)
