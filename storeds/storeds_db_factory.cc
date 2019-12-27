@@ -43,6 +43,7 @@
 #include "rbtree/rbtree_dram.cc"
 #include "rbtree/rbtree_pmem.cc"
 #include "rbtree/rbtree_pmem_tx.cc"
+#include "rbtree/rbtree_vmem.cc"
 #include "rbtree/rbtree_dram_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_tx_concurrent_lock.cc"
@@ -127,6 +128,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreePmem(path);
     } else if (strcmp(type, "rbtree-pmem-tx") == 0) {
         return new RbtreePmemTx(path);
+    } else if (strcmp(type, "rbtree-vmem") == 0) {
+        return new RbtreeVmem(path);
     } else if (strcmp(type, "rbtree-dram-conc-lock") == 0) {
         return new RbtreeDramConcurrentLock(path);
     } else if (strcmp(type, "rbtree-pmem-conc-lock") == 0) {
