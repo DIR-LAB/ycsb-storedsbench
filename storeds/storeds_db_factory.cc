@@ -14,6 +14,7 @@
 #include "bplustree/bplustree_dram.cc"
 #include "bplustree/bplustree_pmem.cc"
 #include "bplustree/bplustree_pmem_tx.cc"
+#include "bplustree/bplustree_vmem.cc"
 #include "bplustree/bplustree_dram_concurrent_lock.cc"
 #include "bplustree/bplustree_pmem_concurrent_lock.cc"
 #include "bplustree/bplustree_pmem_tx_concurrent_lock.cc"
@@ -82,6 +83,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BPlusTreePmem(path);
     } else if (strcmp(type, "bplustree-pmem-tx") == 0) {
         return new BPlusTreePmemTx(path);
+    } else if (strcmp(type, "bplustree-vmem") == 0) {
+        return new BPlusTreeVmem(path);
     } else if (strcmp(type, "bplustree-dram-conc-lock") == 0) {
         return new BPlusTreeDramConcurrentLock(path);
     } else if (strcmp(type, "bplustree-pmem-conc-lock") == 0) {
