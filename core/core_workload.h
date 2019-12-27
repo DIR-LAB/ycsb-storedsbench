@@ -158,6 +158,7 @@ namespace ycsbc {
         virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update);
         virtual uint64_t NextSequenceKeyOffline();
         virtual uint64_t NextTransactionKeyOffline();
+        virtual uint64_t NextTransactionKeyRaw(); /// Used for offline transactions
 
         bool read_all_fields() const { return read_all_fields_; }
 
@@ -202,6 +203,7 @@ namespace ycsbc {
         std::vector <DB::KVPair> insert_value_;
         std::vector <DB::KVPair> update_value_;
         int sequence_key_arr[100005];
+        int transaction_key_arr[100005];
         int sequence_idx_;
         pthread_mutex_t ycsbc_offline_lock_;
     };
@@ -220,6 +222,14 @@ namespace ycsbc {
         return BuildKeyName(sequence_key_arr[idx]);
     }
 
+    inline uint64_t CoreWorkload::NextTransactionKeyRaw() {
+        uint64_t key_num;
+        do {
+            key_num = key_chooser_->Next();
+        } while (key_num > insert_key_sequence_.Last());
+        return key_num;
+    }
+
     inline uint64_t CoreWorkload::NextTransactionKey() {
         uint64_t key_num;
         do {
@@ -229,11 +239,18 @@ namespace ycsbc {
     }
 
     inline uint64_t CoreWorkload::NextTransactionKeyOffline() {
-        uint64_t key_num;
-        do {
-            key_num = key_chooser_->Next();
-        } while (key_num > record_count_-1);
-        return BuildKeyName(key_num);
+//        uint64_t key_num;
+//        do {
+//            key_num = key_chooser_->Next();
+//        } while (key_num > record_count_-1);
+//        return BuildKeyName(key_num);
+        //todo: may try with different lock and sequence
+        int idx;
+        pthread_mutex_lock(&ycsbc_offline_lock_);
+        idx = sequence_idx_;
+        sequence_idx_ += 1;
+        pthread_mutex_unlock(&ycsbc_offline_lock_);
+        return BuildKeyName(transaction_key_arr[idx]);
     }
 
     /**
