@@ -28,6 +28,11 @@ namespace ycsbc {
         READMODIFYWRITE
     };
 
+    struct offline_ops {
+        uint64_t key;
+        Operation operation;
+    };
+
     class CoreWorkload {
     public:
         ///
@@ -154,6 +159,8 @@ namespace ycsbc {
         virtual size_t NextScanLength() { return scan_len_chooser_->Next(); }
 
         virtual void PrepareOfflineData(int ops);
+        virtual void PrepareOfflineDataV1(int ops);
+        virtual struct offline_ops GetOperationByIndex(int idx);
         virtual void BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values);
         virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update);
         virtual uint64_t NextSequenceKeyOffline();
@@ -208,9 +215,14 @@ namespace ycsbc {
         int transaction_key_arr[100005];
         int sequence_key_idx_;
         int transaction_key_idx_;
+        struct offline_ops offlineOps[100005];
         pthread_mutex_t ycsbc_offline_sequence_key_lock_;
         pthread_mutex_t ycsbc_offline_transaction_key_lock_;
     };
+
+    inline struct offline_ops CoreWorkload::GetOperationByIndex(int idx) {
+        return offlineOps[idx];
+    }
 
     inline uint64_t CoreWorkload::NextSequenceKey() {
         uint64_t key_num = key_generator_->Next();

@@ -182,6 +182,23 @@ void CoreWorkload::PrepareOfflineData(int ops) {
     }
 }
 
+void CoreWorkload::PrepareOfflineDataV1(int ops) {
+    for(int i=0; i<ops; i+=1) {
+        offlineOps[i].operation = NextOperation();
+        switch (offlineOps[i].operation) {
+            case READ:
+            case UPDATE:
+                offlineOps[i].key = NextTransactionKey();
+                break;
+            case INSERT:
+                offlineOps[i].key = NextSequenceKey();
+                break;
+            default:
+                throw utils::Exception("Operation request is not recognized!");
+        }
+    }
+}
+
 ycsbc::Generator<uint64_t> *CoreWorkload::GetFieldLenGenerator(
         const utils::Properties &p) {
     string field_len_dist = p.GetProperty(FIELD_LENGTH_DISTRIBUTION_PROPERTY,

@@ -86,7 +86,7 @@ int main(const int argc, const char *argv[]) {
     // Peforms transactions
     actual_ops.clear();
     total_ops = stoi(props[ycsbc::CoreWorkload::OPERATION_COUNT_PROPERTY]);
-    wl.PrepareOfflineData(total_ops);
+    wl.PrepareOfflineDataV1(total_ops);
     //usleep(10000000);
     utils::Timer<double> timer;
     timer.Start();

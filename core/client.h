@@ -111,15 +111,16 @@ namespace ycsbc {
 
     inline bool Client::DoTransactionOfflineV1(int idx) {
         int status = -1;
-        switch (workload_.NextOperation()) {
+        struct offline_ops current_op = workload_.GetOperationByIndex(idx);
+        switch (current_op.operation) {
             case READ:
-                status = TransactionReadOfflineV1(idx);
+                status = TransactionReadOfflineV1(current_op.key);
                 break;
             case UPDATE:
-                status = TransactionUpdateOfflineV1(idx);
+                status = TransactionUpdateOfflineV1(current_op.key);
                 break;
             case INSERT:
-                status = TransactionInsertOfflineV1(idx);
+                status = TransactionInsertOfflineV1(current_op.key);
                 break;
             default:
                 throw utils::Exception("Operation request is not recognized!");
@@ -148,9 +149,9 @@ namespace ycsbc {
         return db_.Read(table, key, NULL, result);
     }
 
-    inline int Client::TransactionReadOfflineV1(int idx) {
+    inline int Client::TransactionReadOfflineV1(const uint64_t &key) {
         const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKeyOfflineV1(idx);
+        //const uint64_t &key = workload_.NextTransactionKeyOfflineV1(idx);
         std::vector <DB::Kuint64VstrPair> result;
         return db_.Read(table, key, NULL, result);
     }
@@ -215,9 +216,9 @@ namespace ycsbc {
         return db_.Update(table, key, values);
     }
 
-    inline int Client::TransactionUpdateOfflineV1(int idx) {
+    inline int Client::TransactionUpdateOfflineV1(const uint64_t &key) {
         const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextTransactionKeyOfflineV1(idx);
+        //const uint64_t &key = workload_.NextTransactionKeyOfflineV1(idx);
         std::vector <DB::KVPair> values;
         if (workload_.write_all_fields()) {
             workload_.BuildValuesOffline(values);
@@ -243,9 +244,9 @@ namespace ycsbc {
         return db_.Insert(table, key, values);
     }
 
-    inline int Client::TransactionInsertOfflineV1(int idx) {
+    inline int Client::TransactionInsertOfflineV1(const uint64_t &key) {
         const std::string &table = workload_.NextTable();
-        const uint64_t &key = workload_.NextSequenceKeyOfflineV1(idx);
+        //const uint64_t &key = workload_.NextSequenceKeyOfflineV1(idx);
         std::vector <DB::KVPair> values;
         workload_.BuildValuesOffline(values);
         return db_.Insert(table, key, values);
