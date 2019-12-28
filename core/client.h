@@ -148,7 +148,7 @@ namespace ycsbc {
         return db_.Read(table, key, NULL, result);
     }
 
-    inline int Client::TransactionReadOffline(int idx) {
+    inline int Client::TransactionReadOfflineV1(int idx) {
         const std::string &table = workload_.NextTable();
         const uint64_t &key = workload_.NextTransactionKeyOfflineV1(idx);
         std::vector <DB::Kuint64VstrPair> result;
