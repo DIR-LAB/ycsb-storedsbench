@@ -204,8 +204,10 @@ namespace ycsbc {
         std::vector <DB::KVPair> update_value_;
         int sequence_key_arr[100005];
         int transaction_key_arr[100005];
-        int sequence_idx_;
-        pthread_mutex_t ycsbc_offline_lock_;
+        int sequence_key_idx_;
+        int transaction_key_idx_;
+        pthread_mutex_t ycsbc_offline_sequence_key_lock_;
+        pthread_mutex_t ycsbc_offline_transaction_key_lock_;
     };
 
     inline uint64_t CoreWorkload::NextSequenceKey() {
@@ -215,10 +217,10 @@ namespace ycsbc {
 
     inline uint64_t CoreWorkload::NextSequenceKeyOffline() {
         int idx;
-        pthread_mutex_lock(&ycsbc_offline_lock_);
-        idx = sequence_idx_;
-        sequence_idx_ += 1;
-        pthread_mutex_unlock(&ycsbc_offline_lock_);
+        pthread_mutex_lock(&ycsbc_offline_sequence_key_lock_);
+        idx = sequence_key_idx_;
+        sequence_key_idx_ += 1;
+        pthread_mutex_unlock(&ycsbc_offline_sequence_key_lock_);
         return BuildKeyName(sequence_key_arr[idx]);
     }
 
@@ -246,10 +248,10 @@ namespace ycsbc {
 //        return BuildKeyName(key_num);
         //todo: may try with different lock and sequence
         int idx;
-        pthread_mutex_lock(&ycsbc_offline_lock_);
-        idx = sequence_idx_;
-        sequence_idx_ += 1;
-        pthread_mutex_unlock(&ycsbc_offline_lock_);
+        pthread_mutex_lock(&ycsbc_offline_transaction_key_lock_);
+        idx = transaction_key_idx_;
+        transaction_key_idx_ += 1;
+        pthread_mutex_unlock(&ycsbc_offline_transaction_key_lock_);
         return BuildKeyName(transaction_key_arr[idx]);
     }
 

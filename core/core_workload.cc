@@ -167,10 +167,15 @@ void CoreWorkload::Init(const utils::Properties &p) {
 }
 
 void CoreWorkload::PrepareOfflineData(int ops) {
-    pthread_mutex_init(&ycsbc_offline_lock_, NULL);
+    pthread_mutex_init(&ycsbc_offline_sequence_key_lock_, NULL);
+    pthread_mutex_init(&ycsbc_offline_transaction_key_lock_, NULL);
+
     BuildValues(insert_value_);
     BuildValues(update_value_);
-    sequence_idx_ = 0;
+
+    sequence_key_idx_ = 0;
+    transaction_key_idx_ = 0;
+
     for(int i=0; i<ops; i+=1) {
         sequence_key_arr[i] = key_generator_->Next();
         transaction_key_arr[i] = NextTransactionKeyRaw();
