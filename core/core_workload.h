@@ -157,7 +157,9 @@ namespace ycsbc {
         virtual void BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values);
         virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update);
         virtual uint64_t NextSequenceKeyOffline();
+        virtual uint64_t NextSequenceKeyOfflineV1(int idx);
         virtual uint64_t NextTransactionKeyOffline();
+        virtual uint64_t NextTransactionKeyOfflineV1(int idx);
         virtual uint64_t NextTransactionKeyRaw(); /// Used for offline transactions
 
         bool read_all_fields() const { return read_all_fields_; }
@@ -224,6 +226,10 @@ namespace ycsbc {
         return BuildKeyName(sequence_key_arr[idx]);
     }
 
+    inline uint64_t CoreWorkload::NextSequenceKeyOfflineV1(int idx) {
+        return BuildKeyName(sequence_key_arr[idx]);
+    }
+
     inline uint64_t CoreWorkload::NextTransactionKeyRaw() {
         uint64_t key_num;
         do {
@@ -252,6 +258,10 @@ namespace ycsbc {
         idx = transaction_key_idx_;
         transaction_key_idx_ += 1;
         pthread_mutex_unlock(&ycsbc_offline_transaction_key_lock_);
+        return BuildKeyName(transaction_key_arr[idx]);
+    }
+
+    inline uint64_t CoreWorkload::NextTransactionKeyOfflineV1(int idx) {
         return BuildKeyName(transaction_key_arr[idx]);
     }
 
