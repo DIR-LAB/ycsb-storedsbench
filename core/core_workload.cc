@@ -183,6 +183,9 @@ void CoreWorkload::PrepareOfflineData(int ops) {
 }
 
 void CoreWorkload::PrepareOfflineDataV1(int ops) {
+    BuildValues(insert_value_);
+    BuildValues(update_value_);
+
     for(int i=0; i<ops; i+=1) {
         offlineOps[i].operation = NextOperation();
         switch (offlineOps[i].operation) {
