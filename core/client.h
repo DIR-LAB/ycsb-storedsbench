@@ -36,7 +36,7 @@ namespace ycsbc {
 
         virtual int TransactionReadOffline();
 
-        virtual int TransactionReadOfflineV1(int idx);
+        virtual int TransactionReadOfflineV1(const uint64_t &key);
 
         virtual int TransactionReadModifyWrite();
 
@@ -46,13 +46,13 @@ namespace ycsbc {
 
         virtual int TransactionUpdateOffline();
 
-        virtual int TransactionUpdateOfflineV1(int idx);
+        virtual int TransactionUpdateOfflineV1(const uint64_t &key);
 
         virtual int TransactionInsert();
 
         virtual int TransactionInsertOffline();
 
-        virtual int TransactionInsertOfflineV1(int idx);
+        virtual int TransactionInsertOfflineV1(const uint64_t &key);
 
         DB &db_;
         CoreWorkload &workload_;
