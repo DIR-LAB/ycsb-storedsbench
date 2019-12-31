@@ -143,8 +143,7 @@ namespace ycsbc {
      */
     int RbtreePmemConcurrentLock::update(const uint64_t key, void *value) {
         check();
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**

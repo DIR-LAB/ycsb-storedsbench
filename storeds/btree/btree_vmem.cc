@@ -146,8 +146,7 @@ namespace ycsbc {
     int BTreeVmem::update(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**

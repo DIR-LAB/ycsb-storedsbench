@@ -197,8 +197,7 @@ namespace ycsbc {
     int BPlusTreeVmem::update(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         check();
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**

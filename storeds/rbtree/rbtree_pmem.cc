@@ -138,8 +138,7 @@ namespace ycsbc {
      * if the key not exist, insert a new node and balance the tree
      */
     int RbtreePmem::update(const uint64_t key, void *value) {
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**
