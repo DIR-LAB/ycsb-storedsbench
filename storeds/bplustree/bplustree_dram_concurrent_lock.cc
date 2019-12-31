@@ -452,5 +452,6 @@ namespace ycsbc {
         check();
         recursive_free(root);
         root = NULL;
+        pthread_rwlock_destroy(&rwlock);
     }
 }   //ycsbc
