@@ -5,16 +5,20 @@ SUBDIRS=core db storeds
 SUBSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(wildcard storeds/*.cc)
 OBJECTS=$(SUBSRCS:.cc=.o)
 EXEC=ycsbc
+EXECNONNUMA=ycsbc_non_numa
 EXECTEST=ycsbc_test
 EXECPARALLEL=ycsbc_parallel
 EXECPARALLELTEST=ycsbc_parallel_test
 
-all: $(SUBDIRS) $(EXEC) $(EXECTEST) ${EXECPARALLEL} ${EXECPARALLELTEST}
+all: $(SUBDIRS) $(EXEC) $(EXECNONNUMA) $(EXECTEST) ${EXECPARALLEL} ${EXECPARALLELTEST}
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 
 $(EXEC): ycsbc.cc $(OBJECTS)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+$(EXECNONNUMA): ycsbc_non_numa.cc $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 $(EXECTEST): ycsbc_test.cc $(OBJECTS)
@@ -31,6 +35,7 @@ clean:
 		$(MAKE) -C $$dir $@; \
 	done
 	$(RM) $(EXEC)
+	$(RM) $(EXECNONNUMA)
 	$(RM) $(EXECTEST)
 	$(RM) $(EXECPARALLEL)
 	$(RM) $(EXECPARALLELTEST)
