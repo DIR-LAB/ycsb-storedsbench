@@ -37,6 +37,7 @@ namespace ycsbc {
     private:
         /* Private Data */
         VMEM *vmp;
+        pthread_mutex_t mutex_lock_;
         struct bplustree_dram_node *root;
 
         int check();
@@ -104,6 +105,11 @@ namespace ycsbc {
             fprintf(stderr, "[%s]: FATAL: vmem_create failed\n", __FUNCTION__);
             exit(1);
         }
+
+        if(pthread_mutex_init(&mutex_lock_, NULL) != 0) {
+            fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
+            assert(0);
+        }
         root = NULL;
         return 1;
     }
@@ -114,6 +120,7 @@ namespace ycsbc {
     int BPlusTreeVmemConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         check();
 
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         struct bplustree_dram_node *current_node = root;
 
         //going down upto the leaf
@@ -152,6 +159,7 @@ namespace ycsbc {
             }
         }
 
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -187,7 +195,11 @@ namespace ycsbc {
      */
     int BPlusTreeVmemConcurrentMLock::read(const uint64_t key, void *&result) {
         check();
+
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         result = search(root, key);
+
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -197,8 +209,7 @@ namespace ycsbc {
     int BPlusTreeVmemConcurrentMLock::update(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         check();
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**
@@ -379,18 +390,25 @@ namespace ycsbc {
     int BPlusTreeVmemConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %ld, value: %s\n", __func__, key, (char *) value);
 
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
+
         // if bplus tree is empty, create root
         if (root == NULL) {
             root = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
             root->entries[0].key = key;
             memcpy(root->entries[0].value, (char *) value, strlen((char *) value) + 1);
             root->nk = 1;
+
+            pthread_mutex_unlock(&mutex_lock_);
             return 1;
         }
 
         // if the key already exist in bplus tree, update the value and return
         bool is_updated = update_if_found(root, key, value);
-        if (is_updated) return 1;
+        if (is_updated) {
+            pthread_mutex_unlock(&mutex_lock_);
+            return 1;
+        }
 
         // if root is full
         if (is_node_full(root->nk)) {
@@ -413,6 +431,7 @@ namespace ycsbc {
             insert_not_full(root, key, value);
         }
 
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -444,6 +463,7 @@ namespace ycsbc {
         check();
         recursive_free(root);
         root = NULL;
+        pthread_mutex_destroy(&mutex_lock_);
         vmem_delete(vmp);
     }
 }   //ycsbc

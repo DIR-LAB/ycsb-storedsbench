@@ -9,6 +9,7 @@
 #include "btree/btree_pmem.cc"
 #include "btree/btree_pmem_tx.cc"
 #include "btree/btree_vmem.cc"
+#include "btree/btree_vmem_concurrent_mlock.cc"
 #include "btree/btree_dram_concurrent_lock.cc"
 #include "btree/btree_pmem_concurrent_lock.cc"
 #include "btree/btree_pmem_tx_concurrent_lock.cc"
@@ -16,6 +17,7 @@
 #include "bplustree/bplustree_pmem.cc"
 #include "bplustree/bplustree_pmem_tx.cc"
 #include "bplustree/bplustree_vmem.cc"
+#include "bplustree/bplustree_vmem_concurrent_mlock.cc"
 #include "bplustree/bplustree_dram_concurrent_lock.cc"
 #include "bplustree/bplustree_pmem_concurrent_lock.cc"
 #include "bplustree/bplustree_pmem_tx_concurrent_lock.cc"
@@ -23,6 +25,7 @@
 #include "hashmap/ht_pmem.cc"
 #include "hashmap/ht_pmem_tx.cc"
 #include "hashmap/ht_vmem.cc"
+#include "hashmap/ht_vmem_concurrent_mlock.cc"
 #include "hashmap/ht_dram_concurrent_lock.cc"
 #include "hashmap/ht_pmem_concurrent_lock.cc"
 #include "hashmap/ht_pmem_tx_concurrent_lock.cc"
@@ -30,6 +33,7 @@
 #include "skiplist/skiplist_pmem.cc"
 #include "skiplist/skiplist_pmem_tx.cc"
 #include "skiplist/skiplist_vmem.cc"
+#include "skiplist/skiplist_vmem_concurrent_mlock.cc"
 #include "skiplist/skiplist_dram_concurrent_lock.cc"
 #include "skiplist/skiplist_pmem_concurrent_lock.cc"
 #include "skiplist/skiplist_pmem_tx_concurrent_lock.cc"
@@ -48,6 +52,7 @@
 #include "rbtree/rbtree_pmem.cc"
 #include "rbtree/rbtree_pmem_tx.cc"
 #include "rbtree/rbtree_vmem.cc"
+#include "rbtree/rbtree_vmem_concurrent_mlock.cc"
 #include "rbtree/rbtree_dram_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_tx_concurrent_lock.cc"
@@ -80,6 +85,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmemTx(path);
     } else if (strcmp(type, "btree-vmem") == 0) {
         return new BTreeVmem(path);
+    } else if (strcmp(type, "btree-vmem-conc-mlock") == 0) {
+        return new BTreeVmemConcurrentMLock(path);
     } else if (strcmp(type, "btree-dram-conc-lock") == 0) {
         return new BTreeDramConcurrentLock(path);
     } else if (strcmp(type, "btree-pmem-conc-lock") == 0) {
@@ -94,6 +101,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BPlusTreePmemTx(path);
     } else if (strcmp(type, "bplustree-vmem") == 0) {
         return new BPlusTreeVmem(path);
+    } else if (strcmp(type, "bplustree-vmem-conc-mlock") == 0) {
+        return new BPlusTreeVmemConcurrentMLock(path);
     } else if (strcmp(type, "bplustree-dram-conc-lock") == 0) {
         return new BPlusTreeDramConcurrentLock(path);
     } else if (strcmp(type, "bplustree-pmem-conc-lock") == 0) {
@@ -108,6 +117,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new HtPmemTx(path);
     } else if (strcmp(type, "hashtable-vmem") == 0) {
         return new HtVmem(path);
+    } else if (strcmp(type, "hashtable-vmem-conc-mlock") == 0) {
+        return new HtVmemConcurrentMLock(path);
     } else if (strcmp(type, "hashtable-dram-conc-lock") == 0) {
         return new HtDramConcurrentLock(path);
     } else if (strcmp(type, "hashtable-pmem-conc-lock") == 0) {
@@ -122,6 +133,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new SkiplistPmemTx(path);
     } else if (strcmp(type, "skiplist-vmem") == 0) {
         return new SkiplistVmem(path);
+    } else if (strcmp(type, "skiplist-vmem-conc-mlock") == 0) {
+        return new SkiplistVmemConcurrentMLock(path);
     } else if (strcmp(type, "skiplist-dram-conc-lock") == 0) {
         return new SkiplistDramConcurrentLock(path);
     } else if (strcmp(type, "skiplist-pmem-conc-lock") == 0) {
@@ -142,6 +155,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreePmemTx(path);
     } else if (strcmp(type, "rbtree-vmem") == 0) {
         return new RbtreeVmem(path);
+    } else if (strcmp(type, "rbtree-vmem-conc-mlock") == 0) {
+        return new RbtreeVmemConcurrentMLock(path);
     } else if (strcmp(type, "rbtree-dram-conc-lock") == 0) {
         return new RbtreeDramConcurrentLock(path);
     } else if (strcmp(type, "rbtree-pmem-conc-lock") == 0) {

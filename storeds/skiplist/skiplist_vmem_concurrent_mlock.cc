@@ -34,6 +34,7 @@ namespace ycsbc {
     private:
         /* Private Data */
         VMEM *vmp;
+        pthread_mutex_t mutex_lock_;
         struct sk_dram_node *head = NULL;
 
         int check();
@@ -70,6 +71,11 @@ namespace ycsbc {
             exit(1);
         }
 
+        if(pthread_mutex_init(&mutex_lock_, NULL) != 0) {
+            fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
+            assert(0);
+        }
+
         if ((head = ((struct sk_dram_node *) vmem_malloc(vmp, sizeof(struct sk_dram_node)))) == NULL) {
             fprintf(stderr, "[%s]: FATAL: vmem_malloc failed\n", __FUNCTION__);
             exit(1);
@@ -103,6 +109,7 @@ namespace ycsbc {
     int SkiplistVmemConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
 
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
         find(key, path);
@@ -117,6 +124,8 @@ namespace ycsbc {
             if(len_count == len) break;
             possible_found = possible_found->next[SKIPLIST_BASE_LEVEL];
         }
+
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -143,14 +152,16 @@ namespace ycsbc {
     int SkiplistVmemConcurrentMLock::read(const uint64_t key, void *&result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
 
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
         find(key, path);
         possible_found = path[SKIPLIST_BASE_LEVEL]->next[SKIPLIST_BASE_LEVEL];
         if(possible_found != NULL && possible_found->entry.key == key) {
             result = possible_found->entry.value;
         }
+
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -160,8 +171,7 @@ namespace ycsbc {
      */
     int SkiplistVmemConcurrentMLock::update(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**
@@ -184,7 +194,8 @@ namespace ycsbc {
     int SkiplistVmemConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %ld, value: %s\n\n", __func__, key, (char *) value);
         check();
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         struct sk_dram_node *path[SKIPLIST_LEVELS_NUM], *possible_found;
 
         find(key, path);
@@ -205,6 +216,8 @@ namespace ycsbc {
             strcpy(new_node->entry.value, (char *) value);
             insert_node(new_node, path);
         }
+
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -248,6 +261,7 @@ namespace ycsbc {
         }
         vmem_free(vmp, head);
         head = NULL;
+        pthread_mutex_destroy(&mutex_lock_);
         vmem_delete(vmp);
     }
 }   //ycsbc

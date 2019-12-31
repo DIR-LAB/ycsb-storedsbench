@@ -36,6 +36,7 @@ namespace ycsbc {
     private:
         /* Private Data */
         VMEM *vmp;
+        pthread_mutex_t mutex_lock_;
         struct rbtree_dram_node *root_p = NULL;
 
         int check();
@@ -62,6 +63,11 @@ namespace ycsbc {
         if ((vmp = vmem_create(path, PMEM_RB_POOL_SIZE)) == NULL) {
             fprintf(stderr, "[%s]: FATAL: vmem_create failed\n", __FUNCTION__);
             exit(1);
+        }
+
+        if(pthread_mutex_init(&mutex_lock_, NULL) != 0) {
+            fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
+            assert(0);
         }
         root_p = NULL;
         return 1;
@@ -109,9 +115,9 @@ namespace ycsbc {
      */
     int RbtreeVmemConcurrentMLock::read(const uint64_t key, void *&result) {
         check();
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         lookup(root_p, key, result);
-
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -120,8 +126,7 @@ namespace ycsbc {
      */
     int RbtreeVmemConcurrentMLock::update(const uint64_t key, void *value) {
         check();
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**
@@ -311,7 +316,7 @@ namespace ycsbc {
      */
     int RbtreeVmemConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
 
         //root is null, insert to root node
         if (root_p == NULL) {
@@ -319,12 +324,14 @@ namespace ycsbc {
 
             //fix violation will update the color
             fix_violation(root_p);
+            pthread_mutex_unlock(&mutex_lock_);
             return 1;
         }
 
         // Do a normal BST insert
         struct rbtree_dram_node *new_node = bst_upsert(root_p, key, value);
         if (new_node) fix_violation(new_node);
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -347,6 +354,7 @@ namespace ycsbc {
         check();
         free_node(root_p);
         root_p = NULL;
+        pthread_mutex_destroy(&mutex_lock_);
         vmem_delete(vmp);
     }
 }   //ycsbc

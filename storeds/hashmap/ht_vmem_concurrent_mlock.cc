@@ -36,6 +36,7 @@ namespace ycsbc {
     private:
         /* Private Data */
         VMEM *vmp;
+        pthread_mutex_t mutex_lock_;
         struct dram_hashtable *root_p;
 
         int check();
@@ -116,6 +117,11 @@ namespace ycsbc {
             exit(1);
         }
 
+        if(pthread_mutex_init(&mutex_lock_, NULL) != 0) {
+            fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
+            assert(0);
+        }
+
         size_t len = INIT_BUCKETS_NUM;
         if ((root_p = ((struct dram_hashtable *) vmem_malloc(vmp, sizeof(struct dram_hashtable)))) == NULL) {
             fprintf(stderr, "[%s]: FATAL: vmem_malloc failed\n", __FUNCTION__);
@@ -150,6 +156,7 @@ namespace ycsbc {
      */
     int HtVmemConcurrentMLock::read(const uint64_t key, void *&result) {
         check();
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
 
         struct dram_buckets *buckets_p = root_p->buckets;
         //uint64_t uint64_key = strtoull(key, NULL, 0);
@@ -162,6 +169,7 @@ namespace ycsbc {
                 break;
             }
         }
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -195,6 +203,7 @@ namespace ycsbc {
      */
     int HtVmemConcurrentMLock::insert(const uint64_t key, void *value) {
         check();
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
 
         struct dram_buckets *buckets_p = root_p->buckets;
         //uint64_t uint64_key = strtoull(key, NULL, 0);
@@ -204,6 +213,7 @@ namespace ycsbc {
             if(entry_p->key == key) {
                 //key found! replace the value and return
                 memcpy(entry_p->value, (char *) value, strlen((char *) value) + 1);
+                pthread_mutex_unlock(&mutex_lock_);
                 return 1;
             }
         }
@@ -212,6 +222,7 @@ namespace ycsbc {
         struct dram_entry *entry_p = new_entry(key, (const char*) value);
         entry_p->next = buckets_p->bucket[hash_value];
         buckets_p->bucket[hash_value] = entry_p;
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
@@ -241,6 +252,7 @@ namespace ycsbc {
         vmem_free(vmp, root_p->buckets->bucket);
         vmem_free(vmp, root_p->buckets);
         vmem_free(vmp, root_p);
+        pthread_mutex_destroy(&mutex_lock_);
         vmem_delete(vmp);
     }
 }   //ycsbc
