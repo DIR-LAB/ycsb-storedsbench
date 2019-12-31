@@ -44,7 +44,7 @@ int ParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num
         if (is_loading) {
             oks += client.DoInsert();
         } else {
-            oks += client.DoTransactionOffline();
+            oks += client.DoTransactionOfflineV1(i);
         }
     }
     db->Close();
@@ -92,7 +92,7 @@ int main(const int argc, const char *argv[]) {
     actual_ops.clear();
     total_ops = stoi(props[ycsbc::CoreWorkload::OPERATION_COUNT_PROPERTY]);
     for(int t=0; t<num_threads; t+=1) {
-        wl_list[t].PrepareOfflineData(total_ops);
+        wl_list[t].PrepareOfflineDataV1(total_ops);
     }
     utils::Timer<double> timer;
     timer.Start();

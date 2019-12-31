@@ -31,7 +31,7 @@ namespace ycsbc {
     struct offline_ops {
         uint64_t key;
         Operation operation;
-    };
+    } __attribute__ ((aligned (8)));
 
     class CoreWorkload {
     public:
@@ -158,16 +158,16 @@ namespace ycsbc {
 
         virtual size_t NextScanLength() { return scan_len_chooser_->Next(); }
 
-        virtual void PrepareOfflineData(int ops);
+//        virtual void PrepareOfflineData(int ops);
         virtual void PrepareOfflineDataV1(int ops);
         virtual struct offline_ops GetOperationByIndex(int idx);
         virtual void BuildValuesOffline(std::vector <ycsbc::DB::KVPair> &values);
         virtual void BuildUpdateOffline(std::vector <ycsbc::DB::KVPair> &update);
-        virtual uint64_t NextSequenceKeyOffline();
-        virtual uint64_t NextSequenceKeyOfflineV1(int idx);
-        virtual uint64_t NextTransactionKeyOffline();
-        virtual uint64_t NextTransactionKeyOfflineV1(int idx);
-        virtual uint64_t NextTransactionKeyRaw(); /// Used for offline transactions
+//        virtual uint64_t NextSequenceKeyOffline();
+//        virtual uint64_t NextSequenceKeyOfflineV1(int idx);
+//        virtual uint64_t NextTransactionKeyOffline();
+//        virtual uint64_t NextTransactionKeyOfflineV1(int idx);
+//        virtual uint64_t NextTransactionKeyRaw(); /// Used for offline transactions
 
         bool read_all_fields() const { return read_all_fields_; }
 
@@ -186,6 +186,7 @@ namespace ycsbc {
             if (key_chooser_) delete key_chooser_;
             if (field_chooser_) delete field_chooser_;
             if (scan_len_chooser_) delete scan_len_chooser_;
+            if (offlineOps) delete offlineOps;
         }
 
     protected:
@@ -211,13 +212,14 @@ namespace ycsbc {
         //offline data
         std::vector <DB::KVPair> insert_value_;
         std::vector <DB::KVPair> update_value_;
-        int sequence_key_arr[100005];
-        int transaction_key_arr[100005];
-        int sequence_key_idx_;
-        int transaction_key_idx_;
-        struct offline_ops offlineOps[100005];
-        pthread_mutex_t ycsbc_offline_sequence_key_lock_;
-        pthread_mutex_t ycsbc_offline_transaction_key_lock_;
+//        int sequence_key_arr[100005];
+//        int transaction_key_arr[100005];
+//        int sequence_key_idx_;
+//        int transaction_key_idx_;
+        //todo: need to confirm if this way has no impact on the ycsbc performance
+        struct offline_ops *offlineOps;
+//        pthread_mutex_t ycsbc_offline_sequence_key_lock_;
+//        pthread_mutex_t ycsbc_offline_transaction_key_lock_;
     };
 
     inline struct offline_ops CoreWorkload::GetOperationByIndex(int idx) {
@@ -229,7 +231,7 @@ namespace ycsbc {
         return BuildKeyName(key_num);
     }
 
-    inline uint64_t CoreWorkload::NextSequenceKeyOffline() {
+    /*inline uint64_t CoreWorkload::NextSequenceKeyOffline() {
         int idx;
         pthread_mutex_lock(&ycsbc_offline_sequence_key_lock_);
         idx = sequence_key_idx_;
@@ -240,15 +242,15 @@ namespace ycsbc {
 
     inline uint64_t CoreWorkload::NextSequenceKeyOfflineV1(int idx) {
         return BuildKeyName(sequence_key_arr[idx]);
-    }
+    }*/
 
-    inline uint64_t CoreWorkload::NextTransactionKeyRaw() {
+    /*inline uint64_t CoreWorkload::NextTransactionKeyRaw() {
         uint64_t key_num;
         do {
             key_num = key_chooser_->Next();
         } while (key_num > insert_key_sequence_.Last());
         return key_num;
-    }
+    }*/
 
     inline uint64_t CoreWorkload::NextTransactionKey() {
         uint64_t key_num;
@@ -258,7 +260,7 @@ namespace ycsbc {
         return BuildKeyName(key_num);
     }
 
-    inline uint64_t CoreWorkload::NextTransactionKeyOffline() {
+    /*inline uint64_t CoreWorkload::NextTransactionKeyOffline() {
 //        uint64_t key_num;
 //        do {
 //            key_num = key_chooser_->Next();
@@ -275,7 +277,7 @@ namespace ycsbc {
 
     inline uint64_t CoreWorkload::NextTransactionKeyOfflineV1(int idx) {
         return BuildKeyName(transaction_key_arr[idx]);
-    }
+    }*/
 
     /**
      * note: we are considering uint64_t type key for this project

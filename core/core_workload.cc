@@ -166,7 +166,7 @@ void CoreWorkload::Init(const utils::Properties &p) {
     //rand_seed_ = clock();
 }
 
-void CoreWorkload::PrepareOfflineData(int ops) {
+/*void CoreWorkload::PrepareOfflineData(int ops) {
     pthread_mutex_init(&ycsbc_offline_sequence_key_lock_, NULL);
     pthread_mutex_init(&ycsbc_offline_transaction_key_lock_, NULL);
 
@@ -180,12 +180,13 @@ void CoreWorkload::PrepareOfflineData(int ops) {
         sequence_key_arr[i] = key_generator_->Next();
         transaction_key_arr[i] = NextTransactionKeyRaw();
     }
-}
+}*/
 
 void CoreWorkload::PrepareOfflineDataV1(int ops) {
     BuildValues(insert_value_);
     BuildValues(update_value_);
 
+    offlineOps = (struct offline_ops *) malloc(ops * sizeof(struct offline_ops));
     for(int i=0; i<ops; i+=1) {
         offlineOps[i].operation = NextOperation();
         switch (offlineOps[i].operation) {
