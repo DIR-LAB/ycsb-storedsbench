@@ -8,6 +8,7 @@
 #include "btree/btree_dram.cc"
 #include "btree/btree_pmem.cc"
 #include "btree/btree_pmem_tx.cc"
+#include "btree/btree_vmem.cc"
 #include "btree/btree_dram_concurrent_lock.cc"
 #include "btree/btree_pmem_concurrent_lock.cc"
 #include "btree/btree_pmem_tx_concurrent_lock.cc"
@@ -21,12 +22,14 @@
 #include "hashmap/ht_dram.cc"
 #include "hashmap/ht_pmem.cc"
 #include "hashmap/ht_pmem_tx.cc"
+#include "hashmap/ht_vmem.cc"
 #include "hashmap/ht_dram_concurrent_lock.cc"
 #include "hashmap/ht_pmem_concurrent_lock.cc"
 #include "hashmap/ht_pmem_tx_concurrent_lock.cc"
 #include "skiplist/skiplist_dram.cc"
 #include "skiplist/skiplist_pmem.cc"
 #include "skiplist/skiplist_pmem_tx.cc"
+#include "skiplist/skiplist_vmem.cc"
 #include "skiplist/skiplist_dram_concurrent_lock.cc"
 #include "skiplist/skiplist_pmem_concurrent_lock.cc"
 #include "skiplist/skiplist_pmem_tx_concurrent_lock.cc"
@@ -72,6 +75,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmem(path);
     } else if (strcmp(type, "btree-pmem-tx") == 0) {
         return new BTreePmemTx(path);
+    } else if (strcmp(type, "btree-vmem") == 0) {
+        return new BTreeVmem(path);
     } else if (strcmp(type, "btree-dram-conc-lock") == 0) {
         return new BTreeDramConcurrentLock(path);
     } else if (strcmp(type, "btree-pmem-conc-lock") == 0) {
@@ -98,6 +103,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new HtPmem(path);
     } else if (strcmp(type, "hashtable-pmem-tx") == 0) {
         return new HtPmemTx(path);
+    } else if (strcmp(type, "hashtable-vmem") == 0) {
+        return new HtVmem(path);
     } else if (strcmp(type, "hashtable-dram-conc-lock") == 0) {
         return new HtDramConcurrentLock(path);
     } else if (strcmp(type, "hashtable-pmem-conc-lock") == 0) {
@@ -110,6 +117,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new SkiplistPmem(path);
     } else if (strcmp(type, "skiplist-pmem-tx") == 0) {
         return new SkiplistPmemTx(path);
+    } else if (strcmp(type, "skiplist-vmem") == 0) {
+        return new SkiplistVmem(path);
     } else if (strcmp(type, "skiplist-dram-conc-lock") == 0) {
         return new SkiplistDramConcurrentLock(path);
     } else if (strcmp(type, "skiplist-pmem-conc-lock") == 0) {
