@@ -202,8 +202,7 @@ namespace ycsbc {
     int BPlusTreeDramConcurrentLock::update(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         check();
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**
@@ -453,5 +452,6 @@ namespace ycsbc {
         check();
         recursive_free(root);
         root = NULL;
+        pthread_rwlock_destroy(&rwlock);
     }
 }   //ycsbc

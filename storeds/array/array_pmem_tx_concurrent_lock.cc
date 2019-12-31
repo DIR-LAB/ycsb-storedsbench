@@ -95,7 +95,7 @@ namespace ycsbc {
             //note: why not the following one?
             //pmemobj_tx_add_range_direct(pmemobj_direct(root_p->array), sizeof(struct array_pmem_elm) * ARRAY_SIZE);
 
-            root_p->array = pmemobj_tx_zalloc(sizeof(struct array_pmem_elm) * ARRAY_SIZE, ARRAY_TYPE);
+            root_p->array = pmemobj_tx_alloc(sizeof(struct array_pmem_elm) * ARRAY_SIZE, ARRAY_TYPE);
             //pmemobj_persist(pop, &root_p->array, sizeof(PMEMoid));
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());

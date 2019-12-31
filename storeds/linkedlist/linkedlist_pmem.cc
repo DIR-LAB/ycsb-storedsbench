@@ -116,7 +116,7 @@ namespace ycsbc {
         strcpy(in_memory_node_ptr->value, (const char *) value);
 
         PMEMoid new_node_oid;
-        pmemobj_zalloc(pop, &new_node_oid, sizeof(struct ll_pmem_node), LL_NODE_TYPE);
+        pmemobj_alloc(pop, &new_node_oid, sizeof(struct ll_pmem_node), LL_NODE_TYPE, NULL, NULL);
         struct ll_pmem_node *pmem_node_ptr = (struct ll_pmem_node *) pmemobj_direct(new_node_oid);
         memcpy(pmem_node_ptr, in_memory_node_ptr, sizeof(struct ll_pmem_node));
         free(in_memory_node_ptr);

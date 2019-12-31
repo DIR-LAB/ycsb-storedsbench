@@ -191,7 +191,7 @@ namespace ycsbc {
      * will update the 'value' if 'key' already exists
      */
     int HtPmem::insert(const uint64_t key, void *value) {
-        //printf("[%s]: key: %s, value: %s\n", __func__, key, (char *) value);
+        //printf("[%s]: key: %ld, value: %s\n", __func__, key, (char *) value);
         check();
 
         struct pmem_buckets *buckets_p = (struct pmem_buckets *) pmemobj_direct(root_p->buckets);
@@ -211,7 +211,7 @@ namespace ycsbc {
         //key not found! need to insert data into bucket[hash_value]
         /* allocate the new entry to be inserted */
         PMEMoid new_entry_oid;
-        if(pmemobj_zalloc(pop, &new_entry_oid, sizeof(struct pmem_entry), HT_ENTRY_TYPE)) {
+        if(pmemobj_alloc(pop, &new_entry_oid, sizeof(struct pmem_entry), HT_ENTRY_TYPE, NULL, NULL)) {
             fprintf(stderr, "[%s]: FATAL: new entry allocation failed: %s\n", __func__, pmemobj_errormsg());
             abort();
         }

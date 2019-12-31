@@ -139,8 +139,7 @@ namespace ycsbc {
      */
     int RbtreePmemTx::update(const uint64_t key, void *value) {
         //check();
-        insert(key, value);
-        return 1;
+        return insert(key, value);
     }
 
     /**
@@ -156,7 +155,7 @@ namespace ycsbc {
         strcpy(in_memory_node_p->value, (char *) value);
 
         //copy in-memory node to pmem-node
-        PMEMoid new_node_oid = pmemobj_tx_zalloc(sizeof(struct rbtree_pmem_node), RB_NODE_TYPE);
+        PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct rbtree_pmem_node), RB_NODE_TYPE);
         pmemobj_tx_add_range(new_node_oid, 0, sizeof(struct rbtree_pmem_node));
         struct rbtree_pmem_node *new_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
         memcpy(new_node_p, in_memory_node_p, sizeof(struct rbtree_pmem_node));

@@ -28,6 +28,11 @@ namespace ycsbc {
         PMEMrwlock rwlock;
     };
 
+    struct array_pmem_concurrent_mlock_root {
+        PMEMoid array;
+        PMEMmutex mlock;
+    };
+
     struct array_pmem_elm {
         char value[DEFAULT_VALUE_LEN];
     };
