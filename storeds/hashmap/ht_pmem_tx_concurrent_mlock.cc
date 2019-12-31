@@ -35,7 +35,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct pmem_hashtable_concurrent_lock *root_p = NULL;
+        struct pmem_hashtable_concurrent_mlock *root_p = NULL;
 
         int check();
 
@@ -123,8 +123,8 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct pmem_hashtable_concurrent_lock));
-        root_p = (struct pmem_hashtable_concurrent_lock *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct pmem_hashtable_concurrent_mlock));
+        root_p = (struct pmem_hashtable_concurrent_mlock *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
@@ -134,7 +134,7 @@ namespace ycsbc {
         size_t buckets_sz = sizeof(struct pmem_buckets) + len * sizeof(struct pmem_entry);
 
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range(root_oid, 0, sizeof(struct pmem_hashtable_concurrent_lock));
+            pmemobj_tx_add_range(root_oid, 0, sizeof(struct pmem_hashtable_concurrent_mlock));
 
             root_p->seed = (uint32_t)time(NULL);
             do {
@@ -164,7 +164,7 @@ namespace ycsbc {
      */
     int HtPmemTxConcurrentMLock::read(const uint64_t key, void *&result) {
         check();
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         struct pmem_buckets *buckets_p = (struct pmem_buckets *) pmemobj_direct(root_p->buckets);
         PMEMoid entry_oid = OID_NULL;
@@ -180,7 +180,7 @@ namespace ycsbc {
             }
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -198,7 +198,7 @@ namespace ycsbc {
      */
     int HtPmemTxConcurrentMLock::insert(const uint64_t key, void *value) {
         check();
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         struct pmem_buckets *buckets_p = (struct pmem_buckets *) pmemobj_direct(root_p->buckets);
         PMEMoid entry_oid = OID_NULL;
@@ -218,7 +218,7 @@ namespace ycsbc {
                     abort();
                 } TX_END
 
-                pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+                pmemobj_mutex_unlock(pop, &root_p->mlock);
                 return 1;
             }
         }
@@ -238,7 +238,7 @@ namespace ycsbc {
             abort();
         } TX_END
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 

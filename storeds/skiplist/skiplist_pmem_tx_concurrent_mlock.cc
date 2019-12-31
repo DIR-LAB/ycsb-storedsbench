@@ -37,7 +37,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct sk_pmem_root_concurrent_lock *root_p = NULL;
+        struct sk_pmem_root_concurrent_mlock *root_p = NULL;
 
         int check();
 
@@ -80,15 +80,15 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct sk_pmem_root_concurrent_lock));
-        root_p = (struct sk_pmem_root_concurrent_lock *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct sk_pmem_root_concurrent_mlock));
+        root_p = (struct sk_pmem_root_concurrent_mlock *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
         }
 
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_root_concurrent_lock));
+            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_root_concurrent_mlock));
             root_p->root_node_oid = pmemobj_tx_alloc(sizeof(struct sk_pmem_node), SK_NODE_TYPE);
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
@@ -102,7 +102,7 @@ namespace ycsbc {
     int SkiplistPmemTxConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
         find(key, path_oid);
@@ -119,7 +119,7 @@ namespace ycsbc {
             possible_found_oid = possible_found_ptr->next[SKIPLIST_BASE_LEVEL];
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -145,7 +145,7 @@ namespace ycsbc {
     int SkiplistPmemTxConcurrentMLock::read(const uint64_t key, void *&result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
         //todo: need to pass by refference
@@ -158,7 +158,7 @@ namespace ycsbc {
             }
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -195,7 +195,7 @@ namespace ycsbc {
     int SkiplistPmemTxConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n\n", __func__, key, (char *) value);
         check();
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         PMEMoid path_oid[SKIPLIST_LEVELS_NUM], possible_found_oid;
         find(key, path_oid);
@@ -226,7 +226,7 @@ namespace ycsbc {
             } TX_END
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -278,7 +278,7 @@ namespace ycsbc {
                 PMEMoid next_oid = root_node_p->next[0];
                 remove_free(((struct sk_pmem_node *) pmemobj_direct(next_oid))->entry.key);
             }
-            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_root_concurrent_lock));
+            pmemobj_tx_add_range_direct(root_p, sizeof(struct sk_pmem_root_concurrent_mlock));
             pmemobj_tx_free(root_oid);
             root_oid = OID_NULL;
         } TX_ONABORT {

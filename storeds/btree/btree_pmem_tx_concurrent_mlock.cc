@@ -36,7 +36,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct btree_pmem_root_concurrent_lock *root_p = NULL;
+        struct btree_pmem_root_concurrent_mlock *root_p = NULL;
 
         int check();
 
@@ -107,15 +107,15 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct btree_pmem_root_concurrent_lock));
-        root_p = (struct btree_pmem_root_concurrent_lock *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct btree_pmem_root_concurrent_mlock));
+        root_p = (struct btree_pmem_root_concurrent_mlock *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
         }
 
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range(root_oid, 0, sizeof(struct btree_pmem_root_concurrent_lock));
+            pmemobj_tx_add_range(root_oid, 0, sizeof(struct btree_pmem_root_concurrent_mlock));
             root_p->root_node_oid = create_node(LEAF_NODE_TRUE_FLAG);    //root is also a leaf
         } TX_ONABORT {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
@@ -161,9 +161,9 @@ namespace ycsbc {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
 
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         result = search(root_p->root_node_oid, key);
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -321,13 +321,13 @@ namespace ycsbc {
     int BTreePmemTxConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
 
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         // if the key already exist in btree, update the value and return
         bool is_updated = update_if_found(root_p->root_node_oid, key, value);
         if(is_updated) {
             //we found the key, and value has been updated
-            pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+            pmemobj_mutex_unlock(pop, &root_p->mlock);
             return 1;
         }
 
@@ -375,7 +375,7 @@ namespace ycsbc {
             } TX_END
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 

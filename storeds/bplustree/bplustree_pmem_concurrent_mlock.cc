@@ -36,7 +36,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct bplustree_pmem_root_concurrent_lock *root_p = NULL;
+        struct bplustree_pmem_root_concurrent_mlock *root_p = NULL;
 
         int check();
 
@@ -126,8 +126,8 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct bplustree_pmem_root_concurrent_lock));
-        root_p = (struct bplustree_pmem_root_concurrent_lock *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct bplustree_pmem_root_concurrent_mlock));
+        root_p = (struct bplustree_pmem_root_concurrent_mlock *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("[%s]: FATAL: The Root Object Not Initalized Yet, Exit!\n", __func__);
             exit(0);
@@ -145,7 +145,7 @@ namespace ycsbc {
     int BPlusTreePmemConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         check();
 
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         struct bplustree_pmem_node *current_node = (struct bplustree_pmem_node *) pmemobj_direct(root_p->root_node_oid);
 
         //going down upto the leaf
@@ -184,7 +184,7 @@ namespace ycsbc {
             }
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -222,9 +222,9 @@ namespace ycsbc {
     int BPlusTreePmemConcurrentMLock::read(const uint64_t key, void *&result) {
         //printf("[%s]: PARAM: key: %s\n", __func__, key);
         check();
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         result = search(root_p->root_node_oid, key);
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -422,13 +422,13 @@ namespace ycsbc {
      */
     int BPlusTreePmemConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         // if the key already exist in btree, update the value and return
         bool is_updated = update_if_found(root_p->root_node_oid, key, value);
         if(is_updated) {
             //we found the key, and value has been updated
-            pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+            pmemobj_mutex_unlock(pop, &root_p->mlock);
             return 1;
         }
 
@@ -464,7 +464,7 @@ namespace ycsbc {
             insert_not_full(root_p->root_node_oid, key, value);
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 

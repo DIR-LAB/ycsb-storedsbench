@@ -68,6 +68,11 @@ namespace ycsbc {
         PMEMoid root_node_oid;
         PMEMrwlock rwlock;
     };
+
+    struct sk_pmem_root_concurrent_mlock {
+        PMEMoid root_node_oid;
+        PMEMmutex mlock;
+    };
 }   //ycsbc
 
 #endif //YCSB_STOREDSBENCH_SKIPLIST_COMMON_H

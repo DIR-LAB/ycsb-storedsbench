@@ -56,6 +56,11 @@ namespace ycsbc {
         PMEMrwlock rwlock;
     };
 
+    struct rbtree_pmem_concurrent_mlock_root {
+        PMEMoid root_node_oid;
+        PMEMmutex mlock;
+    };
+
     /**
      * types -- types of linkedlist pmem allocations
      */

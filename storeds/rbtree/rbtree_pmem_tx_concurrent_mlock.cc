@@ -38,7 +38,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct rbtree_pmem_concurrent_lock_root *root_p = NULL;
+        struct rbtree_pmem_concurrent_mlock_root *root_p = NULL;
 
         int check();
 
@@ -84,8 +84,8 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct rbtree_pmem_concurrent_lock_root));
-        root_p = (struct rbtree_pmem_concurrent_lock_root *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct rbtree_pmem_concurrent_mlock_root));
+        root_p = (struct rbtree_pmem_concurrent_mlock_root *) pmemobj_direct(root_oid);
 
         if (root_p == NULL) {
             printf("FATAL: The Root Object Not Initalized Yet, Exit!\n");
@@ -128,11 +128,11 @@ namespace ycsbc {
     int RbtreePmemTxConcurrentMLock::read(const uint64_t key, void *&result) {
         check();
 
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         lookup(root_p->root_node_oid, key, result);
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
 
         return 1;
     }
@@ -442,13 +442,13 @@ namespace ycsbc {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
 
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         //root node is null, insert to root node
         if (root_p->root_node_oid.off == 0) {
             TX_BEGIN(pop) {
-                pmemobj_tx_add_range_direct(root_p, sizeof(struct rbtree_pmem_concurrent_lock_root));
+                pmemobj_tx_add_range_direct(root_p, sizeof(struct rbtree_pmem_concurrent_mlock_root));
                 root_p->root_node_oid = create_new_node(key, value);
             } TX_ONABORT {
                 if(root_p->root_node_oid.off != 0) {
@@ -460,14 +460,14 @@ namespace ycsbc {
 
             //fix violation will update the color and persist it
             fix_violation(root_p->root_node_oid);
-            pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+            pmemobj_mutex_unlock(pop, &root_p->mlock);
             return 1;
         }
 
         // Do a normal BST insert
         PMEMoid new_node_oid = bst_upsert(root_p->root_node_oid, key, value);
         if (!OID_IS_NULL(new_node_oid)) fix_violation(new_node_oid);
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -500,7 +500,7 @@ namespace ycsbc {
 
         free_node(root_p->root_node_oid);
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range_direct(root_p, sizeof(struct rbtree_pmem_concurrent_lock_root));
+            pmemobj_tx_add_range_direct(root_p, sizeof(struct rbtree_pmem_concurrent_mlock_root));
             root_p->root_node_oid = OID_NULL;
             pmemobj_tx_free(root_oid);
             root_oid = OID_NULL;

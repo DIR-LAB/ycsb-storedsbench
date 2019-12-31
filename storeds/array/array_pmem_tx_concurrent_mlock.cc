@@ -38,7 +38,7 @@ namespace ycsbc {
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct array_pmem_concurrent_lock_root *root_p = NULL;
+        struct array_pmem_concurrent_mlock_root *root_p = NULL;
 
         int check();
 
@@ -82,15 +82,15 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct array_pmem_concurrent_lock_root));
-        root_p = (struct array_pmem_concurrent_lock_root *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct array_pmem_concurrent_mlock_root));
+        root_p = (struct array_pmem_concurrent_mlock_root *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("FATAL: The Root Object Not Initalized Yet, Exit!\n");
             exit(0);
         }
 
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range(root_oid, 0, sizeof(struct array_pmem_concurrent_lock_root));
+            pmemobj_tx_add_range(root_oid, 0, sizeof(struct array_pmem_concurrent_mlock_root));
 
             //note: why not the following one?
             //pmemobj_tx_add_range_direct(pmemobj_direct(root_p->array), sizeof(struct array_pmem_elm) * ARRAY_SIZE);
@@ -107,7 +107,7 @@ namespace ycsbc {
 
     int ArrayPmemTxConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         check();
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         int offset = (int) (key % ARRAY_SIZE);
         for(int i=0; i<len && i<ARRAY_SIZE; i+=1) {
@@ -117,7 +117,7 @@ namespace ycsbc {
             result.push_back(tmp);
         }
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -126,13 +126,13 @@ namespace ycsbc {
      */
     int ArrayPmemTxConcurrentMLock::read(const uint64_t key, void *&result){
         check();
-        if (pmemobj_rwlock_rdlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         int offset = (int) (key % ARRAY_SIZE);
         struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_pmem_elm));
         result = ptr->value;
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -141,7 +141,7 @@ namespace ycsbc {
      */
     int ArrayPmemTxConcurrentMLock::update(const uint64_t key, void *value){
         check();
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         int offset = (int) (key % ARRAY_SIZE);
         TX_BEGIN(pop) {
@@ -155,7 +155,7 @@ namespace ycsbc {
             abort();
         } TX_END
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
@@ -164,7 +164,7 @@ namespace ycsbc {
      */
     int ArrayPmemTxConcurrentMLock::insert(const uint64_t key, void *value){
         check();
-        if (pmemobj_rwlock_wrlock(pop, &root_p->rwlock) != 0) return 0;
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         int offset = (int) (key % ARRAY_SIZE);
         TX_BEGIN(pop) {
@@ -177,7 +177,7 @@ namespace ycsbc {
             abort();
         } TX_END
 
-        pmemobj_rwlock_unlock(pop, &root_p->rwlock);
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
