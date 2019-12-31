@@ -155,7 +155,7 @@ namespace ycsbc {
 
         //copy in-memory node to pmem-node
         PMEMoid new_node_oid;
-        pmemobj_zalloc(pop, &new_node_oid, sizeof(struct rbtree_pmem_node), RB_NODE_TYPE);
+        pmemobj_alloc(pop, &new_node_oid, sizeof(struct rbtree_pmem_node), RB_NODE_TYPE, NULL, NULL);
         struct rbtree_pmem_node *pmem_node_p = (struct rbtree_pmem_node *) pmemobj_direct(new_node_oid);
         memcpy(pmem_node_p, in_memory_node_p, sizeof(struct rbtree_pmem_node));
 
