@@ -5,10 +5,10 @@
 #make
 #cd scripts/parallel/
 
-input_path="../../../workloads/scan/"
+input_path="../../../workloads/"
 
 #array-dram
-for file in $input_path*.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do
@@ -25,8 +25,26 @@ for file in $input_path*.spec; do
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 done
 
+#array-vmem
+for file in $input_path*a.spec $input_path*e.spec; do
+  n_threads=1
+  while [ $n_threads -le 16 ]
+  do
+    counter=1
+    echo "[Benchmark] array-vmem, #of_threads: " $n_threads ", workload: ${file##*/}"
+    while [ $counter -le 10 ]
+    do
+      ./../../../ycsbc_parallel -db storeds -threads $n_threads -dbpath /pmem -type array-vmem -P $input_path${file##*/}
+      ((counter++))
+    done
+    echo "*****************<>*****************"
+    ((n_threads*=2))
+  done
+  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+done
+
 #array-pmem
-for file in $input_path*.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do
@@ -45,7 +63,7 @@ for file in $input_path*.spec; do
 done
 
 #array-pmem-tx
-for file in $input_path*.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do

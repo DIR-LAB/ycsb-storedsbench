@@ -38,7 +38,9 @@ void run_test(int tid, utils::Properties props) {
 
     const string dbpath = props.GetProperty("dbpath", "/pmem/array");
     const string db_file_extension = ".pmem";
-    props.SetProperty("dbpath", dbpath + to_string(tid) + db_file_extension);
+    const string type = props.GetProperty("type", "dram");
+    const bool is_vmem = (type.substr(type.size() - 4).compare("vmem") == 0);
+    if(!is_vmem) props.SetProperty("dbpath", dbpath + to_string(tid) + db_file_extension);
 
     DB *db = ycsbc::DBFactory::CreateDB(props);
 

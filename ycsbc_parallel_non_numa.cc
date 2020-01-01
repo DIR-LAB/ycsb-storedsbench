@@ -19,18 +19,18 @@
 
 using namespace std;
 
-void ParallelUsageMessage(const char *command);
+void NonNumaParallelUsageMessage(const char *command);
 
-bool ParallelStrStartWith(const char *str, const char *pre);
+bool NonNumaParallelStrStartWith(const char *str, const char *pre);
 
-string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties &props);
+string NonNumaParallelParseCommandLine(int argc, const char *argv[], utils::Properties &props);
 
-int ParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bool is_loading, int thread_id) {
+int NonNumaParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num_ops, bool is_loading, int thread_id) {
     // Add cpu affinity here:
     // Create a cpu_set_t object representing a set of CPUs. Clear it and mark only CPU "this_thread_data->tid" as set
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(thread_id*2, &cpuset);
+    CPU_SET((thread_id * 2) + 1, &cpuset);
     int rc = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (rc != 0) {
         printf("Error calling pthread_setaffinity_np: %d\n", rc);
@@ -44,7 +44,7 @@ int ParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num
         if (is_loading) {
             oks += client.DoInsert();
         } else {
-            oks += client.DoTransactionOfflineV1(i);
+            oks += client.DoTransaction();
         }
     }
     db->Close();
@@ -53,7 +53,7 @@ int ParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num
 
 int main(const int argc, const char *argv[]) {
     utils::Properties props;
-    string file_name = ParallelParseCommandLine(argc, argv, props);
+    string file_name = NonNumaParallelParseCommandLine(argc, argv, props);
 
     const int num_threads = stoi(props.GetProperty("threadcount", "1"));
     const string dbpath = props.GetProperty("dbpath", "/pmem/array");
@@ -79,7 +79,7 @@ int main(const int argc, const char *argv[]) {
     vector <future<int>> actual_ops;
     int total_ops = stoi(props[ycsbc::CoreWorkload::RECORD_COUNT_PROPERTY]);
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async, ParallelDelegateClient, db_list[i], &wl_list[i], total_ops, true, i));
+        actual_ops.emplace_back(async(launch::async, NonNumaParallelDelegateClient, db_list[i], &wl_list[i], total_ops, true, i));
     }
     assert((int) actual_ops.size() == num_threads);
 
@@ -93,13 +93,10 @@ int main(const int argc, const char *argv[]) {
     // Peforms transactions
     actual_ops.clear();
     total_ops = stoi(props[ycsbc::CoreWorkload::OPERATION_COUNT_PROPERTY]);
-    for(int t=0; t<num_threads; t+=1) {
-        wl_list[t].PrepareOfflineDataV1(total_ops);
-    }
     utils::Timer<double> timer;
     timer.Start();
     for (int i = 0; i < num_threads; ++i) {
-        actual_ops.emplace_back(async(launch::async, ParallelDelegateClient, db_list[i], &wl_list[i], total_ops, false, i));
+        actual_ops.emplace_back(async(launch::async, NonNumaParallelDelegateClient, db_list[i], &wl_list[i], total_ops, false, i));
     }
     assert((int) actual_ops.size() == num_threads);
 
@@ -119,14 +116,14 @@ int main(const int argc, const char *argv[]) {
     }
 }
 
-string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties &props) {
+string NonNumaParallelParseCommandLine(int argc, const char *argv[], utils::Properties &props) {
     int argindex = 1;
     string filename;
-    while (argindex < argc && ParallelStrStartWith(argv[argindex], "-")) {
+    while (argindex < argc && NonNumaParallelStrStartWith(argv[argindex], "-")) {
         if (strcmp(argv[argindex], "-threads") == 0) {
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("threadcount", argv[argindex]);
@@ -134,7 +131,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
         } else if (strcmp(argv[argindex], "-db") == 0) {
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("dbname", argv[argindex]);
@@ -143,7 +140,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
             // -type is only with storedsDB, it denotes the inner data structures we will use
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("type", argv[argindex]);
@@ -152,7 +149,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
             // -dbpath is only with storedsDB, it shows where the db file is
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("dbpath", argv[argindex]);
@@ -160,7 +157,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
         } else if (strcmp(argv[argindex], "-host") == 0) {
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("host", argv[argindex]);
@@ -168,7 +165,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
         } else if (strcmp(argv[argindex], "-port") == 0) {
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("port", argv[argindex]);
@@ -176,7 +173,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
         } else if (strcmp(argv[argindex], "-slaves") == 0) {
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             props.SetProperty("slaves", argv[argindex]);
@@ -184,7 +181,7 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
         } else if (strcmp(argv[argindex], "-P") == 0) {
             argindex++;
             if (argindex >= argc) {
-                ParallelUsageMessage(argv[0]);
+                NonNumaParallelUsageMessage(argv[0]);
                 exit(0);
             }
             filename.assign(argv[argindex]);
@@ -204,14 +201,14 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
     }
 
     if (argindex == 1 || argindex != argc) {
-        ParallelUsageMessage(argv[0]);
+        NonNumaParallelUsageMessage(argv[0]);
         exit(0);
     }
 
     return filename;
 }
 
-void ParallelUsageMessage(const char *command) {
+void NonNumaParallelUsageMessage(const char *command) {
     cout << "Usage: " << command << " [options]" << endl;
     cout << "Options:" << endl;
     cout << "  -threads n: execute using n threads (default: 1)" << endl;
@@ -220,7 +217,6 @@ void ParallelUsageMessage(const char *command) {
     cout << "                   be specified, and will be processed in the order specified" << endl;
 }
 
-inline bool ParallelStrStartWith(const char *str, const char *pre) {
+inline bool NonNumaParallelStrStartWith(const char *str, const char *pre) {
     return strncmp(str, pre, strlen(pre)) == 0;
 }
-
