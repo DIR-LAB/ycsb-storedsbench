@@ -3,7 +3,7 @@
 #make clean
 #make
 
-input_path="../../../workloads/scan/"
+input_path="../../../workloads/"
 
 #array-dram
 for file in $input_path*.spec; do
@@ -12,6 +12,18 @@ for file in $input_path*.spec; do
   while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads 1 -dbpath /pmem/array.pmem -type array-dram -P $input_path${file##*/}
+    ((counter++))
+  done
+  echo "*****************<>*****************"
+done
+
+#array-vmem
+for file in $input_path*.spec; do
+  counter=1
+  echo "[Benchmark] array-vmem, workload: ${file##*/}"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads 1 -dbpath /pmem -type array-vmem -P $input_path${file##*/}
     ((counter++))
   done
   echo "*****************<>*****************"
