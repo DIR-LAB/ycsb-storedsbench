@@ -58,12 +58,14 @@ int main(const int argc, const char *argv[]) {
     const int num_threads = stoi(props.GetProperty("threadcount", "1"));
     const string dbpath = props.GetProperty("dbpath", "/pmem/array");
     const string db_file_extension = ".pmem";
+    const string type = props.GetProperty("type", "dram");
+    const bool is_vmem = (type.substr(type.size() - 4).compare("vmem") == 0);
 
     ycsbc::DB *db_list[num_threads];
     ycsbc::CoreWorkload wl_list[num_threads];
 
     for(int t=0; t<num_threads; t+=1) {
-        props.SetProperty("dbpath", dbpath + to_string(t) + db_file_extension);
+        if(!is_vmem) props.SetProperty("dbpath", dbpath + to_string(t) + db_file_extension);
         db_list[t] = ycsbc::DBFactory::CreateDB(props);
         wl_list[t].Init(props);
 
