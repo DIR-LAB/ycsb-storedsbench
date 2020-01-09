@@ -65,7 +65,7 @@ namespace ycsbc {
      */
     int SkiplistVmem::init(const char *path) {
         srand((uint32_t) time(NULL));
-        if ((vmp = vmem_create(path, PMEM_BTREE_POOL_SIZE)) == NULL) {
+        if ((vmp = vmem_create(path, PMEM_SKIPLIST_POOL_SIZE)) == NULL) {
             fprintf(stderr, "[%s]: FATAL: vmem_create failed\n", __FUNCTION__);
             exit(1);
         }
