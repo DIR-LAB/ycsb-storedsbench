@@ -112,7 +112,7 @@ namespace ycsbc {
      * init -- hashtable initializer
      */
     int HtVmemConcurrentMLock::init(const char *path) {
-        if ((vmp = vmem_create(path, PMEM_BTREE_POOL_SIZE)) == NULL) {
+        if ((vmp = vmem_create(path, PM_HASHTABLE_POOL_SIZE)) == NULL) {
             fprintf(stderr, "[%s]: FATAL: vmem_create failed\n", __FUNCTION__);
             exit(1);
         }
