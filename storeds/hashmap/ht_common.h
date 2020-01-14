@@ -13,7 +13,7 @@ namespace ycsbc {
      */
 
     /* size of the pmem object pool -- 1 GB */
-    #define PM_HASHTABLE_POOL_SIZE ((size_t) (1 << 30))
+    #define PM_HASHTABLE_POOL_SIZE ((size_t) ((size_t) 1 << 31))
 
     /* name of layout in the pool */
     #define HT_LAYOUT_NAME "ht_layout"

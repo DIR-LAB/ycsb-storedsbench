@@ -9,7 +9,7 @@
 
 namespace ycsbc {
     /* size of the pmem object pool -- 1 GB */
-    #define PMEM_RB_POOL_SIZE ((size_t) (1 << 30))
+    #define PMEM_RB_POOL_SIZE ((size_t) ((size_t) 1 << 31))
 
     /* name of layout in the pool */
     #define RB_LAYOUT_NAME "rbtree_layout"

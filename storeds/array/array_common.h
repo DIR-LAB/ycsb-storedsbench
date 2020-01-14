@@ -7,7 +7,7 @@
 
 namespace ycsbc {
     /* size of the pmem object pool */
-    #define PMEM_ARRAY_POOL_SIZE (160 * 1024 * 1024)
+    #define PMEM_ARRAY_POOL_SIZE ((size_t) ((size_t) 1 << 31))
 
     /* name of layout in the pool */
     #define ARRAY_LAYOUT_NAME "array_layout"

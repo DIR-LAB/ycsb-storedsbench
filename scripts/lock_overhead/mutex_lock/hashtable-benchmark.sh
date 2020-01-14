@@ -5,78 +5,144 @@
 #make
 #cd scripts/parallel/
 
-input_path="../../../workloads/"
+input_path="../../../workloads/lock_overhead/"
 
-#hashtable-dram
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#hashtable-dram workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] hashtable-dram, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] hashtable-dram, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-dram-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-dram-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-#hashtable-vmem
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#hashtable-dram workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] hashtable-dram, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] hashtable-vmem, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type hashtable-vmem-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-dram-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-#hashtable-pmem
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#hashtable-vmem workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] hashtable-vmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] hashtable-pmem, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-      rm /pmem/hashtable.pmem
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type hashtable-vmem-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-#hashtable-pmem-tx
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#hashtable-vmem workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] hashtable-vmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] hashtable-pmem-tx, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-tx-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-      rm /pmem/hashtable.pmem
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type hashtable-vmem-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#hashtable-pmem workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] hashtable-pmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/hashtable.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#hashtable-pmem workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] hashtable-pmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/hashtable.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#hashtable-pmem-tx workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] hashtable-pmem-tx, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-tx-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/hashtable.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#hashtable-pmem-tx workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] hashtable-pmem-tx, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/hashtable.pmem -type hashtable-pmem-tx-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/hashtable.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
