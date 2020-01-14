@@ -52,6 +52,12 @@ int ParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const int num
 }
 
 int main(const int argc, const char *argv[]) {
+    //the next free cpu core
+    cpu_set_t set;
+    CPU_ZERO(&set);        // clear cpu mask
+    CPU_SET(34, &set);      // set cpu 34
+    sched_setaffinity(0, sizeof(cpu_set_t), &set);  // 0 is the calling process
+
     utils::Properties props;
     string file_name = ParallelParseCommandLine(argc, argv, props);
 
