@@ -5,78 +5,144 @@
 #make
 #cd scripts/parallel/
 
-input_path="../../../workloads/"
+input_path="../../../workloads/lock_overhead/"
 
-#rbtree-dram
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#rbtree-dram workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] rbtree-dram, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] rbtree-dram, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-dram-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-dram-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-#rbtree-vmem
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#rbtree-dram workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] rbtree-dram, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] rbtree-vmem, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type rbtree-vmem-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-dram-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-#rbtree-pmem
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#rbtree-vmem workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] rbtree-vmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] rbtree-pmem, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-      rm /pmem/rbtree.pmem
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type rbtree-vmem-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-#rbtree-pmem-tx
-for file in $input_path*a.spec $input_path*e.spec; do
-  n_threads=1
-  while [ $n_threads -le 16 ]
+#rbtree-vmem workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] rbtree-vmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
   do
-    counter=1
-    echo "[Benchmark] rbtree-pmem-tx, #of_threads: " $n_threads ", workload: ${file##*/}"
-    while [ $counter -le 10 ]
-    do
-      ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-tx-conc-mlock -P $input_path${file##*/}
-      ((counter++))
-      rm /pmem/rbtree.pmem
-    done
-    echo "*****************<>*****************"
-    ((n_threads*=2))
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type rbtree-vmem-conc-mlock -P $file
+    ((counter++))
   done
-  echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "*****************<>*****************"
+  ((n_threads*=2))
 done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#rbtree-pmem workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] rbtree-pmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/rbtree.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#rbtree-pmem workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] rbtree-pmem, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/rbtree.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#rbtree-pmem-tx workload-a
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloada_${n_threads}.spec"
+  echo "[Benchmark] rbtree-pmem-tx, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-tx-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/rbtree.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+#rbtree-pmem-tx workload-e
+n_threads=1
+while [ $n_threads -le 16 ]
+do
+  counter=1
+  file="${input_path}workloade_${n_threads}.spec"
+  echo "[Benchmark] rbtree-pmem-tx, #of_threads: " $n_threads ", workload: $file"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/rbtree.pmem -type rbtree-pmem-tx-conc-mlock -P $file
+    ((counter++))
+    rm /pmem/rbtree.pmem
+  done
+  echo "*****************<>*****************"
+  ((n_threads*=2))
+done
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~<>~~~~~~~~~~~~~~~~~~~~~~~~~"
