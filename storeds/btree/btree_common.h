@@ -26,7 +26,7 @@ namespace ycsbc {
     #define DEFAULT_VALUE_LEN 128
 
     /* size of the pmem object pool -- 1 GB */
-    #define PMEM_BTREE_POOL_SIZE ((size_t) (1 << 30))
+    #define PMEM_BTREE_POOL_SIZE ((size_t) ((size_t) 1 << 31))
 
     /* name of layout in the pool */
     #define BTREE_LAYOUT_NAME "btree_layout"
