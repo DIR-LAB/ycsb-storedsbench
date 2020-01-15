@@ -73,14 +73,16 @@ int LockOverheadDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl,
 }
 
 int main(const int argc, const char *argv[]) {
+    utils::Properties props;
+    string file_name = LockOverheadParseCommandLine(argc, argv, props);
+    const int num_threads = stoi(props.GetProperty("threadcount", "1"));
+    const int lock_contention_proportion = stoi(props.GetProperty("lock_contention_proportion", "0"));
+
     //the next free cpu core
     cpu_set_t set;
     CPU_ZERO(&set);        // clear cpu mask
-    CPU_SET(34, &set);      // set cpu 34
+    CPU_SET((num_threads*2) + 2, &set);      // set cpu to the next free core
     sched_setaffinity(0, sizeof(cpu_set_t), &set);  // 0 is the calling process
-
-    utils::Properties props;
-    string file_name = LockOverheadParseCommandLine(argc, argv, props);
 
     ycsbc::DB *db = ycsbc::DBFactory::CreateDB(props);
     if (!db) {
@@ -90,9 +92,6 @@ int main(const int argc, const char *argv[]) {
 
     ycsbc::CoreWorkload wl;
     wl.Init(props);
-
-    const int num_threads = stoi(props.GetProperty("threadcount", "1"));
-    const int lock_contention_proportion = stoi(props.GetProperty("lock_contention_proportion", "0"));
 
     // Loads data
     vector <future<int>> actual_ops;
