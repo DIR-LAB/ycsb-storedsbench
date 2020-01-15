@@ -115,12 +115,12 @@ namespace ycsbc {
      */
     int BPlusTreePmem::init(const char *path) {
         if (file_exists(path) != 0) {
-            if ((pop = pmemobj_create(path, BTREE_LAYOUT_NAME, PMEM_BTREE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
+            if ((pop = pmemobj_create(path, BPLUSTREE_LAYOUT_NAME, PMEM_BPLUSTREE_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
                 fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());
                 exit(0);
             }
         } else {
-            if ((pop = pmemobj_open(path, BTREE_LAYOUT_NAME)) == NULL) {
+            if ((pop = pmemobj_open(path, BPLUSTREE_LAYOUT_NAME)) == NULL) {
                 fprintf(stderr, "failed to open pool: %s\n", pmemobj_errormsg());
                 exit(0);
             }
@@ -465,6 +465,7 @@ namespace ycsbc {
         struct bplustree_pmem_node *current_node_ptr = (struct bplustree_pmem_node *) pmemobj_direct(current_node_oid);
         //base case
         if(current_node_ptr->is_leaf) {
+            //todo: need to free the member OIDs first
             //free the current_node's memory and return
             pmemobj_free(&current_node_oid);
             return;
