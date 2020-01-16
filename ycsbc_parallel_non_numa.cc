@@ -54,8 +54,14 @@ int NonNumaParallelDelegateClient(ycsbc::DB *db, ycsbc::CoreWorkload *wl, const 
 int main(const int argc, const char *argv[]) {
     utils::Properties props;
     string file_name = NonNumaParallelParseCommandLine(argc, argv, props);
-
     const int num_threads = stoi(props.GetProperty("threadcount", "1"));
+
+    //the next free cpu core
+    cpu_set_t set;
+    CPU_ZERO(&set);        // clear cpu mask
+    CPU_SET((num_threads*2) + 3, &set);      // set cpu to the next free core
+    sched_setaffinity(0, sizeof(cpu_set_t), &set);  // 0 is the calling process
+
     const string dbpath = props.GetProperty("dbpath", "/pmem/array");
     const string db_file_extension = ".pmem";
     const string type = props.GetProperty("type", "dram");
