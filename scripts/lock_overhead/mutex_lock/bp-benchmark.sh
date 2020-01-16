@@ -14,7 +14,7 @@ do
   counter=1
   file="${input_path}workloada_${n_threads}.spec"
   echo "[Benchmark] bp-dram, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/bp.pmem -type bp-dram-conc-mlock -P $file
     ((counter++))
@@ -31,7 +31,7 @@ do
   counter=1
   file="${input_path}workloade_${n_threads}.spec"
   echo "[Benchmark] bp-dram, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/bp.pmem -type bp-dram-conc-mlock -P $file
     ((counter++))
@@ -48,7 +48,7 @@ do
   counter=1
   file="${input_path}workloada_${n_threads}.spec"
   echo "[Benchmark] bp-vmem, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type bp-vmem-conc-mlock -P $file
     ((counter++))
@@ -65,7 +65,7 @@ do
   counter=1
   file="${input_path}workloade_${n_threads}.spec"
   echo "[Benchmark] bp-vmem, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem -type bp-vmem-conc-mlock -P $file
     ((counter++))
@@ -82,7 +82,7 @@ do
   counter=1
   file="${input_path}workloada_${n_threads}.spec"
   echo "[Benchmark] bp-pmem, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/bp.pmem -type bp-pmem-conc-mlock -P $file
     ((counter++))
@@ -100,7 +100,7 @@ do
   counter=1
   file="${input_path}workloade_${n_threads}.spec"
   echo "[Benchmark] bp-pmem, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/bp.pmem -type bp-pmem-conc-mlock -P $file
     ((counter++))
@@ -118,7 +118,7 @@ do
   counter=1
   file="${input_path}workloada_${n_threads}.spec"
   echo "[Benchmark] bp-pmem-tx, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/bp.pmem -type bp-pmem-tx-conc-mlock -P $file
     ((counter++))
@@ -136,7 +136,7 @@ do
   counter=1
   file="${input_path}workloade_${n_threads}.spec"
   echo "[Benchmark] bp-pmem-tx, #of_threads: " $n_threads ", workload: $file"
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
     ./../../../ycsbc -db storeds -threads $n_threads -dbpath /pmem/bp.pmem -type bp-pmem-tx-conc-mlock -P $file
     ((counter++))
