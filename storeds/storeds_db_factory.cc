@@ -31,6 +31,10 @@
 #include "bplustree_mem_opt/bp_pmem.cc"
 #include "bplustree_mem_opt/bp_pmem_tx.cc"
 #include "bplustree_mem_opt/bp_vmem.cc"
+#include "bplustree_mem_opt/bp_dram_concurrent_mlock.cc"
+#include "bplustree_mem_opt/bp_pmem_concurrent_mlock.cc"
+#include "bplustree_mem_opt/bp_pmem_tx_concurrent_mlock.cc"
+#include "bplustree_mem_opt/bp_vmem_concurrent_mlock.cc"
 #include "hashmap/ht_dram.cc"
 #include "hashmap/ht_pmem.cc"
 #include "hashmap/ht_pmem_tx.cc"
@@ -135,6 +139,14 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BPPmemTx(path);
     } else if (strcmp(type, "bp-vmem") == 0) {
         return new BPVmem(path);
+    } else if (strcmp(type, "bp-dram-conc-mlock") == 0) {
+        return new BPDramConcurrentMLock(path);
+    } else if (strcmp(type, "bp-pmem-conc-mlock") == 0) {
+        return new BPPmemConcurrentMLock(path);
+    } else if (strcmp(type, "bp-pmem-tx-conc-mlock") == 0) {
+        return new BPPmemTxConcurrentMLock(path);
+    } else if (strcmp(type, "bp-vmem-conc-mlock") == 0) {
+        return new BPVmemConcurrentMLock(path);
     } else if (strcmp(type, "bplustree-dram") == 0) {
         return new BPlusTreeDram(path);
     } else if (strcmp(type, "bplustree-pmem") == 0) {
