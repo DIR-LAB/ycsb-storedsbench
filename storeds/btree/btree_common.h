@@ -12,15 +12,15 @@ namespace ycsbc {
      * Data Structure Section
      */
 
-    /* minimum degree - every node (except root) must contain (MIN_DEGREE - 1) keys */
-    /* all nodes (including root) may contain at most (2*MIN_DEGREE - 1) keys */
-    #define MIN_DEGREE 9
+    /* minimum degree - every node (except root) must contain (BTREE_MIN_DEGREE - 1) keys */
+    /* all nodes (including root) may contain at most (2*BTREE_MIN_DEGREE - 1) keys */
+    #define BTREE_MIN_DEGREE 9
 
     /* maximum keys a node can hold */
-    #define MAX_KEYS (2 * MIN_DEGREE - 1)
+    #define MAX_KEYS (2 * BTREE_MIN_DEGREE - 1)
 
     /* maximum children a node can have */
-    #define MAX_CHILDREN (2 * MIN_DEGREE)
+    #define MAX_CHILDREN (2 * BTREE_MIN_DEGREE)
 
     /* default length for value */
     #define DEFAULT_VALUE_LEN 128

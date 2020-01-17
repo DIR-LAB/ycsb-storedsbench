@@ -169,7 +169,7 @@ namespace ycsbc {
     /**
      * btree_pmem_split_node -- (internal) split the children of the child node equally with the new sibling node
      *
-     * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
+     * so, after this split, both the child and sibling node will hold BTREE_MIN_DEGREE children,
      * one children will be pushed to the parent node.
      *
      * this function will be called when the child node is full and become idx'th child of the parent,
@@ -182,23 +182,23 @@ namespace ycsbc {
         PMEMoid sibling_oid = create_node(child_ptr->is_leaf);    //new sibling node will get the same status as child
         struct btree_pmem_node *sibling_ptr = (struct btree_pmem_node *) pmemobj_direct(sibling_oid);
 
-        sibling_ptr->nk = MIN_DEGREE - 1;   //new sibling child will hold the (MIN_DEGREE - 1) entries of child node
+        sibling_ptr->nk = BTREE_MIN_DEGREE - 1;   //new sibling child will hold the (BTREE_MIN_DEGREE - 1) entries of child node
 
-        //transfer the last (MIN_DEGREE - 1) entries of child node to it's sibling node
-        for(int i=0; i<MIN_DEGREE-1; i+=1) {
-            sibling_ptr->entries[i] = child_ptr->entries[i + MIN_DEGREE];
+        //transfer the last (BTREE_MIN_DEGREE - 1) entries of child node to it's sibling node
+        for(int i=0; i<BTREE_MIN_DEGREE-1; i+=1) {
+            sibling_ptr->entries[i] = child_ptr->entries[i + BTREE_MIN_DEGREE];
             //todo: it is possible to free few of child's memory, or can try with pmemobj_memmove
         }
 
-        //if child is an internal node, transfer the last (MIN_DEGREE) chiddren of child node to it's sibling node
+        //if child is an internal node, transfer the last (BTREE_MIN_DEGREE) chiddren of child node to it's sibling node
         if(child_ptr->is_leaf == LEAF_NODE_FALSE_FLAG) {
-            for(int i=0; i<MIN_DEGREE; i+=1) {
-                sibling_ptr->children[i] = child_ptr->children[i + MIN_DEGREE];
+            for(int i=0; i<BTREE_MIN_DEGREE; i+=1) {
+                sibling_ptr->children[i] = child_ptr->children[i + BTREE_MIN_DEGREE];
                 //todo: it is possible to free few of child's memory, or can try with pmemobj_memmove
             }
         }
 
-        child_ptr->nk = MIN_DEGREE - 1;
+        child_ptr->nk = BTREE_MIN_DEGREE - 1;
 
         //as parent node is going to get a new child at (idx+1)-th place, make a room for it
         for(int i = parent_ptr->nk; i >= idx+1; i -= 1) {
@@ -214,7 +214,7 @@ namespace ycsbc {
         }
 
         //place the middle entry of child node to parent node
-        parent_ptr->entries[idx] = child_ptr->entries[MIN_DEGREE - 1];
+        parent_ptr->entries[idx] = child_ptr->entries[BTREE_MIN_DEGREE - 1];
 
         //parent now hold a new entry, so increasing the number of keys
         parent_ptr->nk += 1;
