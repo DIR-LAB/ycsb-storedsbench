@@ -69,7 +69,7 @@ namespace ycsbc {
      * btree_dram_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
     inline int BTreeVmem::is_node_full(int nk) {
-        return nk == MAX_KEYS ? 1 : 0;
+        return nk == BTREE_MAX_KEYS ? 1 : 0;
     }
 
     /*

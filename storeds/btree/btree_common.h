@@ -17,10 +17,10 @@ namespace ycsbc {
     #define BTREE_MIN_DEGREE 9
 
     /* maximum keys a node can hold */
-    #define MAX_KEYS (2 * BTREE_MIN_DEGREE - 1)
+    #define BTREE_MAX_KEYS (2 * BTREE_MIN_DEGREE - 1)
 
     /* maximum children a node can have */
-    #define MAX_CHILDREN (2 * BTREE_MIN_DEGREE)
+    #define BTREE_MAX_CHILDREN (2 * BTREE_MIN_DEGREE)
 
     /* default length for value */
     #define DEFAULT_VALUE_LEN 128
@@ -56,10 +56,10 @@ namespace ycsbc {
         int nk;
 
         //array of <key-value> entries
-        struct entry entries[MAX_KEYS];
+        struct entry entries[BTREE_MAX_KEYS];
 
         //array of child pointer
-        PMEMoid children[MAX_CHILDREN];
+        PMEMoid children[BTREE_MAX_CHILDREN];
     };
 
     struct btree_pmem_root {
@@ -84,10 +84,10 @@ namespace ycsbc {
         int nk;
 
         //array of <key-value> entries
-        struct entry entries[MAX_KEYS];
+        struct entry entries[BTREE_MAX_KEYS];
 
         //array of child pointer
-        struct btree_dram_node *children[MAX_CHILDREN];
+        struct btree_dram_node *children[BTREE_MAX_CHILDREN];
     };
 }   //ycsbc
 

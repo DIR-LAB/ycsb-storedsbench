@@ -66,7 +66,7 @@ namespace ycsbc {
      * btree_dram_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
     inline int BTreeDram::is_node_full(int nk) {
-        return nk == MAX_KEYS ? 1 : 0;
+        return nk == BTREE_MAX_KEYS ? 1 : 0;
     }
 
     /*
@@ -85,8 +85,8 @@ namespace ycsbc {
         new_node_p->is_leaf = _is_leaf;
         new_node_p->nk = 0;
 
-        //new_node_p->entries = (struct entry *) malloc(MAX_KEYS * sizeof(struct entry));
-        //new_node_p->children = (struct btree_node **) malloc((MAX_CHILDREN) * sizeof(struct btree_node));
+        //new_node_p->entries = (struct entry *) malloc(BTREE_MAX_KEYS * sizeof(struct entry));
+        //new_node_p->children = (struct btree_node **) malloc((BTREE_MAX_CHILDREN) * sizeof(struct btree_node));
 
         return new_node_p;
     }

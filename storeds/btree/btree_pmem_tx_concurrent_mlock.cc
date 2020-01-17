@@ -70,7 +70,7 @@ namespace ycsbc {
      * btree_pmem_tx_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
     int BTreePmemTxConcurrentMLock::is_node_full(int nk) {
-        return nk == MAX_KEYS ? 1 : 0;
+        return nk == BTREE_MAX_KEYS ? 1 : 0;
     }
 
     /*
@@ -85,8 +85,8 @@ namespace ycsbc {
         new_node_prt->is_leaf = _is_leaf;
         new_node_prt->nk = 0;
 
-        // new_node_prt->entries = pmemobj_tx_alloc(MAX_KEYS * sizeof(struct entry), BTREE_ENTRY_TYPE);
-        // new_node_prt->children = pmemobj_tx_alloc((MAX_CHILDREN) * sizeof(struct btree_node), BTREE_NODE_TYPE);
+        // new_node_prt->entries = pmemobj_tx_alloc(BTREE_MAX_KEYS * sizeof(struct entry), BTREE_ENTRY_TYPE);
+        // new_node_prt->children = pmemobj_tx_alloc((BTREE_MAX_CHILDREN) * sizeof(struct btree_node), BTREE_NODE_TYPE);
 
         return new_node_oid;
     }

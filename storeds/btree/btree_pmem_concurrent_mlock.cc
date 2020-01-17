@@ -70,7 +70,7 @@ namespace ycsbc {
      * btree_pmem_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
     int BTreePmemConcurrentMLock::is_node_full(int nk) {
-        return nk == MAX_KEYS ? 1 : 0;
+        return nk == BTREE_MAX_KEYS ? 1 : 0;
     }
 
     /*
