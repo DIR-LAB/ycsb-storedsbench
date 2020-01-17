@@ -12,15 +12,15 @@ namespace ycsbc {
      * Data Structure Section
      */
 
-    /* minimum degree - every node (except root) must contain (MIN_DEGREE - 1) keys */
-    /* all nodes (including root) may contain at most (2*MIN_DEGREE - 1) keys */
-    #define MIN_DEGREE 9
+    /* minimum degree - every node (except root) must contain (BPLUSTREE_MIN_DEGREE - 1) keys */
+    /* all nodes (including root) may contain at most (2*BPLUSTREE_MIN_DEGREE - 1) keys */
+    #define BPLUSTREE_MIN_DEGREE 9
 
     /* maximum keys a node can hold */
-    #define MAX_KEYS (2 * MIN_DEGREE - 1)
+    #define BPLUSTREE_MAX_KEYS (2 * BPLUSTREE_MIN_DEGREE - 1)
 
     /* maximum children a node can have */
-    #define MAX_CHILDREN (2 * MIN_DEGREE)
+    #define BPLUSTREE_MAX_CHILDREN (2 * BPLUSTREE_MIN_DEGREE)
 
     /* default length for value */
     #define DEFAULT_VALUE_LEN 128
@@ -56,10 +56,10 @@ namespace ycsbc {
         int nk;
 
         //array of <key-value> entries
-        struct bplustree_entry entries[MAX_KEYS];
+        struct bplustree_entry entries[BPLUSTREE_MAX_KEYS];
 
         //array of child pointer
-        struct bplustree_dram_node *children[MAX_CHILDREN];
+        struct bplustree_dram_node *children[BPLUSTREE_MAX_CHILDREN];
 
         //used for leaf type nodes
         struct bplustree_dram_node *next;
@@ -88,10 +88,10 @@ namespace ycsbc {
         int nk;
 
         //array of <key-value> entries
-        struct bplustree_entry entries[MAX_KEYS];
+        struct bplustree_entry entries[BPLUSTREE_MAX_KEYS];
 
         //array of child pointer
-        PMEMoid children[MAX_CHILDREN];
+        PMEMoid children[BPLUSTREE_MAX_CHILDREN];
 
         //used for leaf type nodes
         PMEMoid next;
