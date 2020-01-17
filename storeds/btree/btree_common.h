@@ -12,15 +12,15 @@ namespace ycsbc {
      * Data Structure Section
      */
 
-    /* minimum degree - every node (except root) must contain (MIN_DEGREE - 1) keys */
-    /* all nodes (including root) may contain at most (2*MIN_DEGREE - 1) keys */
-    #define MIN_DEGREE 9
+    /* minimum degree - every node (except root) must contain (BTREE_MIN_DEGREE - 1) keys */
+    /* all nodes (including root) may contain at most (2*BTREE_MIN_DEGREE - 1) keys */
+    #define BTREE_MIN_DEGREE 9
 
     /* maximum keys a node can hold */
-    #define MAX_KEYS (2 * MIN_DEGREE - 1)
+    #define BTREE_MAX_KEYS (2 * BTREE_MIN_DEGREE - 1)
 
     /* maximum children a node can have */
-    #define MAX_CHILDREN (2 * MIN_DEGREE)
+    #define BTREE_MAX_CHILDREN (2 * BTREE_MIN_DEGREE)
 
     /* default length for value */
     #define DEFAULT_VALUE_LEN 128
@@ -43,23 +43,26 @@ namespace ycsbc {
     };
 
     /* declaration of data-structures */
+
+    /*structure size: 136 Bytes*/
     struct entry {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
     } __attribute__ ((aligned (8)));
 
+    /*structure size: {8 + (152 * BTREE_MAX_KEYS) + 16} Bytes*/
     struct btree_pmem_node {
         //flag to check if the node is leaf or not
-        int is_leaf;
+        int is_leaf;    //4 Bytes
 
         //current number of keys
-        int nk;
+        int nk; //4 Bytes
 
         //array of <key-value> entries
-        struct entry entries[MAX_KEYS];
+        struct entry entries[BTREE_MAX_KEYS];   //(136 * BTREE_MAX_KEYS) Bytes
 
         //array of child pointer
-        PMEMoid children[MAX_CHILDREN];
+        PMEMoid children[BTREE_MAX_CHILDREN];   //(16 * BTREE_MAX_CHILDREN) Bytes
     };
 
     struct btree_pmem_root {
@@ -76,18 +79,19 @@ namespace ycsbc {
         PMEMmutex mlock;
     };
 
+    /*structure size: {8 + (144 * BTREE_MAX_KEYS) + 8} Bytes*/
     struct btree_dram_node {
         //flag to check if the node is leaf or not
-        int is_leaf;
+        int is_leaf;    //4 Bytes
 
         //current number of keys
-        int nk;
+        int nk; //4 Bytes
 
         //array of <key-value> entries
-        struct entry entries[MAX_KEYS];
+        struct entry entries[BTREE_MAX_KEYS];   //(136 * BTREE_MAX_KEYS) Bytes
 
         //array of child pointer
-        struct btree_dram_node *children[MAX_CHILDREN];
+        struct btree_dram_node *children[BTREE_MAX_CHILDREN];   //(8 * BTREE_MAX_CHILDREN) Bytes
     };
 }   //ycsbc
 

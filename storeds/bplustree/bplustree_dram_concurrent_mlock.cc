@@ -91,7 +91,7 @@ namespace ycsbc {
      * BPlusTreeDramConcurrentMLock::is_node_full -- (internal) checks if bplus tree node contains max possible <key-value> pairs
      */
     inline int BPlusTreeDramConcurrentMLock::is_node_full(int nk) {
-        return nk == MAX_KEYS ? 1 : 0;
+        return nk == BPLUSTREE_MAX_KEYS ? 1 : 0;
     }
 
     /**
@@ -170,7 +170,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node->is_leaf) {
             //check if we found the key
-            if (i < MAX_KEYS && key == current_node->entries[i].key) {
+            if (i < BPLUSTREE_MAX_KEYS && key == current_node->entries[i].key) {
                 //key found, return the value
                 return current_node->entries[i].value;
             }
@@ -179,7 +179,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < MAX_KEYS && key == current_node->entries[i].key) i += 1;
+        if (i < BPLUSTREE_MAX_KEYS && key == current_node->entries[i].key) i += 1;
         return search(current_node->children[i], key);
     }
 
@@ -232,7 +232,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node->is_leaf) {
             //check if we found the key
-            if (i < MAX_KEYS && key == current_node->entries[i].key) {
+            if (i < BPLUSTREE_MAX_KEYS && key == current_node->entries[i].key) {
                 //key found, update value and return
                 memcpy(current_node->entries[i].value, (char *) value, strlen((char *) value) + 1);
                 return true;
@@ -242,14 +242,14 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < MAX_KEYS && key == current_node->entries[i].key) i += 1;
+        if (i < BPLUSTREE_MAX_KEYS && key == current_node->entries[i].key) i += 1;
         return update_if_found(current_node->children[i], key, value);
     }
 
     /**
      * BPlusTreeDramConcurrentMLock::split_node -- (internal) split the children of the child node equally with the new sibling node
      *
-     * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
+     * so, after this split, both the child and sibling node will hold BPLUSTREE_MIN_DEGREE children,
      * one children will be pushed to the parent node.
      *
      * this function will be called when the child node is full and become idx'th child of the parent,
@@ -259,16 +259,16 @@ namespace ycsbc {
         if (child->is_leaf) {
             //new right-sibling node will get the same status as child
             struct bplustree_dram_node *sibling = create_node(child->is_leaf);
-            //new right-sibling node will hold the MIN_DEGREE entries of child node
-            sibling->nk = MIN_DEGREE;
+            //new right-sibling node will hold the BPLUSTREE_MIN_DEGREE entries of child node
+            sibling->nk = BPLUSTREE_MIN_DEGREE;
 
-            //transfer the last MIN_DEGREE entries of child node to it's sibling node
-            for (int i = 0; i < MIN_DEGREE; i += 1) {
-                sibling->entries[i] = child->entries[i + MIN_DEGREE - 1];
+            //transfer the last BPLUSTREE_MIN_DEGREE entries of child node to it's sibling node
+            for (int i = 0; i < BPLUSTREE_MIN_DEGREE; i += 1) {
+                sibling->entries[i] = child->entries[i + BPLUSTREE_MIN_DEGREE - 1];
             }
 
             //reduce the number of entries of child node
-            child->nk = MIN_DEGREE - 1;
+            child->nk = BPLUSTREE_MIN_DEGREE - 1;
 
             //as parent node is going to get a new child at (idx+1)-th place, make a room for it
             for (int i = parent->nk; i >= idx + 1; i -= 1) {
@@ -299,20 +299,20 @@ namespace ycsbc {
         } else {
             //new right-sibling node will get the same status as child
             struct bplustree_dram_node *sibling = create_node(child->is_leaf);
-            //new sibling child will hold the (MIN_DEGREE - 1) entries of child node
-            sibling->nk = MIN_DEGREE - 1;
+            //new sibling child will hold the (BPLUSTREE_MIN_DEGREE - 1) entries of child node
+            sibling->nk = BPLUSTREE_MIN_DEGREE - 1;
 
-            //transfer the last (MIN_DEGREE - 1) entries of child node to it's sibling node
-            for (int i = 0; i < MIN_DEGREE - 1; i += 1) {
-                sibling->entries[i] = child->entries[i + MIN_DEGREE];
+            //transfer the last (BPLUSTREE_MIN_DEGREE - 1) entries of child node to it's sibling node
+            for (int i = 0; i < BPLUSTREE_MIN_DEGREE - 1; i += 1) {
+                sibling->entries[i] = child->entries[i + BPLUSTREE_MIN_DEGREE];
             }
 
-            //as child is an internal node, transfer the last (MIN_DEGREE) children pointers of child node to it's sibling node
-            for (int i = 0; i < MIN_DEGREE; i += 1) {
-                sibling->children[i] = child->children[i + MIN_DEGREE];
+            //as child is an internal node, transfer the last (BPLUSTREE_MIN_DEGREE) children pointers of child node to it's sibling node
+            for (int i = 0; i < BPLUSTREE_MIN_DEGREE; i += 1) {
+                sibling->children[i] = child->children[i + BPLUSTREE_MIN_DEGREE];
             }
 
-            child->nk = MIN_DEGREE - 1;
+            child->nk = BPLUSTREE_MIN_DEGREE - 1;
 
             //as parent node is going to get a new child at (idx+1)-th place, make a room for it
             for (int i = parent->nk; i >= idx + 1; i -= 1) {
@@ -328,7 +328,7 @@ namespace ycsbc {
             }
 
             //place the middle entry of child node to parent node
-            parent->entries[idx] = child->entries[MIN_DEGREE - 1];
+            parent->entries[idx] = child->entries[BPLUSTREE_MIN_DEGREE - 1];
 
             //parent now hold a new entry, so increasing the number of keys
             parent->nk += 1;

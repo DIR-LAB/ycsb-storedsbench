@@ -43,28 +43,31 @@ namespace ycsbc {
     };
 
     /* declaration of data-structures */
+
+    /*structure size: 128 Bytes*/
     struct bp_record {
-        char value[DEFAULT_VALUE_LEN];
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
     } __attribute__ ((aligned (8)));
 
+    /*structure size: {24 + (16 * BP_MAX_KEYS) + 8} Bytes*/
     struct bp_dram_node {
         //flag to identify nodes as leaf or internal
-        int is_leaf;
+        int is_leaf;    //4 Bytes
 
         //current number of keys
-        int nk;
+        int nk; //4 Bytes
 
         //array of key
-        uint64_t keys[BP_MAX_KEYS];
+        uint64_t keys[BP_MAX_KEYS]; //(8 * BP_MAX_KEYS) Bytes
 
         //array of pointers
         //internal nodes will store the children information in this
         //leaf nodes will store the values in this
-        void *pointers[BP_MAX_CHILDREN];
+        void *pointers[BP_MAX_CHILDREN];    //(8 * BP_MAX_CHILDREN) Bytes
 
         //used for leaf type nodes
-        struct bp_dram_node *next;
-        struct bp_dram_node *previous;
+        struct bp_dram_node *next;  //8 Bytes
+        struct bp_dram_node *previous;  //8 Bytes
     };
 
     struct bp_pmem_root {
@@ -81,22 +84,23 @@ namespace ycsbc {
         PMEMmutex mlock;
     };
 
+    /*structure size: {40 + (24 * BP_MAX_KEYS) + 16} Bytes*/
     struct bp_pmem_node {
         //flag to check if the node is leaf or not
-        int is_leaf;
+        int is_leaf;    //4 Bytes
 
         //current number of keys
-        int nk;
+        int nk; //4 Bytes
 
         //array of key
-        uint64_t keys[BP_MAX_KEYS];
+        uint64_t keys[BP_MAX_KEYS]; //(8 * BP_MAX_KEYS) Bytes
 
         //array of child pointer
-        PMEMoid pointers[BP_MAX_CHILDREN];
+        PMEMoid pointers[BP_MAX_CHILDREN];  //(16 * BP_MAX_CHILDREN) Bytes
 
         //used for leaf type nodes
-        PMEMoid next;
-        PMEMoid previous;
+        PMEMoid next;   //16 Bytes
+        PMEMoid previous;   //16 Bytes
     };
 }   //ycsbc
 

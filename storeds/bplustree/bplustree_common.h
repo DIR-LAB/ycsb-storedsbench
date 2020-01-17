@@ -12,15 +12,15 @@ namespace ycsbc {
      * Data Structure Section
      */
 
-    /* minimum degree - every node (except root) must contain (MIN_DEGREE - 1) keys */
-    /* all nodes (including root) may contain at most (2*MIN_DEGREE - 1) keys */
-    #define MIN_DEGREE 9
+    /* minimum degree - every node (except root) must contain (BPLUSTREE_MIN_DEGREE - 1) keys */
+    /* all nodes (including root) may contain at most (2*BPLUSTREE_MIN_DEGREE - 1) keys */
+    #define BPLUSTREE_MIN_DEGREE 9
 
     /* maximum keys a node can hold */
-    #define MAX_KEYS (2 * MIN_DEGREE - 1)
+    #define BPLUSTREE_MAX_KEYS (2 * BPLUSTREE_MIN_DEGREE - 1)
 
     /* maximum children a node can have */
-    #define MAX_CHILDREN (2 * MIN_DEGREE)
+    #define BPLUSTREE_MAX_CHILDREN (2 * BPLUSTREE_MIN_DEGREE)
 
     /* default length for value */
     #define DEFAULT_VALUE_LEN 128
@@ -43,27 +43,30 @@ namespace ycsbc {
     };
 
     /* declaration of data-structures */
+
+    /*structure size: 136 Bytes*/
     struct bplustree_entry {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
     } __attribute__ ((aligned (8)));
 
+    /*structure size: {24 + (144 * BPLUSTREE_MAX_KEYS) + 8} Bytes*/
     struct bplustree_dram_node {
         //flag to check if the node is leaf or not
-        int is_leaf;
+        int is_leaf;    //4 Bytes
 
         //current number of keys
-        int nk;
+        int nk; //4 Bytes
 
         //array of <key-value> entries
-        struct bplustree_entry entries[MAX_KEYS];
+        struct bplustree_entry entries[BPLUSTREE_MAX_KEYS];     //(136 * BPLUSTREE_MAX_KEYS) Bytes
 
         //array of child pointer
-        struct bplustree_dram_node *children[MAX_CHILDREN];
+        struct bplustree_dram_node *children[BPLUSTREE_MAX_CHILDREN];   //(8 * BPLUSTREE_MAX_CHILDREN) Bytes
 
         //used for leaf type nodes
-        struct bplustree_dram_node *next;
-        struct bplustree_dram_node *previous;
+        struct bplustree_dram_node *next;   //8 Bytes
+        struct bplustree_dram_node *previous;   //8 Bytes
     };
 
     struct bplustree_pmem_root {
@@ -80,22 +83,23 @@ namespace ycsbc {
         PMEMmutex mlock;
     };
 
+    /*structure size: {40 + (152 * BPLUSTREE_MAX_KEYS) + 16} Bytes*/
     struct bplustree_pmem_node {
         //flag to check if the node is leaf or not
-        int is_leaf;
+        int is_leaf;    //4 Bytes
 
         //current number of keys
-        int nk;
+        int nk; //4 Bytes
 
         //array of <key-value> entries
-        struct bplustree_entry entries[MAX_KEYS];
+        struct bplustree_entry entries[BPLUSTREE_MAX_KEYS]; //(136 * BPLUSTREE_MAX_KEYS) Bytes
 
         //array of child pointer
-        PMEMoid children[MAX_CHILDREN];
+        PMEMoid children[BPLUSTREE_MAX_CHILDREN];   //(16 * BPLUSTREE_MAX_CHILDREN) Bytes
 
         //used for leaf type nodes
-        PMEMoid next;
-        PMEMoid previous;
+        PMEMoid next;   //16 Bytes
+        PMEMoid previous;   //16 Bytes
     };
 }   //ycsbc
 

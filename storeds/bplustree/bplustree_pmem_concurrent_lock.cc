@@ -92,7 +92,7 @@ namespace ycsbc {
      * BPlusTreePmemConcurrentLock::is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
     int BPlusTreePmemConcurrentLock::is_node_full(int nk) {
-        return nk == MAX_KEYS ? 1 : 0;
+        return nk == BPLUSTREE_MAX_KEYS ? 1 : 0;
     }
 
     /**
@@ -203,7 +203,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node_ptr->is_leaf) {
             //check if we found the key
-            if (i < MAX_KEYS && key == current_node_ptr->entries[i].key) {
+            if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) {
                 //key found, return the value
                 return current_node_ptr->entries[i].value;
             }
@@ -212,7 +212,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < MAX_KEYS && key == current_node_ptr->entries[i].key) i += 1;
+        if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) i += 1;
         return search(current_node_ptr->children[i], key);
     }
 
@@ -252,7 +252,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node_ptr->is_leaf) {
             //check if we found the key
-            if (i < MAX_KEYS && key == current_node_ptr->entries[i].key) {
+            if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) {
                 //key found, update value and return
                 pmemobj_memcpy_persist(pop, current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
                 return true;
@@ -262,14 +262,14 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < MAX_KEYS && key == current_node_ptr->entries[i].key) i += 1;
+        if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) i += 1;
         return update_if_found(current_node_ptr->children[i], key, value);
     }
 
     /**
      * BPlusTreePmemConcurrentLock::split_node -- (internal) split the children of the child node equally with the new sibling node
      *
-     * so, after this split, both the child and sibling node will hold MIN_DEGREE children,
+     * so, after this split, both the child and sibling node will hold BPLUSTREE_MIN_DEGREE children,
      * one children will be pushed to the parent node.
      *
      * this function will be called when the child node is full and become idx'th child of the parent,
@@ -283,15 +283,15 @@ namespace ycsbc {
             //new right-sibling node will get the same status as child
             PMEMoid sibling_oid = create_node(child_ptr->is_leaf);
             struct bplustree_pmem_node *sibling_ptr = (struct bplustree_pmem_node *) pmemobj_direct(sibling_oid);
-            //new right-sibling child will hold the MIN_DEGREE entries of child node
-            sibling_ptr->nk = MIN_DEGREE;
+            //new right-sibling child will hold the BPLUSTREE_MIN_DEGREE entries of child node
+            sibling_ptr->nk = BPLUSTREE_MIN_DEGREE;
 
-            //transfer the last MIN_DEGREE entries of child node to it's sibling node
-            for(int i=0; i<MIN_DEGREE; i+=1) {
-                sibling_ptr->entries[i] = child_ptr->entries[i + MIN_DEGREE - 1];
+            //transfer the last BPLUSTREE_MIN_DEGREE entries of child node to it's sibling node
+            for(int i=0; i<BPLUSTREE_MIN_DEGREE; i+=1) {
+                sibling_ptr->entries[i] = child_ptr->entries[i + BPLUSTREE_MIN_DEGREE - 1];
             }
 
-            child_ptr->nk = MIN_DEGREE - 1;
+            child_ptr->nk = BPLUSTREE_MIN_DEGREE - 1;
 
             //as parent node is going to get a new child at (idx+1)-th place, make a room for it
             for(int i = parent_ptr->nk; i >= idx+1; i -= 1) {
@@ -331,20 +331,20 @@ namespace ycsbc {
             PMEMoid sibling_oid = create_node(child_ptr->is_leaf);    //new sibling node will get the same status as child
             struct bplustree_pmem_node *sibling_ptr = (struct bplustree_pmem_node *) pmemobj_direct(sibling_oid);
 
-            sibling_ptr->nk = MIN_DEGREE - 1;   //new sibling child will hold the (MIN_DEGREE - 1) entries of child node
+            sibling_ptr->nk = BPLUSTREE_MIN_DEGREE - 1;   //new sibling child will hold the (BPLUSTREE_MIN_DEGREE - 1) entries of child node
 
-            //transfer the last (MIN_DEGREE - 1) entries of child node to it's sibling node
-            for(int i=0; i<MIN_DEGREE-1; i+=1) {
-                sibling_ptr->entries[i] = child_ptr->entries[i + MIN_DEGREE];
+            //transfer the last (BPLUSTREE_MIN_DEGREE - 1) entries of child node to it's sibling node
+            for(int i=0; i<BPLUSTREE_MIN_DEGREE-1; i+=1) {
+                sibling_ptr->entries[i] = child_ptr->entries[i + BPLUSTREE_MIN_DEGREE];
             }
 
-            //as child is an internal node, transfer the last MIN_DEGREE chiddren of child node to it's sibling node
-            for(int i=0; i<MIN_DEGREE; i+=1) {
-                sibling_ptr->children[i] = child_ptr->children[i + MIN_DEGREE];
+            //as child is an internal node, transfer the last BPLUSTREE_MIN_DEGREE chiddren of child node to it's sibling node
+            for(int i=0; i<BPLUSTREE_MIN_DEGREE; i+=1) {
+                sibling_ptr->children[i] = child_ptr->children[i + BPLUSTREE_MIN_DEGREE];
                 //todo: it is possible to free few of child's memory, or can try with pmemobj_memmove
             }
 
-            child_ptr->nk = MIN_DEGREE - 1;
+            child_ptr->nk = BPLUSTREE_MIN_DEGREE - 1;
 
             //as parent node is going to get a new child at (idx+1)-th place, make a room for it
             for(int i = parent_ptr->nk; i >= idx+1; i -= 1) {
@@ -360,7 +360,7 @@ namespace ycsbc {
             }
 
             //place the middle entry of child node to parent node
-            parent_ptr->entries[idx] = child_ptr->entries[MIN_DEGREE - 1];
+            parent_ptr->entries[idx] = child_ptr->entries[BPLUSTREE_MIN_DEGREE - 1];
 
             //parent now hold a new entry, so increasing the number of keys
             parent_ptr->nk += 1;
