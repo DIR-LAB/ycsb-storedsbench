@@ -143,7 +143,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node_ptr->entries[i].key) {
+        if(i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) {
             //key found, return the value
             return current_node_ptr->entries[i].value;
         }
@@ -297,7 +297,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node_ptr->entries[i].key) {
+        if(i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) {
             //key found, update value and return
             TX_BEGIN(pop) {
                 pmemobj_tx_add_range_direct(&current_node_ptr->entries[i].value, strlen(current_node_ptr->entries[i].value));
@@ -320,7 +320,6 @@ namespace ycsbc {
      */
     int BTreePmemTxConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-
         if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
 
         // if the key already exist in btree, update the value and return

@@ -115,7 +115,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node->entries[i].key) {
+        if(i < current_node->nk && key == current_node->entries[i].key) {
             //key found, return the value
             return current_node->entries[i].value;
         }
@@ -130,13 +130,8 @@ namespace ycsbc {
      * btree_dram_read -- read 'value' of 'key' from btree and place it into '&result'
      */
     int BTreeVmem::read(const uint64_t key, void *&result) {
-        //cout << "read ... " << key  << endl;
         check();
-
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
-        //cout << uint64_key << endl;
         result = search(root, key);
-        //cout << result << endl;
         return 1;
     }
 
@@ -248,7 +243,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node->entries[i].key) {
+        if(i < current_node->nk && key == current_node->entries[i].key) {
             //key found, update value and return
             memcpy(current_node->entries[i].value, (char *) value, strlen((char *) value) + 1);
             return true;
