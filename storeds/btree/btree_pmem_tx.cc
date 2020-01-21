@@ -143,7 +143,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node_ptr->entries[i].key) {
+        if(i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) {
             //key found, return the value
             return current_node_ptr->entries[i].value;
         }
@@ -296,7 +296,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node_ptr->entries[i].key) {
+        if(i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) {
             //key found, update value and return
             TX_BEGIN(pop) {
                 pmemobj_tx_add_range_direct(&current_node_ptr->entries[i].value, strlen(current_node_ptr->entries[i].value));

@@ -5,10 +5,19 @@
 #include<string.h>
 
 #include "storeds_db_factory.h"
+#include "btree_mem_opt/bt_dram.cc"
+#include "btree_mem_opt/bt_pmem.cc"
+#include "btree_mem_opt/bt_pmem_tx.cc"
+#include "btree_mem_opt/bt_vmem.cc"
+#include "btree_mem_opt/bt_dram_concurrent_mlock.cc"
+#include "btree_mem_opt/bt_pmem_concurrent_mlock.cc"
+#include "btree_mem_opt/bt_pmem_tx_concurrent_mlock.cc"
+#include "btree_mem_opt/bt_vmem_concurrent_mlock.cc"
 #include "btree/btree_dram.cc"
 #include "btree/btree_pmem.cc"
 #include "btree/btree_pmem_tx.cc"
 #include "btree/btree_vmem.cc"
+#include "btree/btree_memkind.cc"
 #include "btree/btree_vmem_concurrent_mlock.cc"
 #include "btree/btree_dram_concurrent_lock.cc"
 #include "btree/btree_dram_concurrent_mlock.cc"
@@ -109,6 +118,22 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new ArrayPmemTxConcurrentLock(path);
     } else if (strcmp(type, "array-pmem-tx-conc-mlock") == 0) {
         return new ArrayPmemTxConcurrentMLock(path);
+    } else if (strcmp(type, "bt-dram") == 0) {
+        return new BTDram(path);
+    } else if (strcmp(type, "bt-pmem") == 0) {
+        return new BTPmem(path);
+    } else if (strcmp(type, "bt-pmem-tx") == 0) {
+        return new BTPmemTx(path);
+    } else if (strcmp(type, "bt-vmem") == 0) {
+        return new BTVmem(path);
+    } else if (strcmp(type, "bt-dram-conc-mlock") == 0) {
+        return new BTDramConcurrentMLock(path);
+    } else if (strcmp(type, "bt-pmem-conc-mlock") == 0) {
+        return new BTPmemConcurrentMLock(path);
+    } else if (strcmp(type, "bt-pmem-tx-conc-mlock") == 0) {
+        return new BTPmemTxConcurrentMLock(path);
+    } else if (strcmp(type, "bt-vmem-conc-mlock") == 0) {
+        return new BTVmemConcurrentMLock(path);
     } else if (strcmp(type, "btree-dram") == 0) {
         return new BTreeDram(path);
     } else if (strcmp(type, "btree-pmem") == 0) {
@@ -117,6 +142,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmemTx(path);
     } else if (strcmp(type, "btree-vmem") == 0) {
         return new BTreeVmem(path);
+    } else if (strcmp(type, "btree-memkind") == 0) {
+        return new BTreeMemkind(path);
     } else if (strcmp(type, "btree-vmem-conc-mlock") == 0) {
         return new BTreeVmemConcurrentMLock(path);
     } else if (strcmp(type, "btree-dram-conc-lock") == 0) {

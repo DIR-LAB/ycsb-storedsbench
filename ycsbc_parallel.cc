@@ -65,7 +65,7 @@ int main(const int argc, const char *argv[]) {
     const string dbpath = props.GetProperty("dbpath", "/pmem/array");
     const string db_file_extension = ".pmem";
     const string type = props.GetProperty("type", "dram");
-    const bool is_vmem = (type.substr(type.size() - 4).compare("vmem") == 0);
+    const bool is_vmem = (type.substr(type.size() - 4).compare("vmem") == 0) || (type.substr(type.size() - 7).compare("memkind") == 0);
 
     ycsbc::DB *db_list[num_threads];
     ycsbc::CoreWorkload wl_list[num_threads];

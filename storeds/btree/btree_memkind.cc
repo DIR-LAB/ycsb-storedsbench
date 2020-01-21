@@ -8,14 +8,14 @@
 #include <string.h>
 #include <stdbool.h>
 #include <iostream>
-#include <pthread.h>
+#include <memkind.h>
 #include "btree_common.h"
 
 namespace ycsbc {
-    class BTreeDramConcurrentMLock : public StoredsBase {
+    class BTreeMemkind : public StoredsBase {
     public:
-        BTreeDramConcurrentMLock(const char *path) {
-            BTreeDramConcurrentMLock::init(path);
+        BTreeMemkind(const char *path) {
+            BTreeMemkind::init(path);
         }
 
         int init(const char *path);
@@ -30,11 +30,12 @@ namespace ycsbc {
 
         void destroy();
 
-        ~BTreeDramConcurrentMLock();
+        ~BTreeMemkind();
 
     private:
+        /* Private Data */
+        struct memkind *pmem_kind = NULL;
         struct btree_dram_node *root;
-        pthread_mutex_t mutex_lock_;
 
         int check();
 
@@ -56,7 +57,7 @@ namespace ycsbc {
     /*
      * btree_dram_check -- (internal) checks if btree has been initialized
      */
-    inline int BTreeDramConcurrentMLock::check() {
+    inline int BTreeMemkind::check() {
         if (root == NULL) {
             fprintf(stderr, "[%s]: FATAL: btree not initialized yet\n", __FUNCTION__);
             assert(0);
@@ -67,45 +68,46 @@ namespace ycsbc {
     /*
      * btree_dram_is_node_full -- (internal) checks if btree node contains max possible <key-value> pairs
      */
-    inline int BTreeDramConcurrentMLock::is_node_full(int nk) {
+    inline int BTreeMemkind::is_node_full(int nk) {
         return nk == BTREE_MAX_KEYS ? 1 : 0;
     }
 
     /*
      * btree_dram_init -- initialize btree
      */
-    int BTreeDramConcurrentMLock::init(const char *path) {
-        root = NULL;
-        if(pthread_mutex_init(&mutex_lock_, NULL) != 0) {
-            fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
-            assert(0);
+    int BTreeMemkind::init(const char *path) {
+        if ((memkind_create_pmem(path, PMEM_BTREE_POOL_SIZE, &pmem_kind)) != 0) {
+            fprintf(stderr, "[%s]: FATAL: memkind_create_pmem failed\n", __FUNCTION__);
+            exit(1);
         }
 
+        root = NULL;
         return 1;
     }
 
     /*
      * btree_dram_create_node -- (internal) create new btree node
      */
-    inline struct btree_dram_node *BTreeDramConcurrentMLock::create_node(int _is_leaf) {
-        struct btree_dram_node *new_node_p = (struct btree_dram_node *) malloc(sizeof(struct btree_dram_node));
+    inline struct btree_dram_node *BTreeMemkind::create_node(int _is_leaf) {
+        struct btree_dram_node *new_node_p;
+        if ((new_node_p = ((struct btree_dram_node *) memkind_malloc(pmem_kind, sizeof(struct btree_dram_node)))) == NULL) {
+            fprintf(stderr, "[%s]: FATAL: memkind_malloc failed\n", __FUNCTION__);
+            exit(1);
+        }
         new_node_p->is_leaf = _is_leaf;
         new_node_p->nk = 0;
-
-        //new_node_p->entries = (struct entry *) malloc(BTREE_MAX_KEYS * sizeof(struct entry));
-        //new_node_p->children = (struct btree_node **) malloc((BTREE_MAX_CHILDREN) * sizeof(struct btree_node));
 
         return new_node_p;
     }
 
-    int BTreeDramConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
+    int BTreeMemkind::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         throw "Scan: function not implemented!";
     }
 
     /**
      * btree_dram_search -- (internal) search the node contains the key and return the value
      */
-    char *BTreeDramConcurrentMLock::search(struct btree_dram_node *current_node, uint64_t key) {
+    char *BTreeMemkind::search(struct btree_dram_node *current_node, uint64_t key) {
         int i = 0;
 
         //todo: it is possible to apply binary search here to make the search faster
@@ -128,20 +130,16 @@ namespace ycsbc {
     /**
      * btree_dram_read -- read 'value' of 'key' from btree and place it into '&result'
      */
-    int BTreeDramConcurrentMLock::read(const uint64_t key, void *&result) {
+    int BTreeMemkind::read(const uint64_t key, void *&result) {
         check();
-
-        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         result = search(root, key);
-        pthread_mutex_unlock(&mutex_lock_);
-
         return 1;
     }
 
     /**
      * btree_dram_update -- update 'value' of 'key' into btree, will insert the 'value' if 'key' not exists
      */
-    int BTreeDramConcurrentMLock::update(const uint64_t key, void *value) {
+    int BTreeMemkind::update(const uint64_t key, void *value) {
         check();
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
         return insert(key, value);
@@ -156,7 +154,7 @@ namespace ycsbc {
      * this function will be called when the child node is full and become idx'th child of the parent,
      * the new sibling node will be the (idx+1)'th child of the parent.
      */
-    void BTreeDramConcurrentMLock::split_node(int idx, struct btree_dram_node *parent, struct btree_dram_node *child) {
+    void BTreeMemkind::split_node(int idx, struct btree_dram_node *parent, struct btree_dram_node *child) {
         struct btree_dram_node *sibling = create_node(child->is_leaf);    //new sibling node will get the same status as child
         sibling->nk = BTREE_MIN_DEGREE - 1;   //new sibling child will hold the (BTREE_MIN_DEGREE - 1) entries of child node
 
@@ -198,7 +196,7 @@ namespace ycsbc {
      * btree_dram_insert_not_full -- (internal) inserts <key, value> pair into node
      * when this function called, we can assume that the node has space to hold new data
      */
-    void BTreeDramConcurrentMLock::insert_not_full(struct btree_dram_node *node, uint64_t key, void *value) {
+    void BTreeMemkind::insert_not_full(struct btree_dram_node *node, uint64_t key, void *value) {
         int i = node->nk - 1;
 
         // if node is a leaf, insert the data to actual position and return
@@ -237,7 +235,7 @@ namespace ycsbc {
     /**
      * update_if_found -- (internal) search the key and if exist, update the value
      */
-    bool BTreeDramConcurrentMLock::update_if_found(struct btree_dram_node *current_node, uint64_t key, void *value) {
+    bool BTreeMemkind::update_if_found(struct btree_dram_node *current_node, uint64_t key, void *value) {
         int i = 0;
 
         //todo: it is possible to apply binary search here to make the search faster
@@ -261,9 +259,9 @@ namespace ycsbc {
     /**
      * btree_dram_insert -- inserts <key, value> pair into btree, will update the 'value' if 'key' already exists
      */
-    int BTreeDramConcurrentMLock::insert(const uint64_t key, void *value) {
+    int BTreeMemkind::insert(const uint64_t key, void *value) {
         //printf("[%s]: PARAM: key: %s, value: %s\n", __func__, key, (char *) value);
-        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
+        //uint64_t uint64_key = strtoull(key, NULL, 0);
 
         // if btree is empty, create root
         if(root == NULL) {
@@ -271,19 +269,12 @@ namespace ycsbc {
             root->entries[0].key = key;
             memcpy(root->entries[0].value, (char *) value, strlen((char *) value) + 1);
             root->nk = 1;
-
-            pthread_mutex_unlock(&mutex_lock_);
             return 1;
         }
 
         // if the key already exist in btree, update the value and return
         bool is_updated = update_if_found(root, key, value);
-        if(is_updated) {
-            //we found the key, and value has been updated
-
-            pthread_mutex_unlock(&mutex_lock_);
-            return 1;
-        }
+        if(is_updated) return 1;        //we found the key, and value has been updated
 
         // if root is full
         if(is_node_full(root->nk)) {
@@ -307,17 +298,16 @@ namespace ycsbc {
             insert_not_full(root, key, value);
         }
 
-        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
     /**
      * btree_dram_recursive_free -- recursively visit all the btree nodes and de-allocate memory
      */
-    void BTreeDramConcurrentMLock::recursive_free(struct btree_dram_node *current_node) {
+    void BTreeMemkind::recursive_free(struct btree_dram_node *current_node) {
         //base case
         if(current_node->is_leaf) {
-            free(current_node);
+            memkind_free(pmem_kind, current_node);
             return;
         }
 
@@ -327,17 +317,21 @@ namespace ycsbc {
         }
 
         //free the memory
-        free(current_node);
+        memkind_free(pmem_kind, current_node);
     }
 
     /**
      * btree_dram_free -- destructor
      */
-    void BTreeDramConcurrentMLock::destroy() {
+    void BTreeMemkind::destroy() {
+        //std::cout << "destroy called" << std::endl;
         check();
 
         recursive_free(root);
         root = NULL;
-        pthread_mutex_destroy(&mutex_lock_);
+        if(memkind_destroy_kind(pmem_kind) != 0) {
+            fprintf(stderr, "[%s]: FATAL: memkind_destroy_kind failed\n", __FUNCTION__);
+            exit(1);
+        }
     }
 }   //ycsbc

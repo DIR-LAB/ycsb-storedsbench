@@ -107,7 +107,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node->entries[i].key) {
+        if(i < current_node->nk && key == current_node->entries[i].key) {
             //key found, return the value
             return current_node->entries[i].value;
         }
@@ -240,7 +240,7 @@ namespace ycsbc {
         }
 
         //check if we found the key
-        if(key == current_node->entries[i].key) {
+        if(i < current_node->nk && key == current_node->entries[i].key) {
             //key found, update value and return
             memcpy(current_node->entries[i].value, (char *) value, strlen((char *) value) + 1);
             return true;

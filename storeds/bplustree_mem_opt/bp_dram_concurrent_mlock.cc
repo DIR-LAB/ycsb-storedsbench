@@ -171,7 +171,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node->is_leaf) {
             //check if we found the key
-            if (i < BP_MAX_KEYS && key == current_node->keys[i]) {
+            if (i < current_node->nk && key == current_node->keys[i]) {
                 //key found, return the value
                 return ((struct bp_record *) current_node->pointers[i])->value;
             }
@@ -180,7 +180,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < BP_MAX_KEYS && key == current_node->keys[i]) i += 1;
+        if (i < current_node->nk && key == current_node->keys[i]) i += 1;
         return search((struct bp_dram_node *) current_node->pointers[i], key);
     }
 
@@ -252,7 +252,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node->is_leaf) {
             //check if we found the key
-            if (i < BP_MAX_KEYS && key == current_node->keys[i]) {
+            if (i < current_node->nk && key == current_node->keys[i]) {
                 //key found, update value and return
                 memcpy(((struct bp_record *) current_node->pointers[i])->value, (char *) value, strlen((char *) value) + 1);
                 return true;
@@ -262,7 +262,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < BP_MAX_KEYS && key == current_node->keys[i]) i += 1;
+        if (i < current_node->nk && key == current_node->keys[i]) i += 1;
         return update_if_found((struct bp_dram_node *) current_node->pointers[i], key, value);
     }
 

@@ -201,7 +201,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node_ptr->is_leaf) {
             //check if we found the key
-            if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) {
+            if (i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) {
                 //key found, return the value
                 return current_node_ptr->entries[i].value;
             }
@@ -210,7 +210,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) i += 1;
+        if (i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) i += 1;
         return search(current_node_ptr->children[i], key);
     }
 
@@ -248,7 +248,7 @@ namespace ycsbc {
         //we reached to leaf
         if (current_node_ptr->is_leaf) {
             //check if we found the key
-            if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) {
+            if (i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) {
                 //key found, update value and return
                 pmemobj_memcpy_persist(pop, current_node_ptr->entries[i].value, (char *) value, strlen((char *) value) + 1);
                 return true;
@@ -258,7 +258,7 @@ namespace ycsbc {
         }
 
         //the node is not leaf, move to the proper child node
-        if (i < BPLUSTREE_MAX_KEYS && key == current_node_ptr->entries[i].key) i += 1;
+        if (i < current_node_ptr->nk && key == current_node_ptr->entries[i].key) i += 1;
         return update_if_found(current_node_ptr->children[i], key, value);
     }
 
