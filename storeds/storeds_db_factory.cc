@@ -17,6 +17,7 @@
 #include "btree/btree_pmem.cc"
 #include "btree/btree_pmem_tx.cc"
 #include "btree/btree_vmem.cc"
+#include "btree/btree_memkind.cc"
 #include "btree/btree_vmem_concurrent_mlock.cc"
 #include "btree/btree_dram_concurrent_lock.cc"
 #include "btree/btree_dram_concurrent_mlock.cc"
@@ -141,6 +142,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmemTx(path);
     } else if (strcmp(type, "btree-vmem") == 0) {
         return new BTreeVmem(path);
+    } else if (strcmp(type, "btree-memkind") == 0) {
+        return new BTreeMemkind(path);
     } else if (strcmp(type, "btree-vmem-conc-mlock") == 0) {
         return new BTreeVmemConcurrentMLock(path);
     } else if (strcmp(type, "btree-dram-conc-lock") == 0) {
