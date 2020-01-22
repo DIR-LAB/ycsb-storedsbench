@@ -26,25 +26,27 @@ namespace ycsbc {
     };
 
     /* declaration of dram data-structures */
+    /*structure size: 168 Bytes*/
     struct rbtree_dram_node {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
-        struct rbtree_dram_node *left;
-        struct rbtree_dram_node *right;
-        struct rbtree_dram_node *parent;
-        bool color;
-        char padding[7];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
+        struct rbtree_dram_node *left;  //8 Bytes
+        struct rbtree_dram_node *right; //8 Bytes
+        struct rbtree_dram_node *parent;    //8 Bytes
+        bool color; //1 Bytes
+        char padding[7];    //7 Bytes
     } __attribute__ ((aligned (8)));
 
     /* declaration of pmem data-structures */
+    /*structure size: 192 Bytes*/
     struct rbtree_pmem_node {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
-        PMEMoid left;
-        PMEMoid right;
-        PMEMoid parent;
-        bool color;
-        char padding[7];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
+        PMEMoid left;   //16 Bytes
+        PMEMoid right;  //16 Bytes
+        PMEMoid parent; //16 Bytes
+        bool color; //1 Bytes
+        char padding[7];    //7 Bytes
     };
 
     struct rbtree_pmem_root {

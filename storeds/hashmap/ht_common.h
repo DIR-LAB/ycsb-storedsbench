@@ -43,63 +43,71 @@ namespace ycsbc {
     };
 
     /* declaration of dram data-structures */
+    /*structure size: 144 Bytes*/
     struct dram_entry {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
 
         /* next entry list pointer */
-        struct dram_entry *next;
+        struct dram_entry *next;    //8 Bytes
     } __attribute__ ((aligned (8)));
 
+    /*structure size: 16 Bytes*/
     struct dram_buckets {
         /* number of buckets */
-        size_t nbuckets;
+        size_t nbuckets;    //8 Bytes
 
         /* array of lists */
-        struct dram_entry **bucket;
+        struct dram_entry **bucket; //8 Bytes
     };
 
+    /*structure size: 28 Bytes*/
     struct dram_hashtable {
         /* random number generator seed */
-        uint32_t seed;
+        uint32_t seed;  //4 Bytes
 
         /* hash function coefficients */
-        uint32_t hash_fun_coeff_a;	//hash_fun_a can not contain value '0'
-        uint32_t hash_fun_coeff_b;
-        uint64_t hash_fun_coeff_p;
+        //hash_fun_a can not contain value '0'
+        uint32_t hash_fun_coeff_a;  //4 Bytes
+        uint32_t hash_fun_coeff_b;  //4 Bytes
+        uint64_t hash_fun_coeff_p;  //8 Bytes
 
         /* buckets */
-        struct dram_buckets *buckets;
+        struct dram_buckets *buckets;   //8 Bytes
     };
 
     /* declaration of pmem data-structures */
+    /*structure size: 152 Bytes*/
     struct pmem_entry {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
 
         /* next entry list pointer */
-        PMEMoid next;
+        PMEMoid next;   //16 Bytes
     };
 
     struct pmem_buckets {
         /* number of buckets */
-        size_t nbuckets;
+        size_t nbuckets;    //8 Bytes
 
         /* array of lists */
-        PMEMoid bucket[];
+        PMEMoid bucket[];   //(16 * 8192) Bytes
+        //todo: this sizing is bit confusing
     };
 
+    /*structure size: 36 Bytes*/
     struct pmem_hashtable {
         /* random number generator seed */
-        uint32_t seed;
+        uint32_t seed;  //4 Bytes
 
         /* hash function coefficients */
-        uint32_t hash_fun_coeff_a;	//hash_fun_a can not contain value '0'
-        uint32_t hash_fun_coeff_b;
-        uint64_t hash_fun_coeff_p;
+        //hash_fun_a can not contain value '0'
+        uint32_t hash_fun_coeff_a;  //4 Bytes
+        uint32_t hash_fun_coeff_b;  //4 Bytes
+        uint64_t hash_fun_coeff_p;  //8 Bytes
 
         /* buckets */
-        PMEMoid buckets;
+        PMEMoid buckets;    //16 Bytes
     };
 
     struct pmem_hashtable_concurrent_lock {
