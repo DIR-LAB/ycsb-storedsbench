@@ -37,27 +37,30 @@ namespace ycsbc {
         SK_MAX_TYPES
     };
 
+    /*structure size: 136 Bytes*/
     struct sk_entry {
-        uint64_t key;
-        char value[DEFAULT_VALUE_LEN];
+        uint64_t key;   //8 Bytes
+        char value[DEFAULT_VALUE_LEN];  //128 Bytes
     } __attribute__ ((aligned (8)));
 
     /* declaration of dram data-structures */
+    /*structure size: 264 Bytes*/
     struct sk_dram_node {
         /* skiplist entry */
-        struct sk_entry entry;
+        struct sk_entry entry;  //136 Bytes
 
         /* next entry pointer */
-        struct sk_dram_node *next[SKIPLIST_LEVELS_NUM];
+        struct sk_dram_node *next[SKIPLIST_LEVELS_NUM]; //16*8 Bytes => 128 Bytes
     };
 
     /* declaration of pmem data-structures */
+    /*structure size: 392 Bytes*/
     struct sk_pmem_node {
         /* skiplist entry */
-        struct sk_entry entry;
+        struct sk_entry entry;  //136 Bytes
 
         /* next entry pointer */
-        PMEMoid next[SKIPLIST_LEVELS_NUM];
+        PMEMoid next[SKIPLIST_LEVELS_NUM];  //16*16 Bytes => 256 Bytes
     };
 
     struct sk_pmem_root {
