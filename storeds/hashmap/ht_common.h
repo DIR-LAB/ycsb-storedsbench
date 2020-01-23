@@ -22,7 +22,8 @@ namespace ycsbc {
     #define HASH_FUNC_COEFF_P 32212254719ULL
 
     /* initial number of buckets */
-    #define INIT_BUCKETS_NUM 8192
+    //#define INIT_BUCKETS_NUM 8192   //load factor: 12.20
+    #define INIT_BUCKETS_NUM 133334   //load factor: .75
 
     /* number of values in a bucket which trigger hashtable rebuild check */
     #define MIN_HASHSET_THRESHOLD 5
