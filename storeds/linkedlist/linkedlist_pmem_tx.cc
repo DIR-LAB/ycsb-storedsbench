@@ -41,6 +41,8 @@ namespace ycsbc {
         struct ll_pmem_root *root_p = NULL;
 
         int check();
+
+        PMEMoid create_node(const uint64_t key, void *value);
     };
 
     int LinkedlistPmemTx::check() {
@@ -115,19 +117,18 @@ namespace ycsbc {
         return 1;
     }
 
+    inline PMEMoid LinkedlistPmemTx::create_node(const uint64_t key, void *value) {
+        PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct ll_pmem_node), LL_NODE_TYPE);
+        struct ll_pmem_node *pmem_node_ptr = (struct ll_pmem_node *) pmemobj_direct(new_node_oid);
+        pmem_node_ptr->key = key;
+        memcpy(pmem_node_ptr->value, (char *) value, strlen((char *) value) + 1);
+
+        return new_node_oid;
+    }
+
     int LinkedlistPmemTx::insert(const uint64_t key, void *value) {
         TX_BEGIN(pop) {
-            //uint64_t uint64_key = strtoull(key, NULL, 0);
-            struct ll_pmem_node *in_memory_node_ptr = (struct ll_pmem_node *) malloc(sizeof(struct ll_pmem_node));
-            in_memory_node_ptr->key = key;
-            strcpy(in_memory_node_ptr->value, (const char *) value);
-
-            PMEMoid new_node_oid;
-            pmemobj_alloc(pop, &new_node_oid, sizeof(struct ll_pmem_node), LL_NODE_TYPE, NULL, NULL);
-            struct ll_pmem_node *pmem_node_ptr = (struct ll_pmem_node *) pmemobj_direct(new_node_oid);
-            memcpy(pmem_node_ptr, in_memory_node_ptr, sizeof(struct ll_pmem_node));
-            free(in_memory_node_ptr);
-
+            PMEMoid new_node_oid = create_node(key, value);
             if(root_p->head.off == 0) {
                 pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_pmem_root));
                 root_p->head = new_node_oid;

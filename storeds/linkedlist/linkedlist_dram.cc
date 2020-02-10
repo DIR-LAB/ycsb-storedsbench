@@ -37,6 +37,8 @@ namespace ycsbc {
         struct ll_dram_node *tail;
 
         int check();
+
+        struct ll_dram_node *create_node(const uint64_t key, void *value);
     };
 
     int LinkedlistDram::check() {
@@ -93,15 +95,17 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistDram::insert(const uint64_t key, void *value) {
-        //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
-        //check();
-
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+    inline struct ll_dram_node *LinkedlistDram::create_node(const uint64_t key, void *value) {
         struct ll_dram_node *new_node = (struct ll_dram_node *) malloc(sizeof(struct ll_dram_node));
         new_node->key = key;
         strcpy(new_node->value, (const char *) value);
+        return new_node;
+    }
 
+    int LinkedlistDram::insert(const uint64_t key, void *value) {
+        //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
+
+        struct ll_dram_node *new_node = create_node(key, value);
         if(head == NULL) {
             head = new_node;
             tail = new_node;
