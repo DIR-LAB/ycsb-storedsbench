@@ -7,14 +7,15 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
+#include <libvmem.h>
 
 #include "linkedlist_common.h"
 
 namespace ycsbc {
-    class LinkedlistDram : public StoredsBase {
+    class LinkedlistVmem : public StoredsBase {
     public:
-        LinkedlistDram(const char *path) {
-            LinkedlistDram::init(path);
+        LinkedlistVmem(const char *path) {
+            LinkedlistVmem::init(path);
         }
 
         int init(const char *path);
@@ -29,10 +30,11 @@ namespace ycsbc {
 
         void destroy();
 
-        ~LinkedlistDram();
+        ~LinkedlistVmem();
 
     private:
         /* Private Data */
+        VMEM *vmp;
         struct ll_dram_node *head;
         struct ll_dram_node *tail;
 
@@ -41,7 +43,7 @@ namespace ycsbc {
         struct ll_dram_node *create_node(const uint64_t key, void *value);
     };
 
-    int LinkedlistDram::check() {
+    int LinkedlistVmem::check() {
         if (head == NULL) {
             fprintf(stderr, "[%s]: FATAL: linkedlist not initialized yet\n", __FUNCTION__);
             assert(0);
@@ -50,17 +52,21 @@ namespace ycsbc {
     }
 
     // Check if this is the correct implementation for the init function for a linkedlist
-    int LinkedlistDram::init(const char *path) {
+    int LinkedlistVmem::init(const char *path) {
         head = NULL;
         tail = NULL;
+        if ((vmp = vmem_create(path, PMEM_BP_POOL_SIZE)) == NULL) {
+            fprintf(stderr, "[%s]: FATAL: vmem_create failed\n", __FUNCTION__);
+            exit(1);
+        }
         return 1;
     }
 
-    int LinkedlistDram::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
+    int LinkedlistVmem::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         throw "Scan: function not implemented!";
     }
 
-    int LinkedlistDram::read(const uint64_t key, void *&result) {
+    int LinkedlistVmem::read(const uint64_t key, void *&result) {
         //printf("[%s]: key: %s\n", __FUNCTION__, key);
         check();
 
@@ -78,7 +84,7 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistDram::update(const uint64_t key, void *value) {
+    int LinkedlistVmem::update(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
         check();
 
@@ -95,14 +101,18 @@ namespace ycsbc {
         return 1;
     }
 
-    inline struct ll_dram_node *LinkedlistDram::create_node(const uint64_t key, void *value) {
-        struct ll_dram_node *new_node = (struct ll_dram_node *) malloc(sizeof(struct ll_dram_node));
+    inline struct ll_dram_node *LinkedlistVmem::create_node(const uint64_t key, void *value) {
+        struct ll_dram_node *new_node;
+        if ((new_node = ((struct ll_dram_node *) vmem_malloc(vmp, sizeof(struct ll_dram_node)))) == NULL) {
+            fprintf(stderr, "[%s]: FATAL: vmem_malloc failed\n", __FUNCTION__);
+            exit(1);
+        }
         new_node->key = key;
         strcpy(new_node->value, (const char *) value);
         return new_node;
     }
 
-    int LinkedlistDram::insert(const uint64_t key, void *value) {
+    int LinkedlistVmem::insert(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
 
         struct ll_dram_node *new_node = create_node(key, value);
@@ -118,14 +128,19 @@ namespace ycsbc {
         return 1;
     }
 
-    void LinkedlistDram::destroy() {
+    void LinkedlistVmem::destroy() {
         struct ll_dram_node *current_node;
 
-        if(tail != NULL) free(tail);
+        if(tail != NULL) {
+            vmem_free(vmp, tail);
+            tail = NULL;
+        }
         while (head != NULL) {
             current_node = head;
             head = head->next;
-            free(current_node);
+            vmem_free(vmp, current_node);
+            current_node = NULL;
         }
+        vmem_delete(vmp);
     }
 }   //ycsbc

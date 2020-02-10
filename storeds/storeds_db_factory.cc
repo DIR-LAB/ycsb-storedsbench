@@ -67,8 +67,13 @@
 #include "skiplist/skiplist_pmem_tx_concurrent_lock.cc"
 #include "skiplist/skiplist_pmem_tx_concurrent_mlock.cc"
 #include "linkedlist/linkedlist_dram.cc"
+#include "linkedlist/linkedlist_dram_concurrent_mlock.cc"
 #include "linkedlist/linkedlist_pmem.cc"
+#include "linkedlist/linkedlist_pmem_concurrent_mlock.cc"
 #include "linkedlist/linkedlist_pmem_tx.cc"
+#include "linkedlist/linkedlist_pmem_tx_concurrent_mlock.cc"
+#include "linkedlist/linkedlist_vmem.cc"
+#include "linkedlist/linkedlist_vmem_concurrent_mlock.cc"
 #include "array/array_dram.cc"
 #include "array/array_pmem.cc"
 #include "array/array_pmem_tx.cc"
@@ -242,10 +247,20 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new SkiplistPmemTxConcurrentMLock(path);
     } else if (strcmp(type, "linkedlist-dram") == 0) {
         return new LinkedlistDram(path);
+    } else if (strcmp(type, "linkedlist-dram-conc-mlock") == 0) {
+        return new LinkedlistDramConcurrentMLock(path);
     } else if (strcmp(type, "linkedlist-pmem") == 0) {
         return new LinkedlistPmem(path);
+    } else if (strcmp(type, "linkedlist-pmem-conc-mlock") == 0) {
+        return new LinkedlistPmemConcurrentMLock(path);
     } else if (strcmp(type, "linkedlist-pmem-tx") == 0) {
         return new LinkedlistPmemTx(path);
+    } else if (strcmp(type, "linkedlist-pmem-tx-conc-mlock") == 0) {
+        return new LinkedlistPmemTxConcurrentMLock(path);
+    } else if (strcmp(type, "linkedlist-vmem") == 0) {
+        return new LinkedlistVmem(path);
+    } else if (strcmp(type, "linkedlist-vmem-conc-mlock") == 0) {
+        return new LinkedlistVmemConcurrentMLock(path);
     } else if (strcmp(type, "rbtree-dram") == 0) {
         return new RbtreeDram(path);
     } else if (strcmp(type, "rbtree-pmem") == 0) {

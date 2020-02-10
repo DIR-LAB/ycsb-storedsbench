@@ -11,10 +11,10 @@
 #include "linkedlist_common.h"
 
 namespace ycsbc {
-    class LinkedlistDram : public StoredsBase {
+    class LinkedlistDramConcurrentMLock : public StoredsBase {
     public:
-        LinkedlistDram(const char *path) {
-            LinkedlistDram::init(path);
+        LinkedlistDramConcurrentMLock(const char *path) {
+            LinkedlistDramConcurrentMLock::init(path);
         }
 
         int init(const char *path);
@@ -29,19 +29,20 @@ namespace ycsbc {
 
         void destroy();
 
-        ~LinkedlistDram();
+        ~LinkedlistDramConcurrentMLock();
 
     private:
         /* Private Data */
         struct ll_dram_node *head;
         struct ll_dram_node *tail;
+        pthread_mutex_t mutex_lock_;
 
         int check();
 
         struct ll_dram_node *create_node(const uint64_t key, void *value);
     };
 
-    int LinkedlistDram::check() {
+    int LinkedlistDramConcurrentMLock::check() {
         if (head == NULL) {
             fprintf(stderr, "[%s]: FATAL: linkedlist not initialized yet\n", __FUNCTION__);
             assert(0);
@@ -50,23 +51,26 @@ namespace ycsbc {
     }
 
     // Check if this is the correct implementation for the init function for a linkedlist
-    int LinkedlistDram::init(const char *path) {
+    int LinkedlistDramConcurrentMLock::init(const char *path) {
         head = NULL;
         tail = NULL;
+        if(pthread_mutex_init(&mutex_lock_, NULL) != 0) {
+            fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
+            assert(0);
+        }
         return 1;
     }
 
-    int LinkedlistDram::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
+    int LinkedlistDramConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         throw "Scan: function not implemented!";
     }
 
-    int LinkedlistDram::read(const uint64_t key, void *&result) {
+    int LinkedlistDramConcurrentMLock::read(const uint64_t key, void *&result) {
         //printf("[%s]: key: %s\n", __FUNCTION__, key);
         check();
 
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         struct ll_dram_node *current_node = head;
-
         while (current_node != NULL) {
             if (current_node->key == key) {
                 result = current_node->value;
@@ -74,17 +78,16 @@ namespace ycsbc {
             }
             current_node = current_node->next;
         }
-
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
-    int LinkedlistDram::update(const uint64_t key, void *value) {
+    int LinkedlistDramConcurrentMLock::update(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
         check();
 
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         struct ll_dram_node *current_node = head;
-
         while (current_node != NULL) {
             if (current_node->key == key) {
                 strcpy(current_node->value, (const char *) value);
@@ -92,20 +95,23 @@ namespace ycsbc {
             }
             current_node = current_node->next;
         }
+        pthread_mutex_unlock(&mutex_lock_);
         return 1;
     }
 
-    inline struct ll_dram_node *LinkedlistDram::create_node(const uint64_t key, void *value) {
+    inline struct ll_dram_node *LinkedlistDramConcurrentMLock::create_node(const uint64_t key, void *value) {
         struct ll_dram_node *new_node = (struct ll_dram_node *) malloc(sizeof(struct ll_dram_node));
         new_node->key = key;
         strcpy(new_node->value, (const char *) value);
         return new_node;
     }
 
-    int LinkedlistDram::insert(const uint64_t key, void *value) {
+    int LinkedlistDramConcurrentMLock::insert(const uint64_t key, void *value) {
         //printf("[%s]: key: %s, value: %s\n", __FUNCTION__, key, (char *) value);
 
+        if (pthread_mutex_lock(&mutex_lock_) != 0) return 0;
         struct ll_dram_node *new_node = create_node(key, value);
+
         if(head == NULL) {
             head = new_node;
             tail = new_node;
@@ -114,18 +120,24 @@ namespace ycsbc {
             tail->next = new_node;
             tail = tail->next;
         }
+        pthread_mutex_unlock(&mutex_lock_);
 
         return 1;
     }
 
-    void LinkedlistDram::destroy() {
+    void LinkedlistDramConcurrentMLock::destroy() {
         struct ll_dram_node *current_node;
 
-        if(tail != NULL) free(tail);
+        if(tail != NULL) {
+            free(tail);
+            tail = NULL;
+        }
         while (head != NULL) {
             current_node = head;
             head = head->next;
             free(current_node);
+            current_node = NULL;
         }
+        pthread_mutex_destroy(&mutex_lock_);
     }
 }   //ycsbc

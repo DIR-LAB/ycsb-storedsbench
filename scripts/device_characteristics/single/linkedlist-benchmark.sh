@@ -17,6 +17,18 @@ for file in $input_path*.spec; do
   echo "*****************<>*****************"
 done
 
+#linkedlist-vmem
+for file in $input_path*.spec; do
+  counter=1
+  echo "[Benchmark] linkedlist-vmem, workload: ${file##*/}"
+  while [ $counter -le 10 ]
+  do
+    ./../../../ycsbc -db storeds -threads 1 -dbpath /pmem -type linkedlist-vmem -P $input_path${file##*/}
+    ((counter++))
+  done
+  echo "*****************<>*****************"
+done
+
 #linkedlist-pmem
 for file in $input_path*.spec; do
   counter=1

@@ -14,10 +14,10 @@
 #include "linkedlist_common.h"
 
 namespace ycsbc {
-    class LinkedlistPmemTx : public StoredsBase {
+    class LinkedlistPmemTxConcurrentMLock : public StoredsBase {
     public:
-        LinkedlistPmemTx(const char *path) {
-            LinkedlistPmemTx::init(path);
+        LinkedlistPmemTxConcurrentMLock(const char *path) {
+            LinkedlistPmemTxConcurrentMLock::init(path);
         }
 
         int init(const char *path);
@@ -32,20 +32,20 @@ namespace ycsbc {
 
         void destroy();
 
-        ~LinkedlistPmemTx();
+        ~LinkedlistPmemTxConcurrentMLock();
 
     private:
         /* Private Data */
         PMEMobjpool *pop = NULL;
         PMEMoid root_oid;
-        struct ll_pmem_root *root_p = NULL;
+        struct ll_pmem_concurrent_mlock_root *root_p = NULL;
 
         int check();
 
         PMEMoid create_node(const uint64_t key, void *value);
     };
 
-    int LinkedlistPmemTx::check() {
+    int LinkedlistPmemTxConcurrentMLock::check() {
         if (root_p->head.off == 0) {
             fprintf(stderr, "[%s]: FATAL: linkedlist not initialized yet\n", __FUNCTION__);
             assert(0);
@@ -53,7 +53,7 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistPmemTx::init(const char *path) {
+    int LinkedlistPmemTxConcurrentMLock::init(const char *path) {
         if (file_exists(path) != 0) {
             if ((pop = pmemobj_create(path, LL_LAYOUT_NAME, PMEM_LL_POOL_SIZE, CREATE_MODE_RW)) == NULL) {
                 fprintf(stderr, "failed to create pool: %s\n", pmemobj_errormsg());
@@ -66,8 +66,8 @@ namespace ycsbc {
             }
         }
 
-        root_oid = pmemobj_root(pop, sizeof(struct ll_pmem_root));
-        root_p = (struct ll_pmem_root *) pmemobj_direct(root_oid);
+        root_oid = pmemobj_root(pop, sizeof(struct ll_pmem_concurrent_mlock_root));
+        root_p = (struct ll_pmem_concurrent_mlock_root *) pmemobj_direct(root_oid);
         if(root_p == NULL) {
             printf("FATAL: The Root Object Not Initalized Yet, Exit!\n");
             exit(0);
@@ -75,14 +75,14 @@ namespace ycsbc {
         return 1;
     }
 
-    int LinkedlistPmemTx::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
+    int LinkedlistPmemTxConcurrentMLock::scan(const uint64_t key, int len, std::vector <std::vector<DB::Kuint64VstrPair>> &result) {
         throw "Scan: function not implemented!";
     }
 
-    int LinkedlistPmemTx::read(const uint64_t key, void *&result) {
+    int LinkedlistPmemTxConcurrentMLock::read(const uint64_t key, void *&result) {
         check();
 
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         struct ll_pmem_node *current_node = (struct ll_pmem_node *) pmemobj_direct(root_p->head);
 
         while (current_node != NULL) {
@@ -92,13 +92,14 @@ namespace ycsbc {
             }
             current_node = (struct ll_pmem_node *) pmemobj_direct(current_node->next);
         }
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
-    int LinkedlistPmemTx::update(const uint64_t key, void *value) {
+    int LinkedlistPmemTxConcurrentMLock::update(const uint64_t key, void *value) {
         check();
 
-        //uint64_t uint64_key = strtoull(key, NULL, 0);
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         struct ll_pmem_node *current_node = (struct ll_pmem_node *) pmemobj_direct(root_p->head);
 
         while (current_node != NULL) {
@@ -114,10 +115,11 @@ namespace ycsbc {
             }
             current_node = (struct ll_pmem_node *) pmemobj_direct(current_node->next);
         }
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
-    inline PMEMoid LinkedlistPmemTx::create_node(const uint64_t key, void *value) {
+    inline PMEMoid LinkedlistPmemTxConcurrentMLock::create_node(const uint64_t key, void *value) {
         PMEMoid new_node_oid = pmemobj_tx_alloc(sizeof(struct ll_pmem_node), LL_NODE_TYPE);
         struct ll_pmem_node *pmem_node_ptr = (struct ll_pmem_node *) pmemobj_direct(new_node_oid);
         pmem_node_ptr->key = key;
@@ -126,11 +128,12 @@ namespace ycsbc {
         return new_node_oid;
     }
 
-    int LinkedlistPmemTx::insert(const uint64_t key, void *value) {
+    int LinkedlistPmemTxConcurrentMLock::insert(const uint64_t key, void *value) {
+        if (pmemobj_mutex_lock(pop, &root_p->mlock) != 0) return 0;
         TX_BEGIN(pop) {
             PMEMoid new_node_oid = create_node(key, value);
             if(root_p->head.off == 0) {
-                pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_pmem_root));
+                pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_pmem_concurrent_mlock_root));
                 root_p->head = new_node_oid;
                 root_p->tail = new_node_oid;
             }
@@ -143,15 +146,16 @@ namespace ycsbc {
             fprintf(stderr, "[%s]: FATAL: transaction aborted: %s\n", __func__, pmemobj_errormsg());
             abort();
         } TX_END
+        pmemobj_mutex_unlock(pop, &root_p->mlock);
         return 1;
     }
 
-    void LinkedlistPmemTx::destroy() {
+    void LinkedlistPmemTxConcurrentMLock::destroy() {
         check();
         PMEMoid current_node;
 
         TX_BEGIN(pop) {
-            pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_pmem_root));
+            pmemobj_tx_add_range(root_oid, 0, sizeof(struct ll_pmem_concurrent_mlock_root));
             while (root_p->head.off != 0) {
                 current_node = root_p->head;
                 root_p->head = ((struct ll_pmem_node *) pmemobj_direct(root_p->head))->next;
