@@ -30,11 +30,18 @@ namespace ycsbc {
         PMEMoid tail;
     };
 
-    /* declaration of pmem data-structures */
     struct ll_pmem_node {
         uint64_t key;
         char value[DEFAULT_VALUE_LEN];
         PMEMoid next;
+    };
+
+    /* declaration of pmem concurrent data-structures */
+    struct ll_pmem_concurrent_mlock_root {
+        PMEMoid head;
+        PMEMoid tail;
+
+        PMEMmutex mlock;
     };
 
     /**
