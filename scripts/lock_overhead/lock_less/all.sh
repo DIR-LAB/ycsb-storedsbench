@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "[Benchmark] array started ..."
 ./array-benchmark.sh > ar.out
+echo "[Benchmark] linkedlist started ..."
+./linkedlist-benchmark.sh > ll.out
 echo "[Benchmark] bplustree started ..."
 ./bplustree-benchmark.sh > bp.out
 echo "[Benchmark] btree started ..."

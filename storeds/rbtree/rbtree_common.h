@@ -63,6 +63,10 @@ namespace ycsbc {
         PMEMmutex mlock;
     };
 
+    struct rbtree_vmem_concurrent_pmlock {
+        pthread_mutex_t mutex_lock_;
+    };
+
     /**
      * types -- types of linkedlist pmem allocations
      */
