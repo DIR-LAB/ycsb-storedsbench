@@ -90,10 +90,12 @@
 #include "rbtree/rbtree_pmem_tx.cc"
 #include "rbtree/rbtree_vmem.cc"
 #include "rbtree/rbtree_vmem_concurrent_mlock.cc"
+#include "rbtree/rbtree_vmem_concurrent_pmlock.cc"
 #include "rbtree/rbtree_dram_concurrent_lock.cc"
 #include "rbtree/rbtree_dram_concurrent_mlock.cc"
 #include "rbtree/rbtree_pmem_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_concurrent_mlock.cc"
+#include "rbtree/rbtree_pmem_concurrent_vmlock.cc"
 #include "rbtree/rbtree_pmem_tx_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_tx_concurrent_mlock.cc"
 
@@ -271,6 +273,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreeVmem(path);
     } else if (strcmp(type, "rbtree-vmem-conc-mlock") == 0) {
         return new RbtreeVmemConcurrentMLock(path);
+    } else if (strcmp(type, "rbtree-vmem-conc-pmlock") == 0) {
+        return new RbtreeVmemConcurrentPMLock(path);
     } else if (strcmp(type, "rbtree-dram-conc-lock") == 0) {
         return new RbtreeDramConcurrentLock(path);
     } else if (strcmp(type, "rbtree-dram-conc-mlock") == 0) {
@@ -279,6 +283,8 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreePmemConcurrentLock(path);
     } else if (strcmp(type, "rbtree-pmem-conc-mlock") == 0) {
         return new RbtreePmemConcurrentMLock(path);
+    } else if (strcmp(type, "rbtree-pmem-conc-vmlock") == 0) {
+        return new RbtreePmemConcurrentVMLock(path);
     } else if (strcmp(type, "rbtree-pmem-tx-conc-lock") == 0) {
         return new RbtreePmemTxConcurrentLock(path);
     } else if (strcmp(type, "rbtree-pmem-tx-conc-mlock") == 0) {
