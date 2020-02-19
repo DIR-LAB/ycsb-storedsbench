@@ -100,6 +100,10 @@
 #include "rbtree/rbtree_pmem_concurrent_vmlock.cc"
 #include "rbtree/rbtree_pmem_tx_concurrent_lock.cc"
 #include "rbtree/rbtree_pmem_tx_concurrent_mlock.cc"
+#include "hashlist/hl_dram.cc"
+#include "hashlist/hl_vmem.cc"
+#include "hashlist/hl_pmem.cc"
+#include "hashlist/hl_pmem_tx.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
@@ -295,6 +299,14 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new RbtreePmemTxConcurrentLock(path);
     } else if (strcmp(type, "rbtree-pmem-tx-conc-mlock") == 0) {
         return new RbtreePmemTxConcurrentMLock(path);
+    } else if (strcmp(type, "hl-dram") == 0) {
+        return new HlDram(path);
+    } else if (strcmp(type, "hl-vmem") == 0) {
+        return new HlVmem(path);
+    } else if (strcmp(type, "hl-pmem") == 0) {
+        return new HlPmem(path);
+    } else if (strcmp(type, "hl-pmem-tx") == 0) {
+        return new HlPmem(path);
     } else {
         return NULL;
     }
