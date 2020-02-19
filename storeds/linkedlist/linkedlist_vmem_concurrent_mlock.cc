@@ -60,7 +60,7 @@ namespace ycsbc {
             fprintf(stderr, "[%s]: FATAL: Mutex-Lock failed to initialize\n", __FUNCTION__);
             assert(0);
         }
-        if ((vmp = vmem_create(path, PMEM_BP_POOL_SIZE)) == NULL) {
+        if ((vmp = vmem_create(path, PMEM_LL_POOL_SIZE)) == NULL) {
             fprintf(stderr, "[%s]: FATAL: vmem_create failed\n", __FUNCTION__);
             exit(1);
         }
