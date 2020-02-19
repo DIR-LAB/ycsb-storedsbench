@@ -37,6 +37,10 @@ namespace ycsbc {
         char value[DEFAULT_VALUE_LEN];
     };
 
+    struct array_vmem_concurrent_pmlock {
+        pthread_mutex_t mutex_lock_;
+    };
+
     /**
      * types -- types of pmem allocations
      */
