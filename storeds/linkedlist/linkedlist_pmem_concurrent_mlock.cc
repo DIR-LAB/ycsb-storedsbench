@@ -150,7 +150,7 @@ namespace ycsbc {
             root_p->head = ((struct ll_pmem_node *) pmemobj_direct(root_p->head))->next;
             pmemobj_free(&current_node);
         }
-        pmemobj_free(&(root_p->tail));
+        if(root_p->tail.off != 0) pmemobj_free(&(root_p->tail));
         root_p->head = OID_NULL;
         root_p->tail = OID_NULL;
         root_oid = OID_NULL;
