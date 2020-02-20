@@ -93,6 +93,9 @@ namespace ycsbc{
         if (pthread_rwlock_wrlock(&rwlock) != 0) return 0;
 
         int offset = (int) (key % ARRAY_SIZE);
+        char _dummy_read[DEFAULT_VALUE_LEN];
+        strcpy(_dummy_read, array[offset]);
+
         strcpy(array[offset], (const char *) value);
 
         pthread_rwlock_unlock(&rwlock);

@@ -86,6 +86,9 @@ namespace ycsbc{
         check();
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         int offset = (int) (key % ARRAY_SIZE);
+        char _dummy_read[DEFAULT_VALUE_LEN];
+        strcpy(_dummy_read, array[offset]);
+
         strcpy(array[offset], (const char *) value);
         return 1;
     }
