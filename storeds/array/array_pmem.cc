@@ -131,8 +131,10 @@ namespace ycsbc {
 
         //uint64_t uint64_key = strtoull(key, NULL, 0);
         int offset = (int) (key % ARRAY_SIZE);
-
         struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_pmem_elm));
+        char _dummy_read[DEFAULT_VALUE_LEN];
+        strcpy(_dummy_read, ptr->value);
+
         strcpy(ptr->value, (const char *) value);
         pmemobj_persist(pop, ptr, sizeof(struct array_pmem_elm));
 

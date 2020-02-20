@@ -146,6 +146,9 @@ namespace ycsbc {
         int offset = (int) (key % ARRAY_SIZE);
         TX_BEGIN(pop) {
             struct array_pmem_elm *ptr = (struct array_pmem_elm *) ((char *)pmemobj_direct(root_p->array) + offset * sizeof(struct array_pmem_elm));
+            char _dummy_read[DEFAULT_VALUE_LEN];
+            strcpy(_dummy_read, ptr->value);
+
             pmemobj_tx_add_range_direct(ptr, sizeof(struct array_pmem_elm));
             //pmemobj_tx_add_range(pmemobj_oid(ptr), 0, sizeof(struct array_pmem_elm));
             strcpy(ptr->value, (const char *) value);

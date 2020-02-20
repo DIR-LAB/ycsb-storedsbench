@@ -104,6 +104,10 @@
 #include "hashlist/hl_vmem.cc"
 #include "hashlist/hl_pmem.cc"
 #include "hashlist/hl_pmem_tx.cc"
+#include "hashlist/hl_dram_conc_mlock.cc"
+#include "hashlist/hl_vmem_conc_mlock.cc"
+#include "hashlist/hl_pmem_conc_mlock.cc"
+#include "hashlist/hl_pmem_tx_conc_mlock.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
@@ -306,7 +310,15 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
     } else if (strcmp(type, "hl-pmem") == 0) {
         return new HlPmem(path);
     } else if (strcmp(type, "hl-pmem-tx") == 0) {
-        return new HlPmem(path);
+        return new HlPmemTx(path);
+    } else if (strcmp(type, "hl-dram-conc-mlock") == 0) {
+        return new HlDramConcurrentMLock(path);
+    } else if (strcmp(type, "hl-vmem-conc-mlock") == 0) {
+        return new HlVmemConcurrentMLock(path);
+    } else if (strcmp(type, "hl-pmem-conc-mlock") == 0) {
+        return new HlPmemConcurrentMLock(path);
+    } else if (strcmp(type, "hl-pmem-tx-conc-mlock") == 0) {
+        return new HlPmemTxConcurrentMLock(path);
     } else {
         return NULL;
     }
