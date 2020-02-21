@@ -46,6 +46,10 @@ namespace ycsbc {
         /* buckets */
         struct hl_dram_buckets *buckets;   //8 Bytes
     };
+
+    struct hashlist_vmem_pmlock {
+        pthread_mutex_t mutex_lock_;
+    };
 }   //ycsbc
 
 #endif //YCSB_STOREDSBENCH_HL_COMMON_H
