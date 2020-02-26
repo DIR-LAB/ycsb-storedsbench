@@ -6,6 +6,7 @@
 #define YCSB_STOREDSBENCH_STOREDS_BASE_H
 
 #include <stdint.h>
+#include<vector>
 
 namespace ycsbc {
 
