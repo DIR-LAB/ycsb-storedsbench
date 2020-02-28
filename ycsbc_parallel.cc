@@ -220,8 +220,10 @@ string ParallelParseCommandLine(int argc, const char *argv[], utils::Properties 
 void ParallelUsageMessage(const char *command) {
     cout << "Usage: " << command << " [options]" << endl;
     cout << "Options:" << endl;
+    cout << "  -db dbname: specify the name of the DB to use (default: storeds)" << endl;
     cout << "  -threads n: execute using n threads (default: 1)" << endl;
-    cout << "  -db dbname: specify the name of the DB to use (default: basic)" << endl;
+    cout << "  -dbpath dbpath: specify the name of the PMEM memory pool file to be created" << endl;
+    cout << "  -type dsname: specify the name of the data-structure to use" << endl;
     cout << "  -P propertyfile: load properties from the given file. Multiple files can" << endl;
     cout << "                   be specified, and will be processed in the order specified" << endl;
 }
