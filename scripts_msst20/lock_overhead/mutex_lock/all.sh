@@ -2,7 +2,7 @@
 echo "[Benchmark] array started ..."
 ./array-benchmark.sh > ar.out
 echo "[Benchmark] linkedlist started ..."
-./linkedlist-benchmark.sh > ll.out
+./hashlist-benchmark.sh > ll.out
 echo "[Benchmark] bplustree started ..."
 ./bp-benchmark.sh > bp.out
 echo "[Benchmark] btree started ..."
