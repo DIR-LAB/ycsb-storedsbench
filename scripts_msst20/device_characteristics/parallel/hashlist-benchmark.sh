@@ -8,7 +8,7 @@
 input_path="../../../workloads/"
 
 #hashlist-dram
-for file in $input_path*e.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do
@@ -26,7 +26,7 @@ for file in $input_path*e.spec; do
 done
 
 #hashlist-vmem
-for file in $input_path*e.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do
@@ -44,7 +44,7 @@ for file in $input_path*e.spec; do
 done
 
 #hashlist-pmem
-for file in $input_path*e.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do
@@ -63,7 +63,7 @@ for file in $input_path*e.spec; do
 done
 
 #hashlist-pmem-tx
-for file in $input_path*e.spec; do
+for file in $input_path*a.spec $input_path*e.spec; do
   n_threads=1
   while [ $n_threads -le 16 ]
   do
