@@ -1,7 +1,6 @@
 # pmemids_bench
 
-pmemids_bench is a C++ version of YCSB based benchmark suite that includes seven commonly used indexing data structures implemented in four 
-persistent modes and four parallel modes.
+pmemids_bench is a C++ version of YCSB based benchmark suite that includes seven commonly used indexing data structures implemented in four persistent modes and four parallel modes (shown in later table).
 
 ## Quick Start
 
@@ -86,7 +85,7 @@ files in the workloads dir.
 ## Benchmarking Results and Analysis
 
 ### Evaluation Platform
-We conducted all the evaluations on a Dell R740 rack server
+We tested our benchmark suiteon a Dell R740 rack server
 with two sockets. Each socket installs a 2nd generation Intel
 Xeon Scalable Processor (Gold 6254 @ 3.10G) with 18 physical
 (36 virtual) cores. The machine is running Ubuntu 18.04 with a
