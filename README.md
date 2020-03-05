@@ -1,10 +1,16 @@
 # pmemids_bench
 
-pmemids_bench is a C++ version of YCSB based benchmark suite that includes seven commonly used indexing data structures implemented in four 
-persistent modes and four parallel modes.
+pmemids_bench is a C++ version of YCSB based benchmark suite that includes seven commonly used indexing data structures implemented in four persistent modes and four parallel modes (shown in later table).
 
 ## Quick Start
 
+### Prerequisites
+* GNU Make
+* C++ (we used version 11)
+* PMDK (we used version 1.8)
+* external libraries: pthreads, pmemobj, vmem, memkind
+
+### Build & Run
 To build pmemids_bench:
 
 ```
@@ -78,15 +84,81 @@ files in the workloads dir.
     <tr>
       <td colspan="5" align="middle">Table 1: Summary of indexing data structures, their different running modes under various workloads included in the benchmark suite.</td>
     </tr>
-  <tbody>
+  </tbody>
 </table>
 
 ### Workloads
 
+To help benchmark the storage systems, typical YCSB benchmarks include some representative workloads such as the five workloads (A to E) shown in the top part of Table 2. However, in pmemids_bench, this is not feasible anymore, simply because unlike benchmarking storage systems, we do not know how developers will use the indexing data structures. So, in our implementation, we leverage the YCSB workload generator, but we do create different workloads for our evaluations, as placed in the bottom part of Table 2. There are only two workloads included in pmemids_bench by default. But developers can configure their own workloads as we have placed several sample of them in "workloads" directory (i.e. check files with ".spec" file extension).
+
+<table>
+  <thead>
+    <tr>
+      <th>YCSB Workload</th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+      <th>E</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="middle">Read<br>
+                           Update<br>
+                           Insert<br>
+                           Read & Update</td>
+      <td align="middle">50<br>
+                           50<br>
+                           -<br>
+                           -</td>
+      <td align="middle">95<br>
+                           5<br>
+                           -<br>
+                           -</td>
+      <td align="middle">100<br>
+                           -<br>
+                           -<br>
+                           -</td>
+      <td align="middle">95<br>
+                           -<br>
+                           5<br>
+                           -</td>
+      <td align="middle">50<br>
+                           -<br>
+                           -<br>
+                           50</td>
+    </tr>
+  </tbody>
+  <thead>
+    <tr>
+      <th>pmemids_bench Workload</th>
+      <th colspan="2">A (100% Read)</th>
+      <th colspan="3">B (100% Write)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="middle">Read<br>
+                           Update<br>
+                           Insert</td>
+      <td  colspan="2" align="middle">100<br>
+                           -<br>
+                           -</td>
+      <td  colspan="3" align="middle">-<br>
+                           90<br>
+                           10</td>
+    </tr>
+    <tr>
+      <td colspan="6" align="middle">Table 2: Workloads in % of differebt operations.</td>
+    </tr>
+  </tbody>
+</table>
+
 ## Benchmarking Results and Analysis
 
 ### Evaluation Platform
-We conducted all the evaluations on a Dell R740 rack server
+We tested our benchmark suiteon a Dell R740 rack server
 with two sockets. Each socket installs a 2nd generation Intel
 Xeon Scalable Processor (Gold 6254 @ 3.10G) with 18 physical
 (36 virtual) cores. The machine is running Ubuntu 18.04 with a
