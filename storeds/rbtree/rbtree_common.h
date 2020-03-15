@@ -47,6 +47,7 @@ namespace ycsbc {
         PMEMoid parent; //16 Bytes
         bool color; //1 Bytes
         char padding[7];    //7 Bytes
+        int *flag;     //numbytes
     };
 
     struct rbtree_pmem_root {

@@ -10,13 +10,17 @@ EXECTEST=ycsbc_test
 EXECPARALLEL=ycsbc_parallel
 EXECPARALLELNONNUMA=ycsbc_parallel_non_numa
 EXECPARALLELTEST=ycsbc_parallel_test
+EXECRB = rbtree_lockfree_test
 
-all: $(SUBDIRS) $(EXEC) $(EXECNONNUMA) $(EXECTEST) ${EXECPARALLEL} ${EXECPARALLELNONNUMA} ${EXECPARALLELTEST}
+all: $(SUBDIRS) $(EXEC) $(EXECNONNUMA) $(EXECTEST) ${EXECPARALLEL} ${EXECPARALLELNONNUMA} ${EXECPARALLELTEST} ${EXECRB}
 
 $(SUBDIRS):
 	$(MAKE) -C $@
 
 $(EXEC): ycsbc.cc $(OBJECTS)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+$(EXECRB): rbtree_lockfree_test.cc $(OBJECTS)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 $(EXECNONNUMA): ycsbc_non_numa.cc $(OBJECTS)
