@@ -17,7 +17,6 @@
 #include "btree/btree_pmem.cc"
 #include "btree/btree_pmem_tx.cc"
 #include "btree/btree_vmem.cc"
-#include "btree/btree_memkind.cc"
 #include "btree/btree_vmem_concurrent_mlock.cc"
 #include "btree/btree_dram_concurrent_lock.cc"
 #include "btree/btree_dram_concurrent_mlock.cc"
@@ -110,12 +109,16 @@
 #include "hashlist/hl_pmem_conc_mlock.cc"
 #include "hashlist/hl_pmem_conc_vmlock.cc"
 #include "hashlist/hl_pmem_tx_conc_mlock.cc"
+#include "threemisses/threemisses_pmem.cc"
 
 using ycsbc::StoredsDbFactory;
 using ycsbc::StoredsBase;
 
 StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
-    if (strcmp(type, "array-dram") == 0) {
+    if (strcmp(type, "threemiss") == 0) {
+        return new ThreeMissesPmem(path);
+    }
+    /*if (strcmp(type, "array-dram") == 0) {
         return new ArrayDram(path);
     } else if (strcmp(type, "array-pmem") == 0) {
         return new ArrayPmem(path);
@@ -325,7 +328,7 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new HlPmemConcurrentVMLock(path);
     } else if (strcmp(type, "hl-pmem-tx-conc-mlock") == 0) {
         return new HlPmemTxConcurrentMLock(path);
-    } else {
+    }*/ else {
         return NULL;
     }
 }
