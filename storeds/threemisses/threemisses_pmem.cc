@@ -41,12 +41,9 @@ namespace ycsbc {
      * init -- hash-list initializer
      */
     int ThreeMissesPmem::init(const char *path) {
-        string IndexFileName = "/pmem/idx.pmem";
-        string DataFileName = "/pmem/data.pmem";
+        string IndexFileName = "/mnt/PM0/idx.pmem";
+        string DataFileName = "/mnt/PM0/data.pmem";
         const int64_t count = 10000000 * 2;
-
-        const int64_t ValueLength = 128;
-        const int64_t KeyLength = 8;
 
         remove(IndexFileName.c_str());
         remove(DataFileName.c_str());
@@ -65,10 +62,8 @@ namespace ycsbc {
      * read -- read 'value' of 'key' and place it into '&result'
      */
     int ThreeMissesPmem::read(const uint64_t key, void *&result) {
-        std::ostringstream oss;
-        oss << key;
-        string KeyString(oss.str());
-        AccessVectorChar KeyAV(KeyString);
+	uint64_t keytemp = key;
+        AccessVectorChar KeyAV(reinterpret_cast<char*>(&keytemp));
         AccessVectorChar StoredValueAV = TestMap->GetValue(KeyAV);
         result = StoredValueAV.data();
         return 1;
@@ -78,14 +73,14 @@ namespace ycsbc {
      * update -- update 'value' of 'key' into the hash-list, will insert the 'value' if 'key' not exists
      */
     int ThreeMissesPmem::update(const uint64_t key, void *value) {
-        std::ostringstream oss;
-        oss << key;
-        string KeyString(oss.str());
-        AccessVectorChar KeyAV(KeyString);
+	uint64_t keytemp = key;
+        AccessVectorChar KeyAV(reinterpret_cast<char*>(&keytemp));
 
-        string DataBuffer((char *) value);
-        AccessVectorChar DataAV(DataBuffer);
+        char* valueptr = reinterpret_cast<char*>(value);
+        AccessVectorChar DataAV(valueptr,strlen(valueptr));
+
         AccessVectorChar StoredValueAV = TestMap->GetValue(KeyAV);
+
         TestMap->UpdateRecordField(StoredValueAV, 0, DataAV);
         return 1;
     }
@@ -95,13 +90,10 @@ namespace ycsbc {
      */
     int ThreeMissesPmem::insert(const uint64_t key, void *value) {
         //std::cout << key << " " << value << std::endl;
-        //AccessVectorChar KeyAV(reinterpret_cast<char*>(&key), sizeof(key));
-        std::ostringstream oss;
-        oss << key;
-        string KeyString(oss.str());
-        AccessVectorChar KeyAV(KeyString);
-
-        string DataBuffer((char *) value);
+	uint64_t keytemp = key;
+        AccessVectorChar KeyAV(reinterpret_cast<char*>(&keytemp));
+        
+        static string DataBuffer((char *) value);
         AccessVectorChar DataAV(DataBuffer);
         TestMap->AppendRecord(KeyAV, DataAV);
         return 1;
