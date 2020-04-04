@@ -117,8 +117,7 @@ using ycsbc::StoredsBase;
 StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
     if (strcmp(type, "threemiss") == 0) {
         return new ThreeMissesPmem(path);
-    }
-    /*if (strcmp(type, "array-dram") == 0) {
+    } else if (strcmp(type, "array-dram") == 0) {
         return new ArrayDram(path);
     } else if (strcmp(type, "array-pmem") == 0) {
         return new ArrayPmem(path);
@@ -168,8 +167,6 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new BTreePmemTx(path);
     } else if (strcmp(type, "btree-vmem") == 0) {
         return new BTreeVmem(path);
-    } else if (strcmp(type, "btree-memkind") == 0) {
-        return new BTreeMemkind(path);
     } else if (strcmp(type, "btree-vmem-conc-mlock") == 0) {
         return new BTreeVmemConcurrentMLock(path);
     } else if (strcmp(type, "btree-dram-conc-lock") == 0) {
@@ -328,7 +325,7 @@ StoredsBase *StoredsDbFactory::GetDB(const char *type, const char *path) {
         return new HlPmemConcurrentVMLock(path);
     } else if (strcmp(type, "hl-pmem-tx-conc-mlock") == 0) {
         return new HlPmemTxConcurrentMLock(path);
-    }*/ else {
+    } else {
         return NULL;
     }
 }

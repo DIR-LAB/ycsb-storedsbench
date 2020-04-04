@@ -186,7 +186,7 @@ namespace ycsbc {
             if (key_chooser_) delete key_chooser_;
             if (field_chooser_) delete field_chooser_;
             if (scan_len_chooser_) delete scan_len_chooser_;
-            if (offlineOps) delete offlineOps;
+//            if (offlineOps) delete offlineOps;
         }
 
     protected:

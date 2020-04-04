@@ -12,8 +12,9 @@ namespace ycsbc {
      * Data Structure Section
      */
 
-    /* size of the pmem object pool -- 1 GB */
-    #define PM_HASHTABLE_POOL_SIZE ((size_t) ((size_t) 1 << 31))
+    /* size of the pmem object pool -- 10 GB * PM_HASHTABLE_MULTIPLIER*/
+    #define PM_HASHTABLE_MULTIPLIER 10
+    #define PM_HASHTABLE_POOL_SIZE ((size_t) (10*PM_HASHTABLE_MULTIPLIER*((size_t) 1 << 30)))
 
     /* name of layout in the pool */
     #define HT_LAYOUT_NAME "ht_layout"
@@ -23,7 +24,7 @@ namespace ycsbc {
 
     /* initial number of buckets */
     //#define INIT_BUCKETS_NUM 8192   //load factor: 12.20
-    #define INIT_BUCKETS_NUM 1333334   //load factor: .75
+    #define INIT_BUCKETS_NUM 13333340 * (PM_HASHTABLE_MULTIPLIER / 2) //load factor: .75
 
     /* number of values in a bucket which trigger hashtable rebuild check */
     #define MIN_HASHSET_THRESHOLD 5
