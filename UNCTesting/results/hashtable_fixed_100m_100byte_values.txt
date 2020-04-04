@@ -1,0 +1,9 @@
+
+../ycsbc -db storeds -threads 1 -dbpath mnt/PM0/index.ht -type hashtable-pmem -P workloads/fixed_100m_100byte_values.spec
+
+Sat Apr  4 01:45:09 EDT 2020
+# Loading records:	100000000
+# Transaction throughput (KTPS)
+storeds	workloads/fixed_100m_100byte_values.spec	1	419.892
+Sat Apr  4 01:53:33 EDT 2020
+

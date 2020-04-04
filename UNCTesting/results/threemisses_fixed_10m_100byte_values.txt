@@ -1,0 +1,11 @@
+
+../ycsbc -db storeds -threads 1 -dbpath /dummy_path/dummy.pmem -type threemiss -P workloads/fixed_10m_100byte_values.spec
+
+Fri Apr  3 20:54:47 EDT 2020
+
+0 ..........# Loading records:	10000000
+
+1 .# Transaction throughput (KTPS)
+storeds	workloads/fixed_10m_100byte_values.spec	1	629.105
+Fri Apr  3 20:56:27 EDT 2020
+
