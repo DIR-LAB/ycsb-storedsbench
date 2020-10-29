@@ -6,6 +6,8 @@
 **[Quick Start](#quick-start)**<br>
 **[Benchmark Design and Implementation](#benchmark-design-and-implementation)**<br>
 **[Benchmarking Results and Analysis](#benchmarking-results-and-analysis)**<br>
+**[Usage](#usage)**<br>
+**[Contribution](#contribution)**<br>
 **[Credit](#credit)**<br>
 
 ### Relevant publications:
@@ -253,6 +255,22 @@ in the implementation.
     <img align="middle" src="https://github.com/DIR-LAB/ycsb-storedsbench/blob/master/workloads/plotting-readme/msst20_eval_6_1-2.jpg" alt="numa_100%_read"/>
     <figcaption>Fig. 9. The benchmark results of seven indexing data structures in different persistent modes accessing local memory and remote memory. All evaluations are based on single thread.</figcaption>
 </figure>
+
+## Usage
+
+One of the key motivations of this project is to allow others to reuse our framework and implement their specific data structures for performance comparison (using [YCSB workload](https://github.com/brianfrankcooper/YCSB/tree/master/workloads)). Please have a look at our [wiki page](https://github.com/DIR-LAB/ycsb-storedsbench/wiki) to learn how to add new data structures to this project. From the [Workloads](#workloads) section, you will get some idea about workload generation.
+
+The project is well suited for testing third-party libraries. We helped [TwoMisses](https://www.threemisses.com) (an updated version of `ThreeMisses`, the winner of the first SNIA NVDIMM Challenge!) to benchmark their library. The integration is done in the branch [threemiss](https://github.com/DIR-LAB/ycsb-storedsbench/tree/threemiss).
+
+## Contribution
+
+If you would like to contribute to `pmemids_bench`, we would certainly appreciate your help! Here are some of the ways you can contribute:
+
+* Bug fixes, whether they be for performance or correctness of the existing data structure implementation
+* Improvement of the existing benchmark implementation and documentation
+* Support for additional data structure implementations; we are open to adding more data structures in this repo
+
+Our future goal is to provide a set of portable, high-performance PMEM-aware data structure baselines. For code contributions, please focus on code simplicity and readability. If you open a pull request, we will do an immediate sanity check and respond to you as soon as possible.
 
 ## Credit
 * We use Jinglei Ren's (Github handle: [basicthinker](https://github.com/basicthinker)) C++ implementation of YCSB benchmark [YCSB-C](https://github.com/basicthinker/YCSB-C) as the base of our project.
